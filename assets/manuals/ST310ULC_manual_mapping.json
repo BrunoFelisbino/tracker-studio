@@ -1,0 +1,38 @@
+{
+  "model": "ST310ULC",
+  "version": "1.0",
+  "commands": [
+    {
+      "command_template": "AT^ST300CMD;;02;StatusReq",
+      "expected_response": "RES;ESN;03;01;04;0x;10;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Status completo"
+    },
+    {
+      "command_template": "AT^ST300CMD;;02;Preset",
+      "expected_response": "RES;ESN;03;05;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Leitura de presets"
+    },
+    {
+      "command_template": "AT^ST300CMD;;02;Enable1",
+      "expected_response": "RES;ESN;02;Enable1",
+      "risk_level": "MEDIUM",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Ativar Sa\u00edda 1 (Bloqueio)"
+    },
+    {
+      "command_template": "AT^ST300CMD;;02;Disable1",
+      "expected_response": "RES;ESN;02;Disable1",
+      "risk_level": "MEDIUM",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Desativar Sa\u00edda 1 (Desbloqueio)"
+    }
+  ]
+}

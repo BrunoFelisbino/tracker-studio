@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tracker-studio/suntech_commands.schema.json",
+  "title": "Suntech Command Catalog",
+  "description": "Schema for the Suntech device command catalog used by Tracker Studio",
+  "type": "object",
+  "required": ["version", "generatedAt", "commands"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of catalog generation"
+    },
+    "commands": {
+      "type": "array",
+      "description": "List of command definitions",
+      "items": {
+        "$ref": "#/definitions/command"
+      }
+    }
+  },
+  "definitions": {
+    "command": {
+      "type": "object",
+      "required": ["id", "family", "name", "code", "category", "risk", "status", "rawCommand"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Unique identifier (snake_case)"
+        },
+        "family": {
+          "type": "string",
+          "enum": ["newgen_st8210", "newgen_st8310", "newgen_st8310u", "newgen_st8310um", "legacy_st300", "legacy_st310", "legacy_st310u", "handshake", "cross_family"],
+          "description": "Command family"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable command name"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$",
+          "description": "4-digit command code (e.g. 0301)"
+        },
+        "rawCommand": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Raw command template with <ESN> placeholder where applicable"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "identification",
+            "network",
+            "sim",
+            "apn",
+            "server",
+            "gps",
+            "ignition",
+            "inputs",
+            "outputs",
+            "blocking",
+            "unblocking",
+            "power",
+            "battery",
+            "times",
+            "events",
+            "sensors",
+            "position",
+            "maintenance",
+            "reset",
+            "preset",
+            "diagnostic",
+            "encoding",
+            "geofence",
+            "security",
+            "calibration",
+            "odometer",
+            "messaging",
+            "work",
+            "schema"
+          ],
+          "description": "Command category"
+        },
+        "risk": {
+          "type": "string",
+          "enum": ["read", "config", "action", "destructive"],
+          "description": "Risk level: read=only reads state, config=changes configuration, action=triggers physical action, destructive=can erase/reset device"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["supported", "partial", "legacy", "not_validated"],
+          "description": "Implementation status"
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ST8210", "ST8310", "ST8310U", "ST8310UM", "ST300", "ST310", "ST310U"]
+          },
+          "minItems": 1,
+          "description": "Compatible device models"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["usb", "serial", "sms", "gprs"]
+          },
+          "minItems": 1,
+          "description": "Supported communication channels"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/parameter"
+          },
+          "description": "Command parameters"
+        },
+        "expectedResponse": {
+          "type": "string",
+          "description": "Expected response pattern or template"
+        },
+        "parserRef": {
+          "type": "string",
+          "description": "Reference to the parser file that handles this command's response"
+        },
+        "testRef": {
+          "type": "string",
+          "description": "Reference to the test file covering this command"
+        },
+        "fixtureRef": {
+          "type": "string",
+          "description": "Reference to the test fixture data"
+        },
+        "documentationRef": {
+          "type": "string",
+          "description": "Reference to official documentation or source in codebase"
+        },
+        "destructive": {
+          "type": "boolean",
+          "description": "Whether this command can cause data loss or device reset"
+        },
+        "critical": {
+          "type": "boolean",
+          "description": "Whether this command is critical and requires confirmation"
+        },
+        "requiresReadback": {
+          "type": "boolean",
+          "description": "Whether the command result should be verified by a subsequent read"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or warnings"
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Parameter name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "integer", "boolean", "hex", "ip", "port"],
+          "description": "Parameter data type"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the parameter is required"
+        },
+        "description": {
+          "type": "string",
+          "description": "Parameter description"
+        },
+        "minLength": {
+          "type": "integer",
+          "description": "Minimum parameter length"
+        },
+        "maxLength": {
+          "type": "integer",
+          "description": "Maximum parameter length"
+        },
+        "allowedValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Restrictive list of allowed values"
+        }
+      }
+    }
+  }
+}

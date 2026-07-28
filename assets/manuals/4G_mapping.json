@@ -1,0 +1,139 @@
+{
+  "model": "4G",
+  "manufacturer": "Suntech",
+  "firmware_version": "v1.11",
+  "parameters": {
+    "ignition": {
+      "field": "Pino 1",
+      "type": "digital",
+      "states": [
+        "OFF",
+        "ON"
+      ],
+      "description": "Controle da ignição do veículo",
+      "commands": [
+        {
+          "command": "AT^ST300CMD;;02;03;00",
+          "expected": "RES;ESN;03;00"
+        },
+        {
+          "command": "AT^ST300CMD;;02;03;01",
+          "expected": "RES;ESN;03;01"
+        }
+      ],
+      "current_state": "OFF",
+      "min_value": null,
+      "max_value": null
+    },
+    "output_2": {
+      "field": "Pino 2 (Relé)",
+      "type": "digital",
+      "states": [
+        "OFF",
+        "ON"
+      ],
+      "description": "Relé de controle de saida",
+      "commands": [
+        {
+          "command": "AT^ST300CMD;;02;04;00",
+          "expected": "RES;ESN;04;00"
+        },
+        {
+          "command": "AT^ST300CMD;;02;04;01",
+          "expected": "RES;ESN;04;01"
+        }
+      ],
+      "current_state": "OFF",
+      "min_value": null,
+      "max_value": null
+    },
+    "gps": {
+      "field": "GPS e rede",
+      "type": "network",
+      "states": [
+        "DESABILITADO",
+        "HABILITADO"
+      ],
+      "description": "Status do GPS e rede de localização",
+      "commands": [
+        {
+          "command": "AT^CMD;ESN;10;01",
+          "expected": "LAT;LON;VELOCIDADE;HEADING"
+        },
+        {
+          "command": "AT^CMD;ESN;10;02",
+          "expected": "GPS:SATELLITES;SNR"
+        }
+      ],
+      "current_state": "DESABILITADO",
+      "min_value": null,
+      "max_value": null
+    },
+    "network_apn": {
+      "field": "Configuração de APN",
+      "type": "analog",
+      "states": [
+        ""
+      ],
+      "description": "Configuração de rede móvel APN",
+      "commands": [
+        {
+          "command": "AT^ST300NTN;;02;0;<APN>;<USER>;<PASS>;<HOST>;<PORT>",
+          "expected": "OK"
+        }
+      ],
+      "current_state": "",
+      "min_value": null,
+      "max_value": null
+    }
+  },
+  "command_catalog": {
+    "status_req": {
+      "command_template": "AT^ST300CMD;;02;StatusReq",
+      "expected_response": "RES;ESN;03;01;04;0x;10;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "requires_backup": false,
+      "destructive": false,
+      "notes": "Status completo do dispositivo"
+    },
+    "preset_read": {
+      "command_template": "AT^ST300CMD;;02;Preset",
+      "expected_response": "RES;ESN;03;05;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "requires_backup": false,
+      "destructive": false,
+      "notes": "Leitura da configuração atual"
+    },
+    "network_setup": {
+      "command_template": "AT^ST300NTN;;02;0;<APN>;<USER>;<PASS>;<HOST>;<PORT>;;;;",
+      "expected_response": "OK",
+      "risk_level": "HIGH",
+      "requires_esn": false,
+      "requires_backup": true,
+      "destructive": false,
+      "notes": "Configuração de rede, requer backup e revisão"
+    },
+    "ignition_on": {
+      "command_template": "AT^ST300CMD;;02;03;01",
+      "expected_response": "RES;ESN;03;01",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "requires_backup": false,
+      "destructive": false,
+      "notes": "Ativa ignição"
+    },
+    "ignition_off": {
+      "command_template": "AT^ST300CMD;;02;03;00",
+      "expected_response": "RES;ESN;03;00",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "requires_backup": false,
+      "destructive": false,
+      "notes": "Desativa ignição"
+    }
+  },
+  "generated_at": "2026-07-23",
+  "generated_by": "ManualExtractor v1.0"
+}

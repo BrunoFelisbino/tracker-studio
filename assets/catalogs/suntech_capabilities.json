@@ -1,0 +1,1303 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-07-23T00:17:01.951460+00:00",
+  "source": "Suntech official manuals and documentation",
+  "capabilities": [
+    {
+      "id": "network_apn",
+      "name": "APN Configuration",
+      "category": "network",
+      "description": "Configuração do APN de comunicação",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;00#01;01#apn;02#usuario;03#senha",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "auth",
+          "group": "10",
+          "param": "00",
+          "value": "01"
+        },
+        {
+          "name": "apn",
+          "group": "10",
+          "param": "01"
+        },
+        {
+          "name": "user",
+          "group": "10",
+          "param": "02"
+        },
+        {
+          "name": "password",
+          "group": "10",
+          "param": "03"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "network_server",
+      "name": "Server IP and Port",
+      "category": "server",
+      "description": "Configuração do IP e porta do servidor principal e backup",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;05#ip;06#porta;08#ip2;09#porta2",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "server_ip",
+          "group": "10",
+          "param": "05"
+        },
+        {
+          "name": "server_port",
+          "group": "10",
+          "param": "06"
+        },
+        {
+          "name": "backup_ip",
+          "group": "10",
+          "param": "08"
+        },
+        {
+          "name": "backup_port",
+          "group": "10",
+          "param": "09"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "network_protocol_tcp",
+      "name": "TCP Protocol",
+      "category": "network",
+      "description": "Configuração do protocolo TCP",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;07#00;10#00",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "protocol",
+          "group": "10",
+          "param": "07",
+          "value": "00"
+        },
+        {
+          "name": "protocol_type",
+          "group": "10",
+          "param": "10",
+          "value": "00"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "network_protocol_udp",
+      "name": "UDP Protocol",
+      "category": "network",
+      "description": "Configuração do protocolo UDP",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;07#01;10#01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "protocol",
+          "group": "10",
+          "param": "07",
+          "value": "01"
+        },
+        {
+          "name": "protocol_type",
+          "group": "10",
+          "param": "10",
+          "value": "01"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "network_jammer",
+      "name": "Jammer Detection",
+      "category": "security",
+      "description": "Configuração da detecção de jammer",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;61#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "mode",
+          "group": "10",
+          "param": "61",
+          "values": [
+            "00",
+            "01",
+            "02",
+            "03"
+          ],
+          "description": "00=Off, 01=Alert, 02=Alert+Immobilizer, 03=Alert+Buzzer"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "network_zip",
+      "name": "ZIP Compression",
+      "category": "network",
+      "description": "Configuração de compactação ZIP",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;55#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "enabled",
+          "group": "10",
+          "param": "55",
+          "values": [
+            "00",
+            "01"
+          ]
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "ignition_physical",
+      "name": "Physical Ignition",
+      "category": "ignition",
+      "description": "Configuração de ignição física",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;00#01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "type",
+          "group": "17",
+          "param": "00",
+          "value": "01"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "ignition_virtual_accel",
+      "name": "Virtual Ignition (Accelerometer)",
+      "category": "ignition",
+      "description": "Configuração de ignição virtual por acelerômetro",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;00#03",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "type",
+          "group": "17",
+          "param": "00",
+          "value": "03"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "ignition_virtual_voltage",
+      "name": "Virtual Ignition (Voltage)",
+      "category": "ignition",
+      "description": "Configuração de ignição virtual por tensão",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;00#02",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "type",
+          "group": "17",
+          "param": "00",
+          "value": "02"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "ignition_voltage_threshold",
+      "name": "Voltage Threshold",
+      "category": "ignition",
+      "description": "Configuração de tensão alta/baixa para ignição virtual",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;15#alta;16#baixa",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "high_voltage",
+          "group": "17",
+          "param": "15"
+        },
+        {
+          "name": "low_voltage",
+          "group": "17",
+          "param": "16"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "input1_config",
+      "name": "Input 1 Configuration",
+      "category": "inputs",
+      "description": "Configuração da entrada 1",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;20#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "mode",
+          "group": "17",
+          "param": "20",
+          "values": [
+            "00",
+            "01",
+            "02",
+            "03",
+            "07",
+            "11",
+            "13"
+          ],
+          "description": "00=Falling, 01=Rising, 02=Both, 03=Panic, 07=Antitheft, 11=Door, 13=Disable jammer output"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "input1_read_time",
+      "name": "Input 1 Read Time",
+      "category": "inputs",
+      "description": "Tempo de leitura da entrada 1 em ms",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;21#valor",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "time_ms",
+          "group": "17",
+          "param": "21"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "input2_config",
+      "name": "Input 2 Configuration",
+      "category": "inputs",
+      "description": "Configuração da entrada 2",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;22#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "mode",
+          "group": "17",
+          "param": "22",
+          "values": [
+            "00",
+            "01",
+            "02",
+            "03",
+            "07",
+            "11",
+            "13"
+          ]
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "input2_read_time",
+      "name": "Input 2 Read Time",
+      "category": "inputs",
+      "description": "Tempo de leitura da entrada 2 em ms",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;23#valor",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "time_ms",
+          "group": "17",
+          "param": "23"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "output1_config",
+      "name": "Output 1 Configuration",
+      "category": "outputs",
+      "description": "Configuração da saída 1",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;60#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "type",
+          "group": "17",
+          "param": "60",
+          "values": [
+            "00",
+            "01",
+            "05"
+          ],
+          "description": "00=General, 01=Immobilizer, 05=Buzzer"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "output2_config",
+      "name": "Output 2 Configuration",
+      "category": "outputs",
+      "description": "Configuração da saída 2",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;62#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "type",
+          "group": "17",
+          "param": "62",
+          "values": [
+            "00",
+            "01",
+            "05"
+          ]
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "sending_profile",
+      "name": "Sending Profile",
+      "category": "communication",
+      "description": "Configuração de intervalos, ângulo e distância de comunicação",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;16;70#off;79#on_move;82#on_idle;81#angle;84#distance",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "off_interval",
+          "group": "16",
+          "param": "70"
+        },
+        {
+          "name": "on_move_interval",
+          "group": "16",
+          "param": "79"
+        },
+        {
+          "name": "on_idle_interval",
+          "group": "16",
+          "param": "82"
+        },
+        {
+          "name": "angle",
+          "group": "16",
+          "param": "81"
+        },
+        {
+          "name": "distance",
+          "group": "16",
+          "param": "84"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "speed_limit",
+      "name": "Speed Limit",
+      "category": "sensors",
+      "description": "Limite de velocidade em km/h",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;16;21#velocidade",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "speed_kmh",
+          "group": "16",
+          "param": "21"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "sleep_mode",
+      "name": "Sleep Mode",
+      "category": "power",
+      "description": "Configuração do modo sleep",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;30#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "mode",
+          "group": "19",
+          "param": "30",
+          "values": [
+            "00",
+            "01",
+            "02"
+          ],
+          "description": "00=Off (40-50mA), 01=Ultra-low (~2mAh), 02=Low (~4mAh)"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "motion_sensor",
+      "name": "Motion Sensor",
+      "category": "sensors",
+      "description": "Configuração do sensor de movimento",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;00#XX",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "mode",
+          "group": "19",
+          "param": "00",
+          "values": [
+            "00",
+            "02",
+            "04"
+          ],
+          "description": "00=Off, 02=Shock (ign off), 04=Collision (ign on)"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "shock_time",
+      "name": "Shock Detection Time",
+      "category": "sensors",
+      "description": "Tempo para detectar choque (segundos)",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;02#tempo",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "time_seconds",
+          "group": "19",
+          "param": "02"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "cmd_reboot",
+      "name": "Reboot",
+      "category": "maintenance",
+      "description": "Reiniciar equipamento",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;03;03",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "destructive"
+    },
+    {
+      "id": "cmd_status_req",
+      "name": "Status Request",
+      "category": "diagnostic",
+      "description": "Solicitar posição e status",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;03;01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "read"
+    },
+    {
+      "id": "cmd_output1_on",
+      "name": "Activate Output 1",
+      "category": "outputs",
+      "description": "Ativar saída 1",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;04;01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "action"
+    },
+    {
+      "id": "cmd_output1_off",
+      "name": "Deactivate Output 1",
+      "category": "outputs",
+      "description": "Desativar saída 1",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;04;02",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "action"
+    },
+    {
+      "id": "cmd_output2_on",
+      "name": "Activate Output 2",
+      "category": "outputs",
+      "description": "Ativar saída 2",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;04;03",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "action"
+    },
+    {
+      "id": "cmd_output2_off",
+      "name": "Deactivate Output 2",
+      "category": "outputs",
+      "description": "Desativar saída 2",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;04;04",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "action"
+    },
+    {
+      "id": "cmd_odometer",
+      "name": "Set Odometer",
+      "category": "sensors",
+      "description": "Ajustar odômetro (metros)",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;05;03;ValorEmMetros",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "value_meters"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "destructive"
+    },
+    {
+      "id": "cmd_hourmeter",
+      "name": "Set Hourmeter",
+      "category": "sensors",
+      "description": "Ajustar horímetro (minutos)",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;05;05;ValorEmMinutos",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "value_minutes"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "cmd_preset",
+      "name": "Read Configuration",
+      "category": "diagnostic",
+      "description": "Requisitar configuração completa",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;03;05",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "read"
+    },
+    {
+      "id": "cmd_firmware",
+      "name": "Request Firmware Version",
+      "category": "firmware",
+      "description": "Requisitar versão de firmware",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;03;04;1",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "read"
+    },
+    {
+      "id": "cmd_iccid",
+      "name": "Request ICCID",
+      "category": "sim",
+      "description": "Requisitar ICCID do chip",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "CMD;XXXX;01;03",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "read"
+    },
+    {
+      "id": "moto_ign_off_interval",
+      "name": "Moto: Ignition Off Interval",
+      "category": "communication",
+      "description": "Ajustar tempo de ignição desligada para moto",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;16;70#0",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "interval",
+          "group": "16",
+          "param": "70",
+          "value": "0"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "moto_sleep_time",
+      "name": "Moto: Sleep Entry Time",
+      "category": "power",
+      "description": "Tempo para entrar em modo repouso (moto)",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;01#120",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "time_seconds",
+          "group": "17",
+          "param": "01",
+          "value": "120"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "moto_keepalive_off",
+      "name": "Moto: Disable Keep Alive",
+      "category": "communication",
+      "description": "Desabilitar Keep Alive para moto",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;60#0;70#00",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "moto_ultra_low_sleep",
+      "name": "Moto: Enable Ultra-Low Sleep",
+      "category": "power",
+      "description": "Habilitar sleep ultra-baixo consumo para moto",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;30#01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "moto_shock_enable",
+      "name": "Moto: Enable Shock Detection",
+      "category": "sensors",
+      "description": "Habilitar detecção de choque para moto",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;00#02;02#120",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "car_ign_off_interval",
+      "name": "Car: Ignition Off Interval",
+      "category": "communication",
+      "description": "Ajustar tempo de ignição desligada para carro",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;16;70#3600",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "interval",
+          "group": "16",
+          "param": "70",
+          "value": "3600"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "car_sleep_time",
+      "name": "Car: Sleep Entry Time",
+      "category": "power",
+      "description": "Tempo para entrar em modo repouso (carro)",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;17;01#10",
+      "commandSyntaxStatus": "documented",
+      "parameters": [
+        {
+          "name": "time_seconds",
+          "group": "17",
+          "param": "01",
+          "value": "10"
+        }
+      ],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "car_keepalive_on",
+      "name": "Car: Enable Keep Alive",
+      "category": "communication",
+      "description": "Habilitar Keep Alive para carro",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;10;60#10;70#01",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "car_sleep_disable",
+      "name": "Car: Disable Ultra-Low Sleep",
+      "category": "power",
+      "description": "Desabilitar sleep ultra-baixo para carro",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;30#00",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    },
+    {
+      "id": "car_shock_disable",
+      "name": "Car: Disable Shock",
+      "category": "sensors",
+      "description": "Desabilitar choque para carro",
+      "manual": "comandos_sms_4g_v2",
+      "models": [
+        "ST8210",
+        "ST8310UM",
+        "ST8310U",
+        "ST8310W",
+        "ST8310R"
+      ],
+      "rawCommand": "PRG;XXXX;19;00#00",
+      "commandSyntaxStatus": "documented",
+      "parameters": [],
+      "channels": [
+        "usb",
+        "serial",
+        "sms",
+        "gprs"
+      ],
+      "risk": "config"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "model": "ST310ULC",
+  "manufacturer": "Suntech",
+  "firmware_version": "v1.11",
+  "generation_date": "2023-10-24",
+  "commands": {
+    "status_req": {
+      "command_template": "AT^ST300CMD;;02;StatusReq",
+      "expected_response": "RES;ESN;03;01;04;0x;10;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Status completo do dispositivo incluindo ignição, GPS, rede e configurações"
+    },
+    "preset_read": {
+      "command_template": "AT^ST300CMD;;02;Preset",
+      "expected_response": "RES;ESN;03;05;...",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Leitura de configurações atuais (ignição, GPS, rede, etc.)"
+    },
+    "network_setup": {
+      "command_template": "AT^ST300NTN;;02;0;<APN>;<USER>;<PASS>;<HOST>;<PORT>;;;;",
+      "expected_response": "OK",
+      "risk_level": "HIGH",
+      "requires_esn": false,
+      "destructive": false,
+      "requires_backup": true,
+      "notes": "Configuração de rede APN, requer backup e readback depois"
+    },
+    "ignition_on": {
+      "command_template": "AT^ST300CMD;;02;03;01",
+      "expected_response": "RES;ESN;03;01",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Ativa ignição do veículo"
+    },
+    "ignition_off": {
+      "command_template": "AT^ST300CMD;;02;03;00",
+      "expected_response": "RES;ESN;03;00",
+      "risk_level": "LOW",
+      "requires_esn": false,
+      "destructive": false,
+      "notes": "Desativa ignição do veículo"
+    },
+    "gps_enable": {
+      "command_template": "AT^CMD;ESN;10;01",
+      "expected_response": "LAT;LON;VELOCIDADE;HEADING",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Habilita GPS e solicita dados de localização"
+    },
+    "gps_disable": {
+      "command_template": "AT^CMD;ESN;10;02",
+      "expected_response": "GPS:DESABILITADO",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Desabilita GPS"
+    }
+  },
+  "parameters": {
+    "ignition": {
+      "field": "Pino 1 - Saída de ignição",
+      "type": "digital",
+      "description": "Controle da ignição do veículo (ON/OFF)",
+      "default_state": "OFF",
+      "states": [
+        {"value": "OFF", "description": "Ignição desativada, veículo parado"},
+        {"value": "ON", "description": "Ignição ativada, veículo pronto"}
+      ],
+      "commands": {
+        "turn_on": "AT^ST300CMD;;02;03;01",
+        "turn_off": "AT^ST300CMD;;02;03;00"
+      },
+      "responses": {
+        "turn_on": "RES;ESN;03;01",
+        "turn_off": "RES;ESN;03;00"
+      }
+    },
+    "output_2_relay": {
+      "field": "Pino 2 - Saída do relé",
+      "type": "digital",
+      "description": "Relé de controle de saída (controle remoto)",
+      "default_state": "OFF",
+      "states": [
+        {"value": "OFF", "description": "Relé desativado"},
+        {"value": "ON", "description": "Relé ativado, saída de 12V"}
+      ],
+      "commands": {
+        "activate": "AT^ST300CMD;;02;04;01",
+        "deactivate": "AT^ST300CMD;;02;04;00"
+      },
+      "responses": {
+        "activate": "RES;ESN;04;01",
+        "deactivate": "RES;ESN;04;00"
+      }
+    },
+    "gps_module": {
+      "field": "Módulo GPS",
+      "type": "network",
+      "description": "Sistema de localização por satélite",
+      "default_state": "DESABILITADO",
+      "states": [
+        {"value": "DESABILITADO", "description": "GPS desligado"},
+        {"value": "HABILITADO", "description": "GPS ativo e coletando dados"}
+      ],
+      "commands": {
+        "enable": "AT^CMD;ESN;10;01",
+        "disable": "AT^CMD;ESN;10;02"
+      },
+      "responses": {
+        "enable": "LAT;LON;VELOCIDADE;HEADING",
+        "disable": "GPS:DESABILITADO"
+      },
+      "data_fields": ["latitude", "longitude", "speed_kmh", "heading_degrees"]
+    },
+    "network_apn": {
+      "field": "Configuração APN",
+      "type": "text",
+      "description": "Configurações de rede móvel APN/GPRS/4G",
+      "default_state": "",
+      "notes": "Exige servidor DMZ configurado e conexão de dados ativa"
+    },
+    "ignition_mode": {
+      "field": "Modo de ignição",
+      "type": "selection",
+      "description": "Algoritmo de detecção de ignição selecionado",
+      "default_state": "PHYSICAL",
+      "states": [
+        {"value": "PHYSICAL", "description": "Ignição física padrão (sensor no veículo)"},
+        {"value": "VIRTUAL", "description": "Ignição virtual (checke eletrônico)"}
+      ],
+      "commands": {
+        "physical": "AT^CMD;ESN;06;01;PHYSICAL",
+        "virtual": "AT^CMD;ESN;06;01;VIRTUAL"
+      },
+      "responses": {
+        "physical": "OK",
+        "virtual": "OK"
+      }
+    }
+  },
+  "device_info": {
+    "detection_method": "AT Command Probe",
+    "connection": "USB/Serial",
+    "baud_rates": [9600, 19200, 38400, 115200],
+    "esn_required": false,
+    "firmware_version_required": true
+  },
+  "security": {
+    "destructive_commands": ["network_setup"],
+    "requires_backup_before": ["network_setup"],
+    "hot_backup_supported": true
+  },
+  "ui": {
+    "panel_layout": "grid",
+    "parameter_cards": true,
+    "quick_actions": ["ignition", "gps", "status"],
+    "evidence_collection": true,
+    "auto_save_interval": 30
+  }
+}
+

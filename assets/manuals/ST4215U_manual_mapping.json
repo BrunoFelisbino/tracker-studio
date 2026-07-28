@@ -1,0 +1,79 @@
+{
+  "model": "ST4215U",
+  "version": "1.0",
+  "commands": [
+    {
+      "command_template": "AT^CMD;ESN;01;01",
+      "expected_response": "STATUS:ESN;IGN;GPS;REDE;APN",
+      "risk_level": "LOW",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Status completo"
+    },
+    {
+      "command_template": "AT^CMD;ESN;03;05",
+      "expected_response": "CONFIG;IGN;GPS;REDE;APN;...",
+      "risk_level": "LOW",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Leitura completa"
+    },
+    {
+      "command_template": "AT^CMD;ESN;04;01",
+      "expected_response": "OK",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Ativar Sa\u00edda 1 (Bloqueio)"
+    },
+    {
+      "command_template": "AT^CMD;ESN;04;02",
+      "expected_response": "OK",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Desativar Sa\u00edda 1 (Desbloqueio)"
+    },
+    {
+      "command_template": "AT^CMD;ESN;06;01;VIRTUAL",
+      "expected_response": "OK",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Seta modo de igni\u00e7\u00e3o virtual"
+    },
+    {
+      "command_template": "AT^CMD;ESN;06;01;PHYSICAL",
+      "expected_response": "OK",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Seta modo de igni\u00e7\u00e3o f\u00edsica"
+    },
+    {
+      "command_template": "AT^CMD;ESN;10;01",
+      "expected_response": "LAT;LON;VELOCIDADE;HDOP;SATELITES",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Habilita GPS com dados em tempo real"
+    },
+    {
+      "command_template": "AT^CMD;ESN;10;02",
+      "expected_response": "GPS:DESABILITADO",
+      "risk_level": "MEDIUM",
+      "requires_esn": true,
+      "destructive": false,
+      "notes": "Desabilita GPS"
+    },
+    {
+      "command_template": "AT^CMD;ESN;20;01;<APN>;<USER>;<PASS>;",
+      "expected_response": "OK",
+      "risk_level": "HIGH",
+      "requires_esn": true,
+      "destructive": false,
+      "requires_backup": true,
+      "notes": "Seta APN da rede"
+    }
+  ]
+}
