@@ -2,22 +2,66 @@ import 'teltonika_driver.dart';
 import '../../uce/registry/uce_registry.dart';
 import '../../uce/uce_interfaces.dart';
 
+enum TeltonikaConfigurationStepType {
+  activateUsb,
+  writeParameter,
+  saveConfiguration,
+  disconnectUsb,
+}
+
+class TeltonikaConfigurationStep {
+  final TeltonikaConfigurationStepType type;
+  final String title;
+  final String description;
+  final String command;
+  final int? parameterId;
+
+  const TeltonikaConfigurationStep({
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.command,
+    this.parameterId,
+  });
+}
+
 /// Sequence of USB Configurator commands that writes a Teltonika
 /// network/server profile (APN, credentials, server, port, protocol).
+///
+/// The order is mandatory:
+/// 1. activate the USB Configurator session;
+/// 2. write one or more parameters;
+/// 3. persist the configuration;
+/// 4. disconnect the Configurator session.
 class TeltonikaNetworkCommands {
   /// Commands to be sent in order over the serial transport.
   final List<String> commands;
+
+  /// Structured steps shown to the technician before applying the change.
+  final List<TeltonikaConfigurationStep> steps;
 
   /// Parameter ids covered by the sequence (from the UCE catalog).
   final List<int> parameterIds;
 
   const TeltonikaNetworkCommands({
     required this.commands,
+    required this.steps,
     required this.parameterIds,
   });
 
-  /// Human-readable preview of the whole sequence.
-  String get preview => commands.join('\n');
+  /// Human-readable preview of the complete persistence flow.
+  String get preview {
+    final buffer = StringBuffer('FLUXO OBRIGATÓRIO TELTONIKA\n');
+    for (var index = 0; index < steps.length; index++) {
+      final step = steps[index];
+      buffer
+        ..writeln('${index + 1}. ${step.title}')
+        ..writeln('   ${step.description}')
+        ..writeln('   ${step.command}');
+      if (index < steps.length - 1) buffer.writeln();
+    }
+    return buffer.toString().trimRight();
+  }
 }
 
 /// Parameter ids that make up the Teltonika network/server profile.
@@ -34,6 +78,15 @@ TeltonikaNetworkCommands buildTeltonikaConfigSequence({
   bool saveLast = true,
   bool disconnectLast = true,
 }) {
+  if (parameters.isEmpty) {
+    throw ArgumentError('Informe pelo menos um parâmetro Teltonika para alterar.');
+  }
+  if (!connectFirst || !saveLast) {
+    throw ArgumentError(
+      'O fluxo Teltonika deve ativar o USB antes da alteração e salvar ao final.',
+    );
+  }
+
   String write(int parameterId, String value) {
     final definition = UceRegistry().parameters.getByParameterId(parameterId);
     if (definition == null ||
@@ -48,14 +101,50 @@ TeltonikaNetworkCommands buildTeltonikaConfigSequence({
     return encoded;
   }
 
+  final connectCommand = TeltonikaDriver.encodeConnect();
+  final saveCommand = TeltonikaDriver.encodeSaveConfiguration();
+  final disconnectCommand = TeltonikaDriver.encodeDisconnect();
+  final parameterCommands = <(int parameterId, String command)>[
+    for (final (parameterId, value) in parameters)
+      (parameterId, write(parameterId, value)),
+  ];
+
+  final steps = <TeltonikaConfigurationStep>[
+    TeltonikaConfigurationStep(
+      type: TeltonikaConfigurationStepType.activateUsb,
+      title: 'ATIVAR USB CONFIGURATOR',
+      description:
+          'Abre a sessão de configuração antes de qualquer alteração.',
+      command: connectCommand,
+    ),
+    for (final item in parameterCommands)
+      TeltonikaConfigurationStep(
+        type: TeltonikaConfigurationStepType.writeParameter,
+        title: 'ALTERAR PARÂMETRO ${item.$1}',
+        description:
+            'Envia o valor do parâmetro selecionado para a memória de trabalho.',
+        command: item.$2,
+        parameterId: item.$1,
+      ),
+    TeltonikaConfigurationStep(
+      type: TeltonikaConfigurationStepType.saveConfiguration,
+      title: 'SALVAR / PERSISTIR CONFIGURAÇÃO',
+      description:
+          'Grava definitivamente os parâmetros alterados no equipamento.',
+      command: saveCommand,
+    ),
+    if (disconnectLast)
+      TeltonikaConfigurationStep(
+        type: TeltonikaConfigurationStepType.disconnectUsb,
+        title: 'ENCERRAR USB CONFIGURATOR',
+        description: 'Finaliza a sessão somente depois da persistência.',
+        command: disconnectCommand,
+      ),
+  ];
+
   return TeltonikaNetworkCommands(
-    commands: [
-      if (connectFirst) TeltonikaDriver.encodeConnect(),
-      for (final (parameterId, value) in parameters)
-        write(parameterId, value),
-      if (saveLast) TeltonikaDriver.encodeSaveConfiguration(),
-      if (disconnectLast) TeltonikaDriver.encodeDisconnect(),
-    ],
+    commands: [for (final step in steps) step.command],
+    steps: steps,
     parameterIds: [for (final parameter in parameters) parameter.$1],
   );
 }
