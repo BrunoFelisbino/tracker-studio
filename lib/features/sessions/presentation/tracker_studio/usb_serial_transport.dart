@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 
 abstract class UsbSerialTransport {
@@ -143,7 +144,8 @@ class LibSerialPortTransport
     List<String> available;
     try {
       available = SerialPort.availablePorts;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('UsbSerialTransport: failed to list ports: $e');
       _lastScanDiagnostics = const SerialScanDiagnostics();
       return const [];
     }
@@ -300,7 +302,8 @@ class LibSerialPortTransport
     if (port != null && port.isOpen && !_isDisconnecting) {
       try {
         port.flush(SerialPortBuffer.input);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('UsbSerialTransport: failed to flush input buffer: $e');
         // A desconexão concorrente já invalida o conteúdo pendente.
       }
     }
@@ -317,13 +320,17 @@ class LibSerialPortTransport
     final commandPort = _commandPort;
     final readPort = _readPort;
     try {
-      try {
-        await subscription?.cancel();
-      } catch (_) {}
-      _readerSubscription = null;
-      try {
-        reader?.close();
-      } catch (_) {}
+        try {
+          await subscription?.cancel();
+        } catch (e) {
+          debugPrint('UsbSerialTransport: subscription cancel failed: $e');
+        }
+        _readerSubscription = null;
+        try {
+          reader?.close();
+        } catch (e) {
+          debugPrint('UsbSerialTransport: reader close failed: $e');
+        }
       _reader = null;
       _lineBuffer.clear();
       if (readPort != null && !identical(readPort, commandPort)) {
@@ -393,10 +400,14 @@ class LibSerialPortTransport
   void _disposePort(SerialPort port) {
     try {
       if (port.isOpen) port.close();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UsbSerialTransport: port close failed: $e');
+    }
     try {
       port.dispose();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UsbSerialTransport: port dispose failed: $e');
+    }
   }
 
   void _addLine(String line) {

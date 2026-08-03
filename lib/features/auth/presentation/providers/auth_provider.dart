@@ -130,7 +130,8 @@ class AuthNotifier extends ChangeNotifier {
       } else {
         _state = const AuthState(status: AuthStatus.unauthenticated);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AuthProvider: failed to load session: $e');
       _state = const AuthState(
         status: AuthStatus.unauthenticated,
         error: 'Sessao local indisponivel. Entrando em modo offline.',

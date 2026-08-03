@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'suntech_command_family.dart';
 import 'suntech_legacy_commands.dart';
 import 'suntech_newgen_commands.dart';
@@ -1103,7 +1105,8 @@ Map<String, dynamic>? _extractJson(String response) {
       try {
         final decoded = jsonDecode(response.substring(start, index + 1));
         if (decoded is Map<String, dynamic>) return decoded;
-      } catch (_) {
+      } catch (e) {
+        debugPrint('SuntechHandshakeEngine: JSON parse in handshake failed: $e');
         // Continue with a later object if this framed block is malformed.
       }
       start = -1;

@@ -33,7 +33,7 @@ void main() {
   group('TeltonikaCaptureAnalyzer.analyze', () {
     test('detects device, parses records, IOs and config commands', () {
       final lines = [
-        'IMEI: 352093081452999',
+        'IMEI: 000000000000001',
         'FMB140 device connected',
         ..._record(index: 0, ioLines: [
           'IO ID[ 3]: 1',
@@ -48,7 +48,7 @@ void main() {
 
       expect(analysis.device, isNotNull);
       expect(analysis.device!.model, 'FMB140');
-      expect(analysis.device!.imei, '352093081452999');
+      expect(analysis.device!.imei, '000000000000001');
       expect(analysis.avlRecords, hasLength(1));
       expect(analysis.observedIos, hasLength(3));
       expect(analysis.configCommands, hasLength(2));

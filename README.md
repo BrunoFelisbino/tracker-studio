@@ -324,6 +324,15 @@ cp .env.example .env
 
 Segredos de banco, tokens administrativos e chaves privadas nao podem ser distribuidos no aplicativo Flutter. Use backend ou armazenamento seguro apropriado.
 
+## Documentação
+
+- `docs/plugin-architecture.md` — Plugin system and migration plan.
+- `docs/architecture.md` — High-level architecture and data flow.
+- `docs/teltonika-support.md` — Teltonika FMB device support details.
+- `docs/io-catalog.md` — IO definition catalog system.
+- `docs/capture-privacy.md` — Capture log sanitisation and retention.
+- `docs/public-security-audit.md` — Pre-publication security checklist.
+
 ## Criando plugins
 
 Um plugin implementa `TrackerStudioPlugin`, declara seu `PluginManifest` e cria uma `TrackerPluginSession`. O core resolve plugins por `DeviceIdentity` e usa capacidades declaradas para montar a experiencia.

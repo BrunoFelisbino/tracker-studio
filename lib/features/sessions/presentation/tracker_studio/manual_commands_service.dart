@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 class ParameterType {
   static const digital = 'digital';
   static const analog = 'analog';
@@ -279,8 +281,8 @@ class ManualCommandFlowService {
   static Future<void> _loadAllManuals() async {
     try {
       _loadBuiltInManuals();
-    } catch (_) {
-      // Silently ignore manual loading errors during initialization
+    } catch (e) {
+      debugPrint('ManualCommandFlowService: built-in manual loading failed: $e');
     }
   }
 
@@ -307,7 +309,8 @@ class ManualCommandFlowService {
     if (model.startsWith('ST')) {
       try {
         return await _loadManualFromAssets(model);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('ManualCommandFlowService: failed to load manual from assets: $e');
         return _getGenericManualConfig();
       }
     }

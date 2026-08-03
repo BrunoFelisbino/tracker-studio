@@ -153,25 +153,25 @@ void main() {
     controller.startTeltonikaCapture();
     controller.testTransport.feedLines([
       '[READ] :cfg_connect',
-      '[SEND] :cfg_setparam:2001:VIVO.COM.BR',
+      '[SEND] :cfg_setparam:2001:internet',
       '[READ] <SETPARAM_RESULT>:1',
       '[SEND] :cfg_setparam:2005:5026',
       '[READ] <SETPARAM_RESULT>:1',
-      '[SEND] :cfg_setparam:2002:usuario',
+      '[SEND] :cfg_setparam:2002:testuser',
       '[READ] <SETPARAM_RESULT>:1',
-      '[SEND] :cfg_setparam:2003:senha123',
+      '[SEND] :cfg_setparam:2003:****REDACTED****',
       '[READ] <SETPARAM_RESULT>:0',
-      '[SEND] :cfg_setparam:2004:teltonika.latam.com',
+      '[SEND] :cfg_setparam:2004:tracker.example.com',
     ]);
     await Future<void>.delayed(Duration.zero);
     controller.stopTeltonikaCapture();
 
     final analysis = controller.state.logCapture.analysis!;
-    expect(analysis.parameterValues[2001], 'VIVO.COM.BR');
+    expect(analysis.parameterValues[2001], 'internet');
     expect(analysis.parameterValues[2005], '5026');
-    expect(analysis.parameterValues[2002], 'usuario');
-    expect(analysis.parameterValues[2003], 'senha123');
-    expect(analysis.parameterValues[2004], 'teltonika.latam.com');
+    expect(analysis.parameterValues[2002], 'testuser');
+    expect(analysis.parameterValues[2003], '****REDACTED****');
+    expect(analysis.parameterValues[2004], 'tracker.example.com');
     expect(analysis.confirmedParameters,
         containsAll([2001, 2005, 2002]));
     expect(analysis.confirmedParameters, isNot(contains(2003)));
@@ -189,14 +189,14 @@ void main() {
       '[SEND] :cfg_setparam:2005:5000',
       '[SEND] :cfg_setparam:2005:5026',
       '[SEND] :cfg_setparam:2001:internet',
-      '[SEND] :cfg_setparam:2001:VIVO.COM.BR',
+      '[SEND] :cfg_setparam:2001:synthetic.apn.example',
     ]);
     await Future<void>.delayed(Duration.zero);
     controller.stopTeltonikaCapture();
 
     final analysis = controller.state.logCapture.analysis!;
     expect(analysis.parameterValues[2005], '5026');
-    expect(analysis.parameterValues[2001], 'VIVO.COM.BR');
+    expect(analysis.parameterValues[2001], 'synthetic.apn.example');
   });
 
   test('save capture persists logs and analysis for the session', () async {
@@ -214,7 +214,7 @@ void main() {
     controller.startTeltonikaCapture();
     controller.testTransport.feedLines([
       '[READ] :cfg_connect',
-      '[SEND] :cfg_setparam:2001:VIVO.COM.BR',
+      '[SEND] :cfg_setparam:2001:internet',
       '[READ] <SETPARAM_RESULT>:1',
       ..._record(index: 0, ioLines: [
         'IO ID[ 3]: 1',
@@ -230,9 +230,9 @@ void main() {
     expect(store.all, hasLength(1));
     final record = store.all.single;
     expect(record.sessionCode, controller.state.sessionCode);
-    expect(record.lines, contains(':cfg_setparam:2001:VIVO.COM.BR'));
+    expect(record.lines, contains(':cfg_setparam:2001:internet'));
     expect(record.analysis!['parameterValues'],
-        containsPair('2001', 'VIVO.COM.BR'));
+        containsPair('2001', 'internet'));
 
     final reloaded = CaptureLogStore(
       pathResolver: () async => '$tmpPath/logs.json',
@@ -241,7 +241,7 @@ void main() {
     expect(reloaded.all, hasLength(1));
     expect(
       reloaded.all.single.analysis!['parameterValues'],
-      containsPair('2001', 'VIVO.COM.BR'),
+      containsPair('2001', 'internet'),
     );
 
     await Directory(tmpPath).delete(recursive: true);

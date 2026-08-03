@@ -156,7 +156,13 @@ class BootstrapController extends ChangeNotifier {
     try {
       await _runStep(step, task);
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      BootstrapLogger.log(
+        'Recoverable step failed',
+        step: step,
+        error: e,
+        stackTrace: st,
+      );
       return false;
     }
   }
@@ -165,7 +171,13 @@ class BootstrapController extends ChangeNotifier {
     try {
       await _runStep(step, task);
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      BootstrapLogger.log(
+        'Optional step failed',
+        step: step,
+        error: e,
+        stackTrace: st,
+      );
       return false;
     }
   }

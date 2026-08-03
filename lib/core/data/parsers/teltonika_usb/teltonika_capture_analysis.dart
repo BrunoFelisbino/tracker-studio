@@ -131,8 +131,7 @@ class TeltonikaCaptureAnalysis {
         'avlRecordCount': avlRecords.length,
         'observedIoCount': observedIos.length,
         'configCommandCount': configCommands.length,
-        'parameterValues':
-            parameterValues.map((k, v) => MapEntry('$k', v)),
+        'parameterValues': parameterValues.map((k, v) => MapEntry('$k', v)),
         'confirmedParameters':
             confirmedParameters.map((id) => id.toString()).toList(),
         'warnings': warnings,
@@ -165,7 +164,8 @@ class TeltonikaCaptureDiff {
   Map<String, dynamic> toJson() => {
         'totalRecords': totalRecords,
         'changedRecordCount': changedRecordCount,
-        'changedPacketIndexes': changedPackets.map((p) => p.recordIndex).toList(),
+        'changedPacketIndexes':
+            changedPackets.map((p) => p.recordIndex).toList(),
         'ioChanges': ioChanges.map((c) => c.toJson()).toList(),
         'summary': summary,
       };
@@ -209,14 +209,9 @@ class TeltonikaCaptureAnalyzer {
     // `[READ_HEX]` chunks of the serial log. Decode them so the IOs that move
     // during an event (ignition, door, brake, ...) become observed.
     if (hexChunks.isNotEmpty) {
-      try {
-        final binaryRecords =
-            TeltonikaDriver.decodeBinaryFromHexLines(hexChunks);
-        if (binaryRecords.isNotEmpty) {
-          avlRecords = [...avlRecords, ...binaryRecords];
-        }
-      } catch (error) {
-        errors.add('Falha ao decodificar AVL binário: $error');
+      final result = TeltonikaDriver.decodeBinaryFromHexLines(hexChunks);
+      if (result.isNotEmpty) {
+        avlRecords = [...avlRecords, ...result];
       }
     }
 
@@ -245,7 +240,8 @@ class TeltonikaCaptureAnalyzer {
     }
 
     if (configCommands.isEmpty &&
-        rawLines.any((line) => line.contains(':cfg_') || line.contains('<CFG_'))) {
+        rawLines
+            .any((line) => line.contains(':cfg_') || line.contains('<CFG_'))) {
       warnings.add(
           'Comandos de configuração vistos na captura, mas nenhum foi reconhecido.');
     }
@@ -311,9 +307,7 @@ class TeltonikaCaptureAnalyzer {
       final record = records[index];
       for (final entry in record.ioElements.entries) {
         final definition = UceRegistry().avl.getByAvlId(entry.key);
-        history
-            .putIfAbsent(entry.key, () => [])
-            .add(TeltonikaIoReading(
+        history.putIfAbsent(entry.key, () => []).add(TeltonikaIoReading(
               avlId: entry.key,
               rawValue: entry.value,
               normalizedValue: definition?.convertValue(entry.value),

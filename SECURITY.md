@@ -21,3 +21,12 @@ Report security findings privately to the repository owner through GitHub's priv
 3. Run secret scanning against the complete history.
 4. Review assets, manuals and command catalogs for redistribution rights.
 5. Confirm that logs, reports, screenshots and fixtures contain no real customer or device data.
+
+## Automated checks
+
+The repository includes CI workflows that enforce:
+
+- `dart format --output=none --set-exit-if-changed .` — formatting check.
+- `flutter analyze` — static analysis with no new errors or warnings.
+- `flutter test` — full test suite.
+- Secret scanning against committed files (`refactor/open-source-plugin-foundation` baseline).

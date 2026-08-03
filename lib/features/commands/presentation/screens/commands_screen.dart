@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +52,8 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
   Future<String> _readCatalog() async {
     try {
       return await rootBundle.loadString('assets/catalogs/suntech_commands.json');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('CommandsScreen: catalog load fallback failed: $e');
       final file = File('assets/catalogs/suntech_commands.json');
       if (await file.exists()) {
         return file.readAsString();

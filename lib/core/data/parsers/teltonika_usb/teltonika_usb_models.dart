@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../uce/uce_interfaces.dart';
 
 /// Represents a single USB capture chunk with full traceability
@@ -509,7 +511,8 @@ String bytesToHex(Uint8List bytes) {
 String tryDecodeAscii(Uint8List bytes) {
   try {
     return utf8.decode(bytes, allowMalformed: true);
-  } catch (_) {
+  } catch (e) {
+    debugPrint('tryDecodeAscii: failed to decode bytes: $e');
     return '';
   }
 }

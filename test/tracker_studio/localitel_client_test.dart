@@ -33,14 +33,14 @@ void main() {
     );
 
     final result = await LocalitelClient(dio: dio).analyze(
-      latitude: -16.711915,
-      longitude: -49.254693,
+      latitude: 0.0,
+      longitude: 0.0,
     );
 
     expect(sentPayload, {
       'addressLabel': 'Posição informada pelo rastreador',
-      'latitude': -16.711915,
-      'longitude': -49.254693,
+      'latitude': 0.0,
+      'longitude': 0.0,
       'radiusMeters': 5000,
     });
     expect(result.status, 'ok');

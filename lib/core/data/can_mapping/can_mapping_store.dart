@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+
+/// Maximum number of user-defined CAN mappings retained on disk.
+const kMaxCanMappings = 500;
 
 /// A user-defined mapping for an observed AVL IO element (CAN sensor) that has
 /// no catalog definition. Persisted so the mapping survives between sessions.
@@ -47,6 +51,11 @@ class CanSensorMapping {
 
 /// Persists [CanSensorMapping] entries to a JSON file in the application
 /// support directory (injectable for tests).
+///
+/// Retention: keeps at most [kMaxCanMappings] entries.
+///
+/// Persistence is atomic: data is written to a temporary file, flushed to
+/// disk, then the original file is replaced to reduce corruption risk.
 class CanMappingStore {
   final Future<String> Function() _pathResolver;
   final Map<int, CanSensorMapping> _mappings = {};
@@ -92,8 +101,9 @@ class CanMappingStore {
             }
           }
         }
-      } catch (_) {
+      } catch (e) {
         // Corrupt file: keep an empty mapping and let save overwrite it.
+        debugPrint('CanMappingStore: failed to parse stored JSON: $e');
       }
     }
     _loaded = true;
@@ -112,9 +122,37 @@ class CanMappingStore {
   Future<void> save() async {
     final file = await _file();
     await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode({
+
+    // Apply retention limit.
+    _pruneMappings();
+
+    final encoded = jsonEncode({
       'version': 1,
       'mappings': _mappings.values.map((m) => m.toJson()).toList(),
-    }));
+    });
+
+    // Atomic write: write to a temp file, sync, then replace.
+    final tmpFile = File('${file.path}.tmp');
+    await tmpFile.writeAsString(encoded, flush: true);
+    if (await file.exists()) {
+      await tmpFile.copy(file.path);
+    } else {
+      await tmpFile.rename(file.path);
+    }
+    // Clean up temp file if it still exists (rename moves it).
+    if (await tmpFile.exists()) {
+      await tmpFile.delete(recursive: true);
+    }
+  }
+
+  /// Removes oldest entries when the count exceeds the limit.
+  void _pruneMappings() {
+    if (_mappings.length <= kMaxCanMappings) return;
+    final sorted = _mappings.values.toList()
+      ..sort((a, b) => a.avlId.compareTo(b.avlId));
+    final toRemove = sorted.sublist(0, sorted.length - kMaxCanMappings);
+    for (final m in toRemove) {
+      _mappings.remove(m.avlId);
+    }
   }
 }

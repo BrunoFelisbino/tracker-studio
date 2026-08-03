@@ -33,6 +33,45 @@ enum ParameterCategory {
   unknown,
 }
 
+/// Origin of an AVL IO element definition.
+///
+/// IOs inferred from field observations are NOT treated as official
+/// catalog entries. Each definition must declare its provenance so
+/// consumers can distinguish officially documented IDs from
+/// community-contributed or user-mapped ones.
+enum IoDefinitionSource {
+  /// Published by the device manufacturer (manual, SDK, protocol doc).
+  officialDocumentation,
+
+  /// Observed on a real device during a technician session, then
+  /// tentatively named by the community.
+  deviceObservation,
+
+  /// Contributed by the open-source community without formal verification.
+  communityContribution,
+
+  /// Created by a technician through the manual IO mapping UI.
+  userMapping,
+
+  /// Unknown / unverified origin.
+  unknown,
+}
+
+/// Confidence level of an AVL IO element definition.
+enum IoDefinitionConfidence {
+  /// Confirmed by official documentation or repeated observations.
+  confirmed,
+
+  /// Likely correct based on observed behavior, but not formally documented.
+  probable,
+
+  /// Experimental mapping; needs further validation.
+  experimental,
+
+  /// Origin and correctness are unknown.
+  unknown,
+}
+
 /// How a parameter value is entered/displayed.
 enum ParameterValueType {
   string,
@@ -185,7 +224,23 @@ class AvlDefinition {
 
   /// Converts a raw value into the display unit (e.g. mV -> V).
   final num? multiplier;
-  final String sourceStatus;
+
+  /// Origin of this definition.
+  final IoDefinitionSource source;
+
+  /// Confidence level of this definition.
+  final IoDefinitionConfidence confidence;
+
+  /// Manufacturer-specific fields allowing the catalog to distinguish
+  /// definitions across manufacturers, models, families and firmware.
+  final Manufacturer manufacturer;
+  final String? model;
+  final String? family;
+  final String? firmware;
+  final int? codec;
+
+  /// Free-form provenance string (e.g. "Teltonika FMB XXX Protocol, p. 42").
+  final String? documentationSource;
 
   const AvlDefinition({
     required this.avlId,
@@ -196,7 +251,14 @@ class AvlDefinition {
     this.rawUnit,
     this.displayUnit,
     this.multiplier,
-    this.sourceStatus = 'official',
+    this.source = IoDefinitionSource.officialDocumentation,
+    this.confidence = IoDefinitionConfidence.confirmed,
+    this.manufacturer = Manufacturer.unknown,
+    this.model,
+    this.family,
+    this.firmware,
+    this.codec,
+    this.documentationSource,
   });
 
   /// Applies [multiplier] to raw numeric values.
@@ -210,15 +272,35 @@ class AvlDefinition {
     return raw;
   }
 
+  /// Whether this definition originates from official manufacturer documentation.
+  bool get isOfficiallyDocumented =>
+      source == IoDefinitionSource.officialDocumentation &&
+      confidence == IoDefinitionConfidence.confirmed;
+
+  /// Convenience for IOs that are not in any catalog (IO 12, 16, 24, 199, etc.).
+  /// These should appear as "not cataloged" / "CAN sensor candidate".
+  bool get isUncataloged =>
+      source == IoDefinitionSource.unknown &&
+      confidence == IoDefinitionConfidence.unknown;
+
   Map<String, dynamic> toJson() => {
         'avlId': avlId,
         'name': name,
         'normalizedKey': normalizedKey,
         'category': category.name,
+        'description': description,
         'rawUnit': rawUnit,
         'displayUnit': displayUnit,
         'multiplier': multiplier,
-        'sourceStatus': sourceStatus,
+        'source': source.name,
+        'confidence': confidence.name,
+        'manufacturer': manufacturer.name,
+        'model': model,
+        'family': family,
+        'firmware': firmware,
+        'codec': codec,
+        'documentationSource': documentationSource,
+        'sourceStatus': source.name,
       };
 }
 

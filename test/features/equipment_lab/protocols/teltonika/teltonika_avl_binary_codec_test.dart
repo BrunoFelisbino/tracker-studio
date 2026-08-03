@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tracker_studio/core/drivers/teltonika/teltonika_driver.dart';
+import 'package:tracker_studio/core/data/parsers/teltonika_usb/teltonika_avl_binary_codec.dart';
 
 List<int> _u32be(int value) => [
       (value >> 24) & 0xFF,
       (value >> 16) & 0xFF,
       (value >> 8) & 0xFF,
       value & 0xFF,
-];
+    ];
 
 List<int> _u64be(int value) {
   final r = <int>[];
@@ -67,17 +67,55 @@ String _toHex(Uint8List bytes) =>
 void main() {
   test('codec decodes a hand-built frame with ignition/voltage/IO283', () {
     final frame = _buildFrame(_cleanRecord());
-    final decoded = TeltonikaDriver.decodeBinaryFromHexLines([_toHex(frame)]);
-    expect(decoded, isNotEmpty, reason: 'binary AVL frame should decode');
-    final io = decoded.single.ioElements;
+    final result = TeltonikaAvlCodec.decodeHex(_toHex(frame));
+    expect(result, isA<TeltonikaDecodeSuccess>(),
+        reason: 'binary AVL frame should decode');
+    final records = (result as TeltonikaDecodeSuccess).records;
+    expect(records, isNotEmpty, reason: 'at least one record');
+    final io = records.single.ioElements;
     expect(io[3], 1, reason: 'ignition');
     expect(io[66], 12000, reason: 'external voltage');
     expect(io[283], 26, reason: 'unknown IO 283');
   });
 
-  test('codec returns empty when no frame is present', () {
-    final decoded =
-        TeltonikaDriver.decodeBinaryFromHexLines(['5B 30 30 30 GARBAGE']);
-    expect(decoded, isEmpty);
+  test('codec returns failure when no frame is present', () {
+    final result = TeltonikaAvlCodec.decodeHex('5B 30 30 30 GARBAGE');
+    expect(result, isA<TeltonikaDecodeFailure>());
+    final failure = result as TeltonikaDecodeFailure;
+    expect(failure.error, isNotNull);
+  });
+
+  test('codec returns failure for empty input', () {
+    final result = TeltonikaAvlCodec.decodeHex('');
+    expect(result, isA<TeltonikaDecodeFailure>());
+    final failure = result as TeltonikaDecodeFailure;
+    expect(failure.error, TeltonikaDecodeError.emptyInput);
+  });
+
+  test('codec detects trailing codec mismatch', () {
+    final frame = _buildFrame(_cleanRecord(), codec: 0x08);
+    final corrupted = Uint8List.fromList([
+      ...frame.sublist(0, frame.length - 1),
+      0x09, // wrong trailing codec
+    ]);
+    final result = TeltonikaAvlCodec.decode(corrupted);
+    expect(result, isA<TeltonikaDecodeFailure>());
+    final failure = result as TeltonikaDecodeFailure;
+    expect(failure.error, TeltonikaDecodeError.trailingCodecMismatch);
+  });
+
+  test('codec detects record count mismatch', () {
+    final frame = _buildFrame(_cleanRecord());
+    final corrupted = Uint8List.fromList([
+      frame[0],
+      ..._u32be(5), // claims 5 records but only has 1
+      ...frame.sublist(5, frame.length - 9),
+      ..._u32be(5), // trailing count also wrong
+      frame[frame.length - 1],
+    ]);
+    final result = TeltonikaAvlCodec.decode(corrupted);
+    expect(result, isA<TeltonikaDecodeFailure>());
+    final failure = result as TeltonikaDecodeFailure;
+    expect(failure.error, TeltonikaDecodeError.recordTooShort);
   });
 }

@@ -2,6 +2,85 @@ import 'dart:typed_data';
 
 import 'teltonika_usb_models.dart';
 
+/// Result of decoding a Teltonika AVL binary frame.
+///
+/// Instead of returning an empty list for every failure mode, the decoder
+/// returns a structured result so callers can distinguish between
+/// "no frame found", "corrupt data", "unsupported codec", etc.
+sealed class TeltonikaDecodeResult {
+  const TeltonikaDecodeResult();
+}
+
+/// Successful decode: at least one valid AVL record was extracted.
+class TeltonikaDecodeSuccess extends TeltonikaDecodeResult {
+  final List<TeltonikaGeneratedAvlRecord> records;
+
+  const TeltonikaDecodeSuccess(this.records);
+}
+
+/// Decode failed: the input did not contain a valid frame or was corrupt.
+class TeltonikaDecodeFailure extends TeltonikaDecodeResult {
+  final TeltonikaDecodeError error;
+
+  /// Byte offset in the input where the failure was detected, or null when
+  /// the failure applies to the entire input.
+  final int? offset;
+
+  const TeltonikaDecodeFailure(this.error, {this.offset});
+
+  const TeltonikaDecodeFailure.invalidCodec({this.offset})
+      : error = TeltonikaDecodeError.invalidCodecId;
+
+  const TeltonikaDecodeFailure.recordCountMismatch({this.offset})
+      : error = TeltonikaDecodeError.recordCountMismatch;
+
+  const TeltonikaDecodeFailure.truncatedFrame({this.offset})
+      : error = TeltonikaDecodeError.truncatedFrame;
+
+  const TeltonikaDecodeFailure.trailingCodecMismatch({this.offset})
+      : error = TeltonikaDecodeError.trailingCodecMismatch;
+
+  const TeltonikaDecodeFailure.recordTooShort({this.offset})
+      : error = TeltonikaDecodeError.recordTooShort;
+
+  const TeltonikaDecodeFailure.ioGroupCorrupt({this.offset})
+      : error = TeltonikaDecodeError.ioGroupCorrupt;
+
+  const TeltonikaDecodeFailure.emptyInput()
+      : error = TeltonikaDecodeError.emptyInput,
+        offset = null;
+
+  const TeltonikaDecodeFailure.invalidHex({this.offset})
+      : error = TeltonikaDecodeError.invalidHex;
+}
+
+/// Categories of decode failures.
+enum TeltonikaDecodeError {
+  /// No data was provided.
+  emptyInput,
+
+  /// Leading codec ID is not one of the supported values (e.g. 0x08).
+  invalidCodecId,
+
+  /// Declared record count is implausible (>= 0x8000) or zero.
+  recordCountMismatch,
+
+  /// Not enough bytes to read a complete record.
+  truncatedFrame,
+
+  /// Trailing record count or codec ID does not match the header.
+  trailingCodecMismatch,
+
+  /// A single record was shorter than the minimum required byte length.
+  recordTooShort,
+
+  /// IO group count or elements could not be read within remaining bytes.
+  ioGroupCorrupt,
+
+  /// Input hex string was malformed (odd length, non-hex characters).
+  invalidHex,
+}
+
 /// Teltonika AVL binary codec decoder (codec 0x08 family) for USB/serial dumps.
 ///
 /// The FMB devices stream AVL records as a binary frame that — in the serial
@@ -35,28 +114,50 @@ import 'teltonika_usb_models.dart';
 ///
 /// See: Teltonika FMB XXX Protocol TCP Link (codec 0x08).
 class TeltonikaAvlCodec {
+  /// Supported codec IDs.
+  static const supportedCodecs = <int>[0x08];
+
+  /// Maximum record count we will attempt to decode before rejecting.
+  static const maxRecords = 0x7FFF;
+
   /// Decodes all records from a raw binary blob.
   ///
-  /// Returns an empty list when no valid Teltonika frame is found. A frame is
-  /// considered valid when the leading/trailing codec id match and both
-  /// record counts agree with the number of records actually decoded.
-  static List<TeltonikaGeneratedAvlRecord> decode(Uint8List bytes) {
-    if (bytes.length < 7) return const [];
-    for (var i = 0; i + 6 < bytes.length; i++) {
-      final result = _tryDecode(bytes, i, bytes[i]);
-      if (result != null) return [result];
+  /// Returns a [TeltonikaDecodeSuccess] when at least one valid frame is
+  /// found, or a [TeltonikaDecodeFailure] with a structured error and
+  /// optional offset when the input is not a valid AVL frame.
+  static TeltonikaDecodeResult decode(Uint8List bytes) {
+    if (bytes.isEmpty) {
+      return const TeltonikaDecodeFailure.emptyInput();
     }
-    return const [];
+    if (bytes.length < 7) {
+      return const TeltonikaDecodeFailure.truncatedFrame(offset: 0);
+    }
+    TeltonikaDecodeFailure? firstFailure;
+    for (var i = 0; i + 6 < bytes.length; i++) {
+      final codec = bytes[i];
+      if (!supportedCodecs.contains(codec)) continue;
+      final result = _tryDecode(bytes, i, codec);
+      if (result is TeltonikaDecodeSuccess) return result;
+      if (result is TeltonikaDecodeFailure && firstFailure == null) {
+        firstFailure = result;
+      }
+    }
+    return firstFailure ?? const TeltonikaDecodeFailure.invalidCodec(offset: 0);
   }
 
-  static TeltonikaGeneratedAvlRecord? _tryDecode(
+  static TeltonikaDecodeResult _tryDecode(
     Uint8List bytes,
     int start,
     int codec,
   ) {
     var offset = start + 1; // skip codec id
     final count = _readUint32(bytes, offset);
-    if (count == null || count < 1 || count > 0x7FFF) return null;
+    if (count == null) {
+      return const TeltonikaDecodeFailure.truncatedFrame();
+    }
+    if (count < 1 || count > maxRecords) {
+      return TeltonikaDecodeFailure.recordCountMismatch(offset: start + 1);
+    }
     offset += 4;
 
     final reader = _TeltonikaReader(bytes, offset);
@@ -64,17 +165,27 @@ class TeltonikaAvlCodec {
     int ioTotal = 0;
     for (var i = 0; i < count; i++) {
       final record = _readRecord(reader, i, codec);
-      if (record == null) return null;
+      if (record == null) {
+        return TeltonikaDecodeFailure.recordTooShort(offset: reader.offset);
+      }
       ioTotal += record.ioElements.length;
       records.add(record);
     }
 
     // Validate trailing count + codec id.
     final trailingCount = _readUint32(bytes, reader.offset);
-    if (trailingCount != count) return null;
+    if (trailingCount == null) {
+      return TeltonikaDecodeFailure.truncatedFrame(offset: reader.offset);
+    }
+    if (trailingCount != count) {
+      return TeltonikaDecodeFailure.recordCountMismatch(offset: reader.offset);
+    }
     final trailingCodec =
         reader.offset + 4 < bytes.length ? bytes[reader.offset + 4] : -1;
-    if (trailingCodec != codec) return null;
+    if (trailingCodec != codec) {
+      return TeltonikaDecodeFailure.trailingCodecMismatch(
+          offset: reader.offset + 4);
+    }
 
     // Build a synthetic single record aggregating IOs across the window, plus
     // keep the per-record list for diffing.
@@ -86,27 +197,27 @@ class TeltonikaAvlCodec {
       }
       rawLines.addAll(rec.rawLines);
     }
-    return TeltonikaGeneratedAvlRecord(
-      id: 'avl-bin-aggregate',
-      generatedAt: records.first.generatedAt,
-      deviceTimestamp: records.first.deviceTimestamp,
-      priority: records.first.priority,
-      latitude: records.first.latitude,
-      longitude: records.first.longitude,
-      altitude: records.first.altitude,
-      angle: records.first.angle,
-      speedKph: records.first.speedKph,
-      hdop: records.first.hdop,
-      satellites: records.first.satellites,
-      gpsFix: records.first.gpsFix,
-      eventAvlId: records.first.eventAvlId,
-      ioElements: merged,
-      recordSizeBytes: ioTotal,
-      rawLines: rawLines,
-      packetReferences: const [],
-      // Keep individual records available via the records list on the returned
-      // object's ioElements mapping metadata.
-    );
+    return TeltonikaDecodeSuccess([
+      TeltonikaGeneratedAvlRecord(
+        id: 'avl-bin-aggregate',
+        generatedAt: records.first.generatedAt,
+        deviceTimestamp: records.first.deviceTimestamp,
+        priority: records.first.priority,
+        latitude: records.first.latitude,
+        longitude: records.first.longitude,
+        altitude: records.first.altitude,
+        angle: records.first.angle,
+        speedKph: records.first.speedKph,
+        hdop: records.first.hdop,
+        satellites: records.first.satellites,
+        gpsFix: records.first.gpsFix,
+        eventAvlId: records.first.eventAvlId,
+        ioElements: merged,
+        recordSizeBytes: ioTotal,
+        rawLines: rawLines,
+        packetReferences: const [],
+      ),
+    ]);
   }
 
   static int? _readUint32(Uint8List bytes, int offset) {
@@ -176,30 +287,34 @@ class TeltonikaAvlCodec {
       recordSizeBytes: ioCount,
       memoryAddress: null,
       highPriorityAddress: null,
-      rawLines: ['[AVL_BINÁRIO] codec=0x${codec.toRadixString(16)} offset=$startOffset'],
+      rawLines: [
+        '[AVL_BINÁRIO] codec=0x${codec.toRadixString(16)} offset=$startOffset'
+      ],
       packetReferences: const [],
     );
   }
 
   /// Concatenates `[READ_HEX]` chunks and decodes any AVL frame in them.
-  static List<TeltonikaGeneratedAvlRecord> decodeHexLines(
-      Iterable<String> hexLines) {
+  static TeltonikaDecodeResult decodeHexLines(Iterable<String> hexLines) {
     final hex = hexLines.join(' ');
     return decodeHex(hex);
   }
 
   /// Decodes a single space-separated hex string.
-  static List<TeltonikaGeneratedAvlRecord> decodeHex(String hex) {
+  static TeltonikaDecodeResult decodeHex(String hex) {
     final cleaned = hex.replaceAll(RegExp(r'[^0-9A-Fa-f]'), '');
-    if (cleaned.length.isOdd) return const [];
+    if (cleaned.isEmpty) {
+      return const TeltonikaDecodeFailure.emptyInput();
+    }
+    if (cleaned.length.isOdd) {
+      return const TeltonikaDecodeFailure.invalidHex();
+    }
     final buffer = Uint8List(cleaned.length ~/ 2);
     for (var i = 0; i < buffer.length; i++) {
       buffer[i] = int.parse(cleaned.substring(i * 2, i * 2 + 2), radix: 16);
     }
     return decode(buffer);
   }
-
-  static String get _frameMarker => '[AVL_BINÁRIO]';
 }
 
 class _TeltonikaReader {

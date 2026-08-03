@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/data/capture_logs/capture_log_store.dart';
@@ -16,7 +17,7 @@ import 'suntech_command_family.dart';
 import 'suntech_handshake_engine.dart';
 import 'suntech_legacy_commands.dart';
 import 'suntech_newgen_commands.dart';
-import 'teltonika_network_commands.dart';
+import '../../../../core/drivers/teltonika/teltonika_network_commands.dart';
 import 'tracker_session_state.dart';
 import 'usb_serial_transport.dart';
 import 'work_order_models.dart';
@@ -688,7 +689,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       }
       try {
         await readStatus(silent: true);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('TrackerStudioController: serial status polling failed: $e');
         // Ignora erros de desconexão da porta serial durante polling automático
       }
     });

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,7 +55,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
       setState(() {
         _commands = items;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SmsScreen: failed to load commands: $e');
       if (!mounted) return;
       setState(() {
         _commands = const [];
@@ -65,7 +67,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
   Future<String> _readCatalog() async {
     try {
       return await rootBundle.loadString('assets/catalogs/suntech_commands.json');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SmsScreen: catalog load fallback failed: $e');
       final file = File('assets/catalogs/suntech_commands.json');
       if (await file.exists()) {
         return file.readAsString();

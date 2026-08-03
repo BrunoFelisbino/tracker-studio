@@ -57,8 +57,8 @@ TrackerSessionState _withMapState(TrackerSessionState state,
     connection: state.connection,
     configuration: state.configuration,
     localitel: LocalitelAnalysis(
-      latitude: -16.6799,
-      longitude: -49.255,
+      latitude: 0.0,
+      longitude: 0.0,
       address: disabledLocalitel
           ? 'Integração LocaliTel não configurada'
           : 'Cobertura consultada',
@@ -67,8 +67,8 @@ TrackerSessionState _withMapState(TrackerSessionState state,
       summary: disabledLocalitel ? 'Integração LocaliTel não configurada' : 'Cobertura recebida',
     ),
     serviceLocation: const ServiceLocation(
-      latitude: -16.6801,
-      longitude: -49.2548,
+      latitude: 0.0,
+      longitude: 0.0,
       accuracyMeters: 8,
       status: 'capturado',
       capturedAt: '2026-07-23 10:00:00',

@@ -30,7 +30,7 @@ void main() {
       startedAt: '10:00:00',
       stoppedAt: '10:01:00',
       lines: [':cfg_connect'],
-      analysis: {'parameterValues': {'2001': 'VIVO.COM.BR'}},
+      analysis: {'parameterValues': {'2001': 'internet'}},
     ));
     await store.append(const CaptureLogRecord(
       id: '2',
@@ -45,7 +45,7 @@ void main() {
     expect(store.all.last.sessionCode, 'S-001');
     expect(
       store.all.last.analysis!['parameterValues'],
-      containsPair('2001', 'VIVO.COM.BR'),
+      containsPair('2001', 'internet'),
     );
 
     final reloaded = storeFor();

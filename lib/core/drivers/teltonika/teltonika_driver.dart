@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../../data/parsers/teltonika_usb/teltonika_avl_binary_codec.dart';
 import '../../data/parsers/teltonika_usb/teltonika_usb_models.dart';
 import '../../uce/registry/uce_registry.dart';
@@ -465,7 +467,8 @@ class TeltonikaDriver {
         category: ParameterCategory.system,
         group: 'Sistema',
         name: 'Low Power Mode',
-        description: '0 = Disabled, 1 = Enabled (requires battery + deep sleep)',
+        description:
+            '0 = Disabled, 1 = Enabled (requires battery + deep sleep)',
         command: 'teltonika.cfg_setparam',
         parameterId: 19500,
         valueType: ParameterValueType.enumValue,
@@ -556,21 +559,27 @@ class TeltonikaDriver {
         name: 'Digital Input 1',
         normalizedKey: 'din1',
         category: AvlCategory.input,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 2,
         name: 'Digital Input 2',
         normalizedKey: 'din2',
         category: AvlCategory.input,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 3,
         name: 'Ignition',
         normalizedKey: 'ignition',
         category: AvlCategory.ignition,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 16,
@@ -578,21 +587,27 @@ class TeltonikaDriver {
         normalizedKey: 'trip_odometer',
         category: AvlCategory.trip,
         rawUnit: 'm',
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 10,
         name: 'Digital Output 1',
         normalizedKey: 'dout1',
         category: AvlCategory.output,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 11,
         name: 'Digital Output 2',
         normalizedKey: 'dout2',
         category: AvlCategory.output,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 66,
@@ -602,7 +617,9 @@ class TeltonikaDriver {
         rawUnit: 'mV',
         displayUnit: 'V',
         multiplier: 0.001,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 67,
@@ -612,28 +629,36 @@ class TeltonikaDriver {
         rawUnit: 'mV',
         displayUnit: 'V',
         multiplier: 0.001,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 69,
         name: 'GNSS Status',
         normalizedKey: 'gnss_status',
         category: AvlCategory.gps,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 89,
         name: 'Fuel Level (resistance)',
         normalizedKey: 'fuel_level',
         category: AvlCategory.fuel,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 113,
         name: 'Fuel Level (CAN/LVCAN)',
         normalizedKey: 'fuel_level',
         category: AvlCategory.fuel,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 181,
@@ -641,7 +666,9 @@ class TeltonikaDriver {
         normalizedKey: 'pdop',
         category: AvlCategory.gps,
         multiplier: 0.1,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 182,
@@ -649,7 +676,9 @@ class TeltonikaDriver {
         normalizedKey: 'hdop',
         category: AvlCategory.gps,
         multiplier: 0.1,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 199,
@@ -657,21 +686,27 @@ class TeltonikaDriver {
         normalizedKey: 'trip_odometer',
         category: AvlCategory.trip,
         rawUnit: 'm',
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 240,
         name: 'Movement',
         normalizedKey: 'movement',
         category: AvlCategory.movement,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
       const AvlDefinition(
         avlId: 80,
         name: 'GSM Network Type',
         normalizedKey: 'gsm_network_type',
         category: AvlCategory.network,
-        sourceStatus: 'official',
+        source: IoDefinitionSource.officialDocumentation,
+        confidence: IoDefinitionConfidence.confirmed,
+        manufacturer: manufacturer,
       ),
     ];
     registry.avl.registerAll(teltonikaAvlList);
@@ -804,9 +839,11 @@ class TeltonikaDriver {
   }
 
   /// Encodes a command for a registered [ParameterDefinition] value.
-  static String? encodeParameterWrite(ParameterDefinition parameter, String value) {
+  static String? encodeParameterWrite(
+      ParameterDefinition parameter, String value) {
     final cmd = UceRegistry().commands.getById(parameter.command);
-    return cmd?.buildCommand({'parameterId': parameter.parameterId, 'value': value});
+    return cmd
+        ?.buildCommand({'parameterId': parameter.parameterId, 'value': value});
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -1067,8 +1104,9 @@ class TeltonikaDriver {
           currentEventId = int.tryParse(msg.split(':').last.trim());
         } else if (msg.contains('IO ID[')) {
           // Parse IO ID[ 89]: 12
-          final match = RegExp(r'IO\s+ID\[\s*(\d+)\s*\]\s*:\s*(-?\d+(?:\.\d+)?)')
-              .firstMatch(msg);
+          final match =
+              RegExp(r'IO\s+ID\[\s*(\d+)\s*\]\s*:\s*(-?\d+(?:\.\d+)?)')
+                  .firstMatch(msg);
           if (match != null) {
             final ioId = int.parse(match.group(1)!);
             final ioVal = double.tryParse(match.group(2)!) ??
@@ -1148,7 +1186,7 @@ class TeltonikaDriver {
           rawUnit: def?.rawUnit,
           displayUnit: def?.displayUnit,
           definitionStatus: def != null ? 'official' : 'unknown',
-           source: 'record-content',
+          source: 'record-content',
           packetReferences: rec.packetReferences,
           rawLine: 'IO ID[$id]: $val',
         );
@@ -1158,13 +1196,21 @@ class TeltonikaDriver {
   }
 
   /// Decodes binary AVL frames found inside `[READ_HEX]` chunks of the log.
+  ///
+  /// Returns a list of [TeltonikaGeneratedAvlRecord] extracted from any valid
+  /// codec-0x08 frame found in the hex lines. When decoding fails, the error is
+  /// logged at debug level and an empty list is returned.
   static List<TeltonikaGeneratedAvlRecord> decodeBinaryFromHexLines(
       List<String> hexLines) {
     if (hexLines.isEmpty) return const [];
-    try {
-      return TeltonikaAvlCodec.decodeHexLines(hexLines);
-    } catch (_) {
-      return const [];
-    }
+    final result = TeltonikaAvlCodec.decodeHexLines(hexLines);
+    return switch (result) {
+      TeltonikaDecodeSuccess(records: final records) => records,
+      TeltonikaDecodeFailure(:final error, :final offset) => () {
+          debugPrint(
+              'decodeBinaryFromHexLines: failed to decode: $error at offset $offset');
+          return const <TeltonikaGeneratedAvlRecord>[];
+        }(),
+    };
   }
 }

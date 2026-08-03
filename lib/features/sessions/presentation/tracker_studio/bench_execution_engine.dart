@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'suntech_legacy_commands.dart';
 
 enum BenchExecutionState {
@@ -238,7 +240,8 @@ class BenchExecutionEngine {
   BenchExecution? findById(String executionId) {
     try {
       return _executions.firstWhere((e) => e.id == executionId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('BenchExecutionRegistry: findById failed: $e');
       return null;
     }
   }

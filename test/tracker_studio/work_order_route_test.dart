@@ -25,18 +25,18 @@ void main() {
   test('coordinates take priority over typed address', () {
     const route = WorkOrderRoute(
       destinationAddress: 'Endereço informado',
-      destinationLatitude: -16.6869,
-      destinationLongitude: -49.2648,
+      destinationLatitude: 0.0,
+      destinationLongitude: 0.0,
     );
 
     expect(route.routeLink()?.queryParameters['destination'],
-        '-16.6869,-49.2648');
+        '0.0,0.0');
   });
 
   test('provided Google Maps link is accepted', () {
     const route = WorkOrderRoute(
       destinationAddress: '',
-      providedGoogleMapsUrl: 'https://maps.google.com/?q=-16.6,-49.2',
+      providedGoogleMapsUrl: 'https://maps.google.com/?q=0,0',
     );
 
     expect(route.directLink?.host, 'maps.google.com');
