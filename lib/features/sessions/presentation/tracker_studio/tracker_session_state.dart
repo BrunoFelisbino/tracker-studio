@@ -1,3 +1,4 @@
+import '../../../../core/data/parsers/teltonika_usb/teltonika_capture_analysis.dart';
 import 'installation_profiles.dart';
 import 'completed_service_repository.dart';
 import 'serial_diagnostics.dart';
@@ -51,6 +52,7 @@ class TrackerSessionState {
   final List<TelemetryDataPoint> backupVoltageHistory;
   final List<EventRecord> ignitionHistory;
   final List<EventRecord> commandHistory;
+  final LogCaptureState logCapture;
 
   const TrackerSessionState({
     required this.sessionCode,
@@ -83,6 +85,7 @@ class TrackerSessionState {
     this.backupVoltageHistory = const [],
     this.ignitionHistory = const [],
     this.commandHistory = const [],
+    this.logCapture = const LogCaptureState(),
   });
 
   int get approvedTests =>
@@ -469,4 +472,55 @@ class EventRecord {
     required this.event,
     this.detail = '',
   });
+}
+
+/// State of the log capture/diff workflow (Analisar / Parar análise).
+class LogCaptureState {
+  /// Whether a capture session is currently collecting serial lines.
+  final bool active;
+
+  /// Clock label when the capture started.
+  final String startedAt;
+
+  /// Normalized raw lines captured so far (device responses + host commands).
+  final List<String> capturedLines;
+
+  /// `[READ_HEX]` chunks captured so far. Preserved separately so the binary
+  /// AVL codec can be decoded without polluting the normalized line list.
+  final List<String> hexChunks;
+
+  /// Result of the last analysis run after stopping the capture.
+  final TeltonikaCaptureAnalysis? analysis;
+
+  /// Result of the last diff computed from [analysis].
+  final TeltonikaCaptureDiff? diff;
+
+  const LogCaptureState({
+    this.active = false,
+    this.startedAt = '',
+    this.capturedLines = const [],
+    this.hexChunks = const [],
+    this.analysis,
+    this.diff,
+  });
+
+  LogCaptureState copyWith({
+    bool? active,
+    String? startedAt,
+    List<String>? capturedLines,
+    List<String>? hexChunks,
+    TeltonikaCaptureAnalysis? analysis,
+    bool clearAnalysis = false,
+    TeltonikaCaptureDiff? diff,
+    bool clearDiff = false,
+  }) {
+    return LogCaptureState(
+      active: active ?? this.active,
+      startedAt: startedAt ?? this.startedAt,
+      capturedLines: capturedLines ?? this.capturedLines,
+      hexChunks: hexChunks ?? this.hexChunks,
+      analysis: clearAnalysis ? null : analysis ?? this.analysis,
+      diff: clearDiff ? null : diff ?? this.diff,
+    );
+  }
 }

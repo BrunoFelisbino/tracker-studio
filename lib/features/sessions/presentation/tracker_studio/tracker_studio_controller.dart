@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/data/capture_logs/capture_log_store.dart';
+import '../../../../core/data/parsers/teltonika_usb/teltonika_capture_analysis.dart';
 import 'completed_service_repository.dart';
 import 'local_service_database.dart';
 import 'localitel_client.dart';
@@ -14,6 +16,7 @@ import 'suntech_command_family.dart';
 import 'suntech_handshake_engine.dart';
 import 'suntech_legacy_commands.dart';
 import 'suntech_newgen_commands.dart';
+import 'teltonika_network_commands.dart';
 import 'tracker_session_state.dart';
 import 'usb_serial_transport.dart';
 import 'work_order_models.dart';
@@ -49,6 +52,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
   final WorkOrderRepository _workOrders;
   final SuntechHandshakeEngine _handshakeEngine;
   final CompletedServiceRepository _completedServices;
+  final CaptureLogStore _captureLogs;
   final bool _serviceSyncConfigured;
   StreamSubscription<String>? _serialSubscription;
   Timer? _responseTimer;
@@ -72,6 +76,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     WorkOrderRepository? workOrders,
     SuntechHandshakeEngine? handshakeEngine,
     CompletedServiceRepository? completedServices,
+    CaptureLogStore? captureLogs,
     bool? serviceSyncConfigured,
   })  : _parser = parser,
         _transport = transport,
@@ -81,6 +86,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
         _handshakeEngine = handshakeEngine ?? SuntechHandshakeEngine(),
         _completedServices = completedServices ??
             CompletedServiceRepository(LocalServiceDatabase.createDefault()),
+        _captureLogs = captureLogs ?? CaptureLogStore(),
         _serviceSyncConfigured = serviceSyncConfigured ??
             const String.fromEnvironment('SERVICE_SYNC_URL').trim().isNotEmpty,
         super(TrackerSessionState.empty()) {
@@ -430,6 +436,97 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
         await _sendCommand(networkCommand.command(esn: state.device.esn));
       }
     }
+  }
+
+  TeltonikaNetworkCommands generateTeltonikaNetworkCommands({
+    required String apn,
+    required String server,
+    required int port,
+    String username = '',
+    String password = '',
+    String protocol = '0',
+  }) {
+    return buildTeltonikaNetworkCommands(
+      apn: apn,
+      server: server,
+      port: port,
+      username: username,
+      password: password,
+      protocol: protocol,
+    );
+  }
+
+  Future<void> writeTeltonikaNetwork({
+    required String apn,
+    required String server,
+    required int port,
+    required bool explicitlyConfirmed,
+    String username = '',
+    String password = '',
+    String protocol = '0',
+  }) async {
+    if (!explicitlyConfirmed) {
+      throw StateError(
+          'Confirmação explícita obrigatória para alterar rede Teltonika.');
+    }
+    _requireUsb();
+    final plan = generateTeltonikaNetworkCommands(
+      apn: apn,
+      server: server,
+      port: port,
+      username: username,
+      password: password,
+      protocol: protocol,
+    );
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'Teltonika',
+          'Aplicando rede: ${plan.commands.length} comandos via USB Configurator.'),
+    );
+    for (final command in plan.commands) {
+      await _transport.writeLine(command);
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'Teltonika',
+          'Rede aplicada. Confira <SETPARAM_RESULT>:1 e <SAVE_CFG_RESULT>:1 (ou use Captura e análise).'),
+    );
+  }
+
+  TeltonikaNetworkCommands generateTeltonikaConfigPlan(
+      Map<int, String> values) {
+    return buildTeltonikaConfigSequence(
+      parameters: [
+        for (final entry in values.entries) (entry.key, entry.value),
+      ],
+    );
+  }
+
+  Future<void> writeTeltonikaConfig({
+    required Map<int, String> values,
+    required bool explicitlyConfirmed,
+  }) async {
+    if (!explicitlyConfirmed) {
+      throw StateError(
+          'Confirmação explícita obrigatória para alterar a configuração Teltonika.');
+    }
+    _requireUsb();
+    final plan = generateTeltonikaConfigPlan(values);
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'Teltonika',
+          'Aplicando configuração: ${plan.commands.length} comandos via USB Configurator.'),
+    );
+    for (final command in plan.commands) {
+      await _transport.writeLine(command);
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'Teltonika',
+          'Configuração aplicada. Confira <SETPARAM_RESULT>:1 e <SAVE_CFG_RESULT>:1 (ou use Captura e análise).'),
+    );
   }
 
   void setStudioMode(StudioMode mode) {
@@ -1276,6 +1373,222 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     );
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // LOG CAPTURE / DIFF WORKFLOW (Analisar → ação física → Parar análise)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Max captured lines kept in the session to avoid unbounded memory growth.
+  static const int _maxCaptureLines = 8000;
+
+  /// Starts a capture session. Raw Teltonika lines are accumulated until
+  /// [stopTeltonikaCapture] runs the analysis.
+  void startTeltonikaCapture() {
+    if (state.logCapture.active) return;
+    if (!_transport.connected) {
+      state = _appendLog(
+        state,
+        LogEntry(_clock(), 'Captura',
+            'Conecte a porta USB/serial antes de iniciar a análise.'),
+      );
+      return;
+    }
+    state = _appendLog(
+      _copy(
+        state,
+        logCapture: LogCaptureState(active: true, startedAt: _clock()),
+      ),
+      LogEntry(
+        _clock(),
+        'Captura',
+        'Análise iniciada. Execute a ação física no veículo e depois toque em "Parar análise".',
+      ),
+    );
+  }
+
+  /// Stops the capture and runs the Teltonika analysis + diff on the captured
+  /// lines, identifying which packets changed and which IO (sensor) moved.
+  void stopTeltonikaCapture() {
+    if (!state.logCapture.active) return;
+    final lines = state.logCapture.capturedLines;
+
+    final analysis = TeltonikaCaptureAnalyzer.analyze(
+      lines,
+      state.logCapture.hexChunks,
+    );
+    final diff = TeltonikaCaptureAnalyzer.diff(analysis);
+
+    var next = _copy(
+      state,
+      logCapture: LogCaptureState(
+        active: false,
+        startedAt: state.logCapture.startedAt,
+        capturedLines: lines,
+        hexChunks: state.logCapture.hexChunks,
+        analysis: analysis,
+        diff: diff,
+      ),
+    );
+
+    next = _appendLog(
+      next,
+      LogEntry(
+        _clock(),
+        'Captura',
+        'Análise concluída: ${diff.totalRecords} registro(s), '
+            '${diff.changedRecordCount} pacote(s) com alteração, '
+            '${diff.ioChanges.length} IO(s) alterado(s).',
+      ),
+    );
+    for (final line in diff.summary) {
+      next = _appendLog(next, LogEntry(_clock(), 'Captura', line));
+    }
+    if (diff.unknownChangedIos.isNotEmpty) {
+      next = _appendLog(
+        next,
+        LogEntry(
+          _clock(),
+          'Captura',
+          'IOs sem catálogo alterados (candidatos a sensor CAN): '
+              '${diff.unknownChangedIos.map((c) => c.avlId).join(', ')}. '
+              'Registre o mapeamento para o fabricante.',
+        ),
+      );
+    }
+    if (analysis.parameterValues.isNotEmpty) {
+      final summary = analysis.parameterValues.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join(', ');
+      final confirmed =
+          analysis.confirmedParameters.map((id) => '$id').join(', ');
+      next = _appendLog(
+        next,
+        LogEntry(
+          _clock(),
+          'Captura',
+          'Parâmetros de configuração vistos na captura: $summary.'
+              '${confirmed.isEmpty ? '' : ' Confirmados pelo rastreador: $confirmed.'} '
+              'Os formulários Teltonika foram preenchidos com esses valores.',
+        ),
+      );
+    }
+    state = next;
+  }
+
+  /// Clears the capture buffer, analysis and diff.
+  void clearTeltonikaCapture() {
+    state = _copy(
+      state,
+      logCapture: const LogCaptureState(),
+    );
+  }
+
+  /// Persists the last stopped capture (lines + analysis) to the local capture
+  /// log store so it survives closing the session. Only called when the user
+  /// explicitly taps "Salvar logs para análise".
+  Future<void> saveTeltonikaCaptureForAnalysis() async {
+    final capture = state.logCapture;
+    if (capture.analysis == null) {
+      state = _appendLog(
+        state,
+        LogEntry(_clock(), 'Captura',
+            'Pare a análise antes de salvar os logs para análise.'),
+      );
+      return;
+    }
+    try {
+      final id = '${DateTime.now().millisecondsSinceEpoch}';
+      await _captureLogs.append(CaptureLogRecord(
+        id: id,
+        sessionCode: state.sessionCode,
+        startedAt: capture.startedAt,
+        stoppedAt: _clock(),
+        lines: List.from(capture.capturedLines),
+        analysis: capture.analysis!.toJson(),
+      ));
+      final params = capture.analysis!.parameterValues;
+      state = _appendLog(
+        state,
+        LogEntry(
+          _clock(),
+          'Captura',
+          'Logs salvos para análise '
+              '(${capture.capturedLines.length} linha(s), '
+              '${params.length} parâmetro(s)). '
+              'Arquivo: tracker_studio_capture_logs.json.',
+        ),
+      );
+    } catch (error) {
+      state = _appendLog(
+        state,
+        LogEntry(_clock(), 'Captura', 'Falha ao salvar os logs: $error'),
+      );
+    }
+  }
+
+  /// Appends a normalized line to the active capture buffer.
+  void _captureLine(String line) {
+    if (!state.logCapture.active) return;
+
+    // Always preserve `[READ_HEX]` payloads separately so the binary AVL codec
+    // can be decoded even though they are excluded from normalized `capturedLines`.
+    if (line.startsWith('[READ_HEX] ')) {
+      final hex = line.substring('[READ_HEX] '.length).trim();
+      if (hex.isNotEmpty) {
+        final nextHex =
+            <String>[...state.logCapture.hexChunks, hex];
+        state = _copy(
+          state,
+          logCapture: state.logCapture.copyWith(hexChunks: nextHex),
+        );
+      }
+      // Hex chunks are captured independently; do not enter normalized lines.
+      return;
+    }
+
+    final normalized = _normalizeCaptureLine(line);
+    if (normalized == null) return;
+
+    final current = state.logCapture.capturedLines;
+    var nextLines = <String>[...current, normalized];
+    var overflow = false;
+    if (nextLines.length > _maxCaptureLines) {
+      nextLines = nextLines.sublist(nextLines.length - _maxCaptureLines);
+      overflow = true;
+    }
+    state = _copy(
+      state,
+      logCapture: state.logCapture.copyWith(capturedLines: nextLines),
+    );
+    if (overflow) {
+      state = _appendLog(
+        state,
+        LogEntry(
+          _clock(),
+          'Captura',
+          'Limite de $_maxCaptureLines linhas atingido; linhas mais antegas descartadas.',
+        ),
+      );
+    }
+  }
+
+  String? _normalizeCaptureLine(String line) {
+    if (line.startsWith('[READ] ')) return line.substring(7);
+    if (line.startsWith('[SEND] ')) return line.substring(7);
+    if (line.startsWith('[READ_ASCII] ')) {
+      return line.substring('[READ_ASCII] '.length).trim();
+    }
+    if (line.startsWith('[READ_HEX] ')) {
+      return line.substring('[READ_HEX] '.length).trim();
+    }
+    if (line.startsWith('[SEND_HEX] ')) return null;
+    if (line.startsWith('[SERIAL')) return null;
+    if (line.startsWith('USB conectado') || line == 'USB desconectado') {
+      return null;
+    }
+    final normalized = line.trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
   Future<void> requestStatus() => readStatus();
   Future<void> requestPreset() => readPreset();
   Future<void> runBasicRead() => readFullDevice();
@@ -1630,6 +1943,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
   void _handleTransportLine(String line) {
     if (_disposed || _isDisconnecting) return;
+    _captureLine(line);
     if (line.startsWith('[SEND]')) {
       state = _appendLog(state, LogEntry(_clock(), 'SEND', line));
       return;
@@ -2075,6 +2389,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     List<TelemetryDataPoint>? backupVoltageHistory,
     List<EventRecord>? ignitionHistory,
     List<EventRecord>? commandHistory,
+    LogCaptureState? logCapture,
   }) {
     return TrackerSessionState(
       sessionCode: sessionCode ?? current.sessionCode,
@@ -2114,6 +2429,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       backupVoltageHistory: backupVoltageHistory ?? current.backupVoltageHistory,
       ignitionHistory: ignitionHistory ?? current.ignitionHistory,
       commandHistory: commandHistory ?? current.commandHistory,
+      logCapture: logCapture ?? current.logCapture,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tracker_studio/core/data/capture_logs/capture_log_store.dart';
 import 'package:tracker_studio/features/sessions/presentation/tracker_studio/completed_service_repository.dart';
 import 'package:tracker_studio/features/sessions/presentation/tracker_studio/local_service_database.dart';
 import 'package:tracker_studio/features/sessions/presentation/tracker_studio/localitel_client.dart';
@@ -13,6 +14,7 @@ import 'package:tracker_studio/features/sessions/presentation/tracker_studio/usb
 Future<MutableTrackerStudioController> createStudioTestController({
   List<SerialPortInfo> ports = const [],
   LocalitelClient? localitel,
+  CaptureLogStore? captureLogs,
 }) async {
   return MutableTrackerStudioController(
     parser: const SuntechParser(),
@@ -20,6 +22,7 @@ Future<MutableTrackerStudioController> createStudioTestController({
     localitel: localitel ?? LocalitelClient(),
     serviceLocation: ServiceLocationProvider(),
     completedServices: _MemoryCompletedServiceRepository(),
+    captureLogs: captureLogs,
   );
 }
 
@@ -32,6 +35,7 @@ class MutableTrackerStudioController extends TrackerStudioController {
     required super.localitel,
     required super.serviceLocation,
     required super.completedServices,
+    super.captureLogs,
   })  : testTransport = transport,
         super(transport: transport);
 
@@ -76,6 +80,16 @@ class CountingTransport implements UsbSerialTransport {
 
   @override
   Future<void> writeLine(String line) async {}
+
+  void feed(String line) {
+    _lines.add(line);
+  }
+
+  void feedLines(Iterable<String> lines) {
+    for (final line in lines) {
+      _lines.add(line);
+    }
+  }
 }
 
 class DisabledLocalitelClient extends LocalitelClient {

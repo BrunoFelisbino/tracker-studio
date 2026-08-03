@@ -9,9 +9,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/design/tracker_colors.dart';
 import '../../../../core/design/tracker_motion.dart';
 import '../../../../core/design/tracker_theme.dart';
+import '../../../../core/data/can_mapping/can_mapping_store.dart';
+import '../../../../core/data/parsers/teltonika_usb/teltonika_capture_analysis.dart';
+import '../../../../core/data/parsers/teltonika_usb/teltonika_usb_models.dart';
 import '../../../../core/widgets/local_mode_badge.dart';
 import '../../../../core/widgets/tracker_radar_background.dart';
 import '../../../../core/widgets/tracker_signal_pulse.dart';
+import '../../../../core/uce/registry/config_field_spec.dart';
+import '../../../../core/uce/registry/uce_registry.dart';
 import 'installation_profiles.dart';
 import 'service_map_preview.dart';
 import 'serial_diagnostics.dart';
@@ -19,6 +24,7 @@ import 'suntech_command_family.dart';
 import 'suntech_handshake_engine.dart';
 import 'suntech_legacy_commands.dart';
 import 'suntech_newgen_commands.dart';
+import 'teltonika_network_commands.dart';
 import 'tracker_session_state.dart';
 import 'tracker_studio_controller.dart';
 import 'usb_serial_transport.dart';
@@ -525,6 +531,12 @@ class _TrackerStudioLiveScreenState
                                   () => controller.sendHandshakeProbe(probe)),
                               onClearHandshake:
                                   controller.clearHandshakeEvidence,
+                              onStartCapture: controller.startTeltonikaCapture,
+                              onStopCapture: controller.stopTeltonikaCapture,
+                              onClearCapture:
+                                  controller.clearTeltonikaCapture,
+                              onSaveCapture: () => _run(
+                                  controller.saveTeltonikaCaptureForAnalysis),
                             ),
                         },
                       ),
@@ -1105,6 +1117,10 @@ class _LaboratoryView extends StatelessWidget {
   final VoidCallback onFullScan;
   final ValueChanged<SuntechHandshakeProbe> onHandshakeProbe;
   final VoidCallback onClearHandshake;
+  final VoidCallback onStartCapture;
+  final VoidCallback onStopCapture;
+  final VoidCallback onClearCapture;
+  final VoidCallback onSaveCapture;
 
   const _LaboratoryView({
     super.key,
@@ -1132,6 +1148,10 @@ class _LaboratoryView extends StatelessWidget {
     required this.onFullScan,
     required this.onHandshakeProbe,
     required this.onClearHandshake,
+    required this.onStartCapture,
+    required this.onStopCapture,
+    required this.onClearCapture,
+    required this.onSaveCapture,
   });
 
   @override
@@ -1194,6 +1214,16 @@ class _LaboratoryView extends StatelessWidget {
         const SizedBox(height: 18),
         _NewGenNetworkCard(session: session, controller: controller),
         const SizedBox(height: 18),
+        _TeltonikaNetworkCard(session: session, controller: controller),
+        const SizedBox(height: 18),
+        _TeltonikaMovingCard(session: session, controller: controller),
+        const SizedBox(height: 18),
+        _TeltonikaBackupCard(session: session, controller: controller),
+        const SizedBox(height: 18),
+        _TeltonikaSystemCard(session: session, controller: controller),
+        const SizedBox(height: 18),
+        TeltonikaCanCard(session: session),
+        const SizedBox(height: 18),
         _ActionBar(
           busy: busy,
           actions: [
@@ -1255,6 +1285,15 @@ class _LaboratoryView extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _SerialRawCard(session: session, onClear: onClearLogs),
+        const SizedBox(height: 18),
+        _LogCaptureCard(
+          session: session,
+          usbConnected: session.connection.usbConnected,
+          onStart: onStartCapture,
+          onStop: onStopCapture,
+          onClear: onClearCapture,
+          onSaveCapture: onSaveCapture,
+        ),
         const SizedBox(height: 18),
         _SerialDiagnosticCard(
           session: session,
@@ -1857,6 +1896,694 @@ class _NewGenNetworkCardState extends State<_NewGenNetworkCard> {
   }
 }
 
+class _ParameterFormCard extends StatefulWidget {
+  final TrackerSessionState session;
+  final TrackerStudioController controller;
+  final String title;
+  final String hint;
+  final List<int> parameterIds;
+  final String applyLabel;
+  final String applyTitle;
+  final String applyMessage;
+
+  const _ParameterFormCard({
+    required this.session,
+    required this.controller,
+    required this.title,
+    required this.hint,
+    required this.parameterIds,
+    required this.applyLabel,
+    required this.applyTitle,
+    required this.applyMessage,
+  });
+
+  @override
+  State<_ParameterFormCard> createState() => _ParameterFormCardState();
+}
+
+class _ParameterFormCardState extends State<_ParameterFormCard> {
+  final Map<int, TextEditingController> _controllers = {};
+  final Map<int, String> _enumSelections = {};
+  final Map<int, String> _seeded = {};
+  TeltonikaNetworkCommands? _commands;
+  bool _busy = false;
+
+  Map<int, String> get _capturedValues =>
+      widget.session.logCapture.analysis?.parameterValues ?? const {};
+
+  int get _capturedCount => widget.parameterIds
+      .where((parameterId) => _capturedValues.containsKey(parameterId))
+      .length;
+
+  static String _defaultFor(ConfigFieldSpec spec) {
+    final value = spec.defaultValue;
+    if (value == null) return '';
+    if (spec.isEnum && spec.enumValues!.containsKey('$value')) return '$value';
+    return '$value';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    for (final parameterId in widget.parameterIds) {
+      final spec = configFieldFor(parameterId);
+      final captured = _capturedValues[parameterId];
+      final seeded = captured ?? _defaultFor(spec);
+      final controller = TextEditingController(text: seeded);
+      _controllers[parameterId] = controller;
+      _seeded[parameterId] = seeded;
+      if (spec.isEnum) _enumSelections[parameterId] = seeded;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ParameterFormCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldAnalysis = oldWidget.session.logCapture.analysis;
+    final newAnalysis = widget.session.logCapture.analysis;
+    if (identical(oldAnalysis, newAnalysis) || newAnalysis == null) return;
+    var changed = false;
+    for (final parameterId in widget.parameterIds) {
+      final captured = newAnalysis.parameterValues[parameterId];
+      if (captured == null) continue;
+      final controller = _controllers[parameterId];
+      if (controller == null) continue;
+      if (controller.text != _seeded[parameterId]) continue;
+      controller.text = captured;
+      _seeded[parameterId] = captured;
+      if (configFieldFor(parameterId).isEnum) {
+        _enumSelections[parameterId] = captured;
+      }
+      changed = true;
+    }
+    if (changed) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Map<int, String> _values() => {
+        for (final parameterId in widget.parameterIds)
+          parameterId:
+              _enumSelections[parameterId] ??
+                  _controllers[parameterId]!.text.trim(),
+      };
+
+  String? _firstError(Map<int, String> values) {
+    for (final parameterId in widget.parameterIds) {
+      final spec = configFieldFor(parameterId);
+      final error = spec.validate(values[parameterId] ?? '');
+      if (error != null) return '${spec.label}: $error';
+    }
+    return null;
+  }
+
+  void _generate() {
+    final values = _values();
+    final firstError = _firstError(values);
+    if (firstError != null) {
+      _showError(firstError);
+      return;
+    }
+    try {
+      final commands = widget.controller.generateTeltonikaConfigPlan(values);
+      setState(() => _commands = commands);
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
+  Future<void> _apply() async {
+    final values = _values();
+    final firstError = _firstError(values);
+    if (firstError != null) {
+      _showError(firstError);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(widget.applyTitle),
+        content: Text(widget.applyMessage),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Entendo e aplicar')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() => _busy = true);
+    try {
+      await widget.controller.writeTeltonikaConfig(
+        values: values,
+        explicitlyConfirmed: true,
+      );
+    } catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _showError(Object error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$error'.replaceFirst('Bad state: ', ''))),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canApply = widget.session.connection.usbConnected && !_busy;
+    final fields = <Widget>[];
+    for (final parameterId in widget.parameterIds) {
+      final spec = configFieldFor(parameterId);
+      if (spec.isEnum) {
+        fields.add(SizedBox(
+          width: 220,
+          child: DropdownButtonFormField<String>(
+            initialValue: _enumSelections[parameterId],
+            decoration: InputDecoration(labelText: spec.label),
+            items: [
+              for (final entry in spec.enumValues!.entries)
+                DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+            ],
+            onChanged: (value) => setState(() {
+              if (value != null) _enumSelections[parameterId] = value;
+            }),
+          ),
+        ));
+      } else {
+        fields.add(_NetworkField(
+          controller: _controllers[parameterId]!,
+          label: spec.unit != null
+              ? '${spec.label} (${spec.unit})'
+              : spec.label,
+          obscureText: spec.obscureText,
+          width: 220,
+        ));
+      }
+    }
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(widget.title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 6),
+          Text(widget.hint, style: const TextStyle(color: _Studio.warning)),
+          if (_capturedCount > 0) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.download_done_outlined,
+                    size: 15, color: _Studio.success),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '$_capturedCount de ${widget.parameterIds.length} parâmetros '
+                    'preenchidos com os valores capturados no log.',
+                    style: const TextStyle(
+                        color: _Studio.success,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 14),
+          Wrap(spacing: 12, runSpacing: 12, children: fields),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _generate,
+                icon: const Icon(Icons.code),
+                label: const Text('Gerar comando'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _commands == null
+                    ? null
+                    : () => Clipboard.setData(
+                          ClipboardData(text: _commands!.preview),
+                        ),
+                icon: const Icon(Icons.copy),
+                label: const Text('Copiar comando'),
+              ),
+              FilledButton.icon(
+                onPressed: canApply ? _apply : null,
+                icon: const Icon(Icons.cloud_upload_outlined),
+                label: Text(widget.applyLabel),
+              ),
+            ],
+          ),
+          if (_commands != null) ...[
+            const SizedBox(height: 12),
+            SelectableText(
+              _commands!.preview,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TeltonikaNetworkCard extends StatelessWidget {
+  final TrackerSessionState session;
+  final TrackerStudioController controller;
+
+  const _TeltonikaNetworkCard({required this.session, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => _ParameterFormCard(
+        session: session,
+        controller: controller,
+        title: 'Rede / APN Teltonika',
+        hint:
+            'Protocolo USB Configurator: :cfg_setparam/<id>:<valor> + :cfg_save. Confirme o readback <SETPARAM_RESULT>:1.',
+        parameterIds: const [2001, 2002, 2003, 2004, 2005, 2006],
+        applyLabel: 'Aplicar rede Teltonika',
+        applyTitle: 'Aplicar rede Teltonika?',
+        applyMessage:
+            'Entendo que este comando altera APN/servidor/porta do rastreador via USB Configurator e devo confirmar o readback <SETPARAM_RESULT>:1.',
+      );
+}
+
+class _TeltonikaMovingCard extends StatelessWidget {
+  final TrackerSessionState session;
+  final TrackerStudioController controller;
+
+  const _TeltonikaMovingCard({required this.session, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => _ParameterFormCard(
+        session: session,
+        controller: controller,
+        title: 'Dados de tempo / Data Acquisition',
+        hint:
+            'Aquisição em movimento (Home network): 10050–10055. Campos gerados do catálogo UCE.',
+        parameterIds: const [10050, 10051, 10052, 10053, 10054, 10055],
+        applyLabel: 'Aplicar dados de tempo',
+        applyTitle: 'Aplicar dados de tempo?',
+        applyMessage:
+            'Entendo que estes comandos alteram período, distância, ângulo, velocidade e registros mínimos de aquisição e devo confirmar o readback <SETPARAM_RESULT>:1.',
+      );
+}
+
+class _TeltonikaBackupCard extends StatelessWidget {
+  final TrackerSessionState session;
+  final TrackerStudioController controller;
+
+  const _TeltonikaBackupCard({required this.session, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => _ParameterFormCard(
+        session: session,
+        controller: controller,
+        title: 'Servidor backup Teltonika',
+        hint:
+            'Segundo servidor (modo habilita o envio): 2010 = modo, 2007/2008/2009 = domínio, porta e protocolo.',
+        parameterIds: const [2010, 2007, 2008, 2009],
+        applyLabel: 'Aplicar servidor backup',
+        applyTitle: 'Aplicar servidor backup?',
+        applyMessage:
+            'Entendo que estes comandos alteram o segundo servidor (domínio, porta, protocolo e modo) e devo confirmar o readback <SETPARAM_RESULT>:1.',
+      );
+}
+
+class _TeltonikaSystemCard extends StatelessWidget {
+  final TrackerSessionState session;
+  final TrackerStudioController controller;
+
+  const _TeltonikaSystemCard({required this.session, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => _ParameterFormCard(
+        session: session,
+        controller: controller,
+        title: 'Sistema Teltonika',
+        hint:
+            'Voltagem de ignição (104/105), NTP (901–903) e Low Power Mode (19500–19504). Campos gerados do catálogo UCE.',
+        parameterIds: const [104, 105, 901, 902, 903, 19500, 19501, 19502, 19504],
+        applyLabel: 'Aplicar sistema',
+        applyTitle: 'Aplicar sistema?',
+        applyMessage:
+            'Entendo que estes comandos alteram voltagem/NTP/low power do rastreador e devo confirmar o readback <SETPARAM_RESULT>:1.',
+      );
+}
+
+class TeltonikaCanCard extends StatefulWidget {
+  final TrackerSessionState session;
+  final CanMappingStore? store;
+
+  const TeltonikaCanCard({super.key, required this.session, this.store});
+
+  @override
+  State<TeltonikaCanCard> createState() => TeltonikaCanCardState();
+}
+
+class TeltonikaCanCardState extends State<TeltonikaCanCard> {
+  late final CanMappingStore _store;
+  bool _loaded = false;
+  bool _busy = false;
+  final Map<int, TextEditingController> _nameControllers = {};
+  final Map<int, TextEditingController> _unitControllers = {};
+  final Map<int, TextEditingController> _noteControllers = {};
+
+  List<TeltonikaObservedIo> get _candidates {
+    final analysis = widget.session.logCapture.analysis;
+    if (analysis == null) return const [];
+    final candidates = analysis.observedIos
+        .where((io) => io.definitionStatus == 'unknown')
+        .toList()
+      ..sort((a, b) => a.avlId.compareTo(b.avlId));
+    return candidates;
+  }
+
+  List<TeltonikaGeneratedAvlRecord> get _records =>
+      widget.session.logCapture.analysis?.avlRecords ?? const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _store = widget.store ?? CanMappingStore();
+    _load();
+  }
+
+  Future<void> _load() async {
+    await _store.load();
+    for (final io in _candidates) {
+      final mapping = _store.byId(io.avlId);
+      _nameControllers[io.avlId] =
+          TextEditingController(text: mapping?.name ?? 'IO ${io.avlId}');
+      _unitControllers[io.avlId] =
+          TextEditingController(text: mapping?.unit ?? '');
+      _noteControllers[io.avlId] =
+          TextEditingController(text: mapping?.note ?? '');
+    }
+    for (final mapping in _store.all) {
+      _nameControllers.putIfAbsent(
+          mapping.avlId, () => TextEditingController(text: mapping.name));
+      _unitControllers.putIfAbsent(
+          mapping.avlId, () => TextEditingController(text: mapping.unit ?? ''));
+      _noteControllers.putIfAbsent(
+          mapping.avlId, () => TextEditingController(text: mapping.note ?? ''));
+    }
+    if (mounted) setState(() => _loaded = true);
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _nameControllers.values) {
+      controller.dispose();
+    }
+    for (final controller in _unitControllers.values) {
+      controller.dispose();
+    }
+    for (final controller in _noteControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _map(int avlId) async {
+    final name = _nameControllers[avlId]?.text.trim() ?? '';
+    if (name.isEmpty) {
+      _showMessage('Informe um nome para o IO $avlId antes de mapear.');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await _store.upsert(CanSensorMapping(
+        avlId: avlId,
+        name: name,
+        unit: _trimmedOrNull(_unitControllers[avlId]?.text),
+        note: _trimmedOrNull(_noteControllers[avlId]?.text),
+      ));
+      if (mounted) {
+        setState(() {});
+        _showMessage('IO $avlId mapeado como "$name" e salvo em arquivo.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _remove(int avlId) async {
+    setState(() => _busy = true);
+    try {
+      await _store.remove(avlId);
+      _nameControllers[avlId]?.text = 'IO $avlId';
+      _unitControllers[avlId]?.text = '';
+      _noteControllers[avlId]?.text = '';
+      if (mounted) {
+        setState(() {});
+        _showMessage('Mapeamento do IO $avlId removido.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String? _trimmedOrNull(String? value) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  String _valueHistory(int avlId) {
+    final values = <String>[];
+    for (final record in _records) {
+      final value = record.ioElements[avlId];
+      if (value != null) values.add('$value');
+    }
+    return values.isEmpty ? '—' : values.join(' → ');
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.memory, size: 20, color: _Studio.primary),
+              SizedBox(width: 8),
+              Text('CAN / Sensores mapeados',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'IOs observados na captura sem definição no catálogo são candidatos a '
+            'sensor CAN. Mapeie AVL ID → nome e o mapeamento é salvo em arquivo '
+            'para as próximas sessões.',
+            style: TextStyle(color: _Studio.warning, fontSize: 12),
+          ),
+          const SizedBox(height: 14),
+          if (!_loaded)
+            const _EmptyText('Carregando mapeamento CAN...')
+          else ...[
+            _buildCandidates(),
+            const SizedBox(height: 16),
+            _buildPersisted(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCandidates() {
+    final candidates = _candidates;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Candidatos da última captura (${candidates.length})',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+        const SizedBox(height: 8),
+        if (candidates.isEmpty)
+          const _EmptyText(
+              'Nenhum IO sem catálogo na última análise. Capture uma ação física '
+              'para descobrir sensores CAN.')
+        else
+          for (final io in candidates) ...[
+            _buildCandidateTile(io),
+            const SizedBox(height: 10),
+          ],
+      ],
+    );
+  }
+
+  Widget _buildCandidateTile(TeltonikaObservedIo io) {
+    final mapped = _store.byId(io.avlId);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _Studio.surface,
+        border: Border.all(
+            color: mapped != null
+                ? _Studio.success.withValues(alpha: 0.6)
+                : _Studio.border),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text('IO ${io.avlId}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w900, fontSize: 13)),
+              const SizedBox(width: 8),
+              if (mapped != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _Studio.success.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    mapped.name,
+                    style: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              const Spacer(),
+              Text('${io.packetReferences.length} ocorrência(s)',
+                  style:
+                      const TextStyle(color: _Studio.muted, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _KeyValue('Último valor', '${io.rawValue}'),
+          _KeyValue('Histórico', _valueHistory(io.avlId)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  controller: _nameControllers[io.avlId],
+                  decoration: const InputDecoration(labelText: 'Nome'),
+                ),
+              ),
+              SizedBox(
+                width: 90,
+                child: TextField(
+                  controller: _unitControllers[io.avlId],
+                  decoration: const InputDecoration(labelText: 'Unidade'),
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: TextField(
+                  controller: _noteControllers[io.avlId],
+                  decoration: const InputDecoration(labelText: 'Observação'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: _busy ? null : () => _map(io.avlId),
+                icon: const Icon(Icons.bookmark_add_outlined),
+                label: Text(mapped != null ? 'Atualizar mapeamento' : 'Mapear'),
+              ),
+              if (mapped != null) ...[
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: _busy ? null : () => _remove(io.avlId),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Remover'),
+                  style: TextButton.styleFrom(foregroundColor: _Studio.danger),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersisted() {
+    final mappings = _store.all;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Mapeados (persistidos) (${mappings.length})',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+        const SizedBox(height: 8),
+        if (mappings.isEmpty)
+          const _EmptyText('Nenhum sensor CAN mapeado ainda.')
+        else
+          for (final mapping in mappings)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Text('IO ${mapping.avlId}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 12)),
+                  const SizedBox(width: 8),
+                  Text(mapping.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 12)),
+                  if (mapping.unit != null) ...[
+                    const SizedBox(width: 6),
+                    Text('(${mapping.unit})',
+                        style: const TextStyle(
+                            color: _Studio.muted, fontSize: 11)),
+                  ],
+                  if (mapping.note != null) ...[
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(mapping.note!,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: _Studio.muted, fontSize: 11)),
+                    ),
+                  ],
+                  if (mapping.note == null) const Spacer(),
+                  TextButton(
+                    onPressed: _busy ? null : () => _remove(mapping.avlId),
+                    style: TextButton.styleFrom(
+                        foregroundColor: _Studio.danger,
+                        padding: const EdgeInsets.symmetric(horizontal: 6)),
+                    child: const Text('Remover',
+                        style: TextStyle(fontSize: 11)),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+}
+
 class _NetworkField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -1864,8 +2591,7 @@ class _NetworkField extends StatelessWidget {
   final bool obscureText;
 
   const _NetworkField({
-    required this.controller,
-    required this.label,
+    required this.controller,    required this.label,
     this.width = 220,
     this.obscureText = false,
   });
@@ -2526,6 +3252,447 @@ class _SerialRawCard extends StatelessWidget {
       if (log.source == source) return log.message;
     }
     return null;
+  }
+}
+
+class _LogCaptureCard extends StatelessWidget {
+  final TrackerSessionState session;
+  final bool usbConnected;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+  final VoidCallback onClear;
+  final VoidCallback onSaveCapture;
+
+  const _LogCaptureCard({
+    required this.session,
+    required this.usbConnected,
+    required this.onStart,
+    required this.onStop,
+    required this.onClear,
+    required this.onSaveCapture,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final capture = session.logCapture;
+    final analysis = capture.analysis;
+    final diff = capture.diff;
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(capture.active ? Icons.radar : Icons.analytics_outlined,
+                  color: capture.active ? _Studio.danger : _Studio.primary,
+                  size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('Captura e análise de logs',
+                    style: TextStyle(
+                        color: _Studio.text, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            'Toque em "Analisar", execute a ação física no veículo e toque em "Parar análise". '
+            'O diff mostra qual pacote mudou e qual IO (sensor CAN) foi afetado.',
+            style: TextStyle(color: _Studio.muted, fontSize: 11),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilledButton.icon(
+                onPressed: usbConnected && !capture.active ? onStart : null,
+                icon: const Icon(Icons.play_arrow, size: 18),
+                label: const Text('Analisar'),
+              ),
+              FilledButton.icon(
+                onPressed: capture.active ? onStop : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _Studio.danger,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.stop, size: 18),
+                label: const Text('Parar análise'),
+              ),
+              OutlinedButton.icon(
+                onPressed:
+                    capture.capturedLines.isNotEmpty || analysis != null
+                        ? onClear
+                        : null,
+                icon: const Icon(Icons.delete_sweep_outlined, size: 17),
+                label: const Text('Limpar'),
+              ),
+              if (analysis != null)
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final text = _analysisText(capture);
+                    Clipboard.setData(ClipboardData(text: text));
+                  },
+                  icon: const Icon(Icons.copy, size: 17),
+                  label: const Text('Copiar análise'),
+                ),
+              if (analysis != null)
+                OutlinedButton.icon(
+                  onPressed: onSaveCapture,
+                  icon: const Icon(Icons.save_outlined, size: 17),
+                  label: const Text('Salvar logs para análise'),
+                ),
+            ],
+          ),
+          if (capture.active) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const TrackerSignalPulse(size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Capturando desde ${capture.startedAt} · '
+                    '${capture.capturedLines.length} linha(s) capturada(s). '
+                    'Execute a ação física e depois pare a análise.',
+                    style: const TextStyle(
+                        color: _Studio.danger, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (analysis != null) ...[
+            const SizedBox(height: 16),
+            _buildDevice(analysis.device, analysis),
+            if (analysis.parameterValues.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildParameters(analysis),
+            ],
+            if (diff != null) ...[
+              const SizedBox(height: 12),
+              _buildDiff(diff),
+            ],
+            const SizedBox(height: 12),
+            _buildRawPreview(capture.capturedLines),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDevice(
+      DetectedTeltonikaDevice? device, TeltonikaCaptureAnalysis analysis) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('Resumo da captura',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+        const SizedBox(height: 8),
+        _KeyValue(
+          'Dispositivo',
+          device == null
+              ? 'Não identificado'
+              : '${device.model ?? 'Teltonika'} (confiança ${device.confidence.toStringAsFixed(0)}%)',
+        ),
+        if (device?.imei != null)
+          _KeyValue('IMEI', _maskImei(device!.imei!)),
+        _KeyValue('Registros AVL', '${analysis.avlRecords.length}'),
+        _KeyValue('IOs observados', '${analysis.observedIos.length}'),
+        _KeyValue(
+            'Comandos config',
+            '${analysis.configCommands.length}'),
+        _KeyValue('Linhas', '${analysis.rawLines.length}'),
+      ],
+    );
+  }
+
+  Widget _buildParameters(TeltonikaCaptureAnalysis analysis) {
+    final entries = analysis.parameterValues.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Text('Parâmetros vistos na captura',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+            const Spacer(),
+            Text('${entries.length}',
+                style: const TextStyle(color: _Studio.muted, fontSize: 12)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final entry in entries)
+          _KeyValue(
+            _parameterLabel(entry.key),
+            analysis.confirmedParameters.contains(entry.key)
+                ? '${entry.value} (confirmado)'
+                : entry.value,
+          ),
+      ],
+    );
+  }
+
+  String _parameterLabel(int parameterId) {
+    final definition = UceRegistry().parameters.getByParameterId(parameterId);
+    return definition?.name ?? 'ID $parameterId';
+  }
+
+  Widget _buildDiff(TeltonikaCaptureDiff diff) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Text('Alterações identificadas',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: diff.hasChanges ? _Studio.warning : _Studio.success,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                diff.hasChanges
+                    ? '${diff.ioChanges.length} IO(s) alterado(s)'
+                    : 'Sem alterações',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: diff.hasChanges ? _Studio.danger : Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        _KeyValue('Pacotes com alteração', '${diff.changedRecordCount}'),
+        if (diff.changedPackets.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _packetChips(diff.changedPackets),
+        ],
+        const SizedBox(height: 6),
+        if (diff.ioChanges.isEmpty)
+          const _EmptyText(
+              'Nenhum IO alterou durante a captura. Repita com outra ação física.')
+        else
+          for (final change in diff.ioChanges) _IoChangeTile(change: change),
+        if (diff.unknownChangedIos.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _Studio.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: _Studio.warning.withValues(alpha: 0.5)),
+            ),
+            child: Text(
+              'IOs sem definição no catálogo foram alterados '
+              '(${diff.unknownChangedIos.map((c) => c.avlId).join(', ')}) — '
+              'são candidatos a sensores CAN a mapear.',
+              style: const TextStyle(
+                  color: _Studio.danger,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _packetChips(List<TeltonikaChangedPacket> packets) {
+    final visible = packets.take(12).toList();
+    final remaining = packets.length - visible.length;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final packet in visible)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: _Studio.surface,
+              border: Border.all(color: _Studio.border),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Pacote #${packet.recordIndex + 1} · '
+              '${packet.changedIoIds.length} IO(s)',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+            ),
+          ),
+        if (remaining > 0)
+          Text('+$remaining',
+              style: const TextStyle(
+                  color: _Studio.muted, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
+
+  Widget _buildRawPreview(List<String> lines) {
+    final preview = lines.reversed.take(24).toList().reversed.toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Linhas capturadas (${lines.length})',
+            style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: _Studio.muted)),
+        const SizedBox(height: 6),
+        Container(
+          constraints: const BoxConstraints(maxHeight: 180),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: _Studio.log,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: preview.isEmpty
+              ? const Text('Nenhuma linha capturada.',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11))
+              : ListView(
+                  children: [
+                    for (final line in preview)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: SelectableText(
+                          line,
+                          style: const TextStyle(
+                              color: Color(0xFFE2E8F0),
+                              fontSize: 10,
+                              fontFamily: 'monospace'),
+                        ),
+                      ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+
+  String _analysisText(LogCaptureState capture) {
+    final analysis = capture.analysis;
+    final diff = capture.diff;
+    final buffer = StringBuffer()
+      ..writeln('Tracker Studio — Análise de captura')
+      ..writeln('Início: ${capture.startedAt}')
+      ..writeln('Linhas: ${capture.capturedLines.length}');
+    if (analysis != null) {
+      buffer
+        ..writeln(
+            'Dispositivo: ${analysis.device?.model ?? 'Não identificado'}')
+        ..writeln('Registros AVL: ${analysis.avlRecords.length}')
+        ..writeln('IOs observados: ${analysis.observedIos.length}')
+        ..writeln('Comandos config: ${analysis.configCommands.length}');
+    }
+    if (diff != null) {
+      buffer.writeln('Pacotes com alteração: ${diff.changedRecordCount}');
+      buffer.writeln('IOs alterados: ${diff.ioChanges.length}');
+      for (final change in diff.ioChanges) {
+        buffer.writeln(
+            ' - ${change.displayLabel}: ${_formatIoValue(change.beforeNormalized ?? change.before)}${change.unit == null ? '' : ' ${change.unit}'}'
+            ' -> ${_formatIoValue(change.afterNormalized ?? change.after)}${change.unit == null ? '' : ' ${change.unit}'}'
+            ' (${change.transitions} transição(ões), pacotes #${change.firstRecordIndex + 1}..#${change.lastRecordIndex + 1})');
+      }
+      for (final line in diff.summary) {
+        buffer.writeln(' - $line');
+      }
+    }
+    return buffer.toString();
+  }
+
+  String _maskImei(String imei) =>
+      imei.length >= 15 ? '${imei.substring(0, 8)}*******' : '***';
+
+  String _formatIoValue(dynamic value) {
+    if (value is num) {
+      final text = value.toStringAsFixed(2);
+      return text.endsWith('.00')
+          ? value.toInt().toString()
+          : text.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+    }
+    return '$value';
+  }
+}
+
+class _IoChangeTile extends StatelessWidget {
+  final TeltonikaIoChange change;
+
+  const _IoChangeTile({required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = change.known ? _Studio.primary : _Studio.warning;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: _Studio.surface,
+        border: Border.all(color: change.known ? _Studio.border : color),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            change.known
+                ? Icons.sensors
+                : Icons.help_outline,
+            size: 17,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  change.displayLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _valueLabel(),
+                  style: TextStyle(
+                    color: change.known ? _Studio.text : _Studio.danger,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  'Pacotes #${change.firstRecordIndex + 1} → #${change.lastRecordIndex + 1} · '
+                  '${change.transitions} transição(ões)',
+                  style: const TextStyle(color: _Studio.muted, fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _valueLabel() {
+    final before = _fmt(change.beforeNormalized ?? change.before);
+    final after = _fmt(change.afterNormalized ?? change.after);
+    final unit = change.unit == null ? '' : ' ${change.unit}';
+    return '$before$unit → $after$unit';
+  }
+
+  String _fmt(dynamic value) {
+    if (value is num) {
+      final text = value.toStringAsFixed(2);
+      return text.endsWith('.00')
+          ? value.toInt().toString()
+          : text.replaceFirst(RegExp(r'0+$'), '')
+              .replaceFirst(RegExp(r'\.$'), '');
+    }
+    return '$value';
   }
 }
 
