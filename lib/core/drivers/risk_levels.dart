@@ -1,5 +1,3 @@
-import 'package:equatable/equatable.dart';
-
 /// Nível de risco de um comando/teste.
 enum RiskLevel {
   readOnly, // Sem risco, só leitura

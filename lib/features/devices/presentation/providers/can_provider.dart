@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/drivers/driver_contracts.dart';
-import '../core/sessions/device_session.dart';
+import '../../../../core/drivers/driver_contracts.dart';
+import '../../../../core/sessions/device_session.dart';
+import '../../../../core/sessions/device_session_provider.dart';
 
 /// Provider para o status CAN runtime e status.
 final canStatusProvider = Provider.family<CanRuntimeStatus, String>(
   (ref, deviceId) {
-    final deviceState = ref.watch(deviceSessionProvider(deviceId));
-    if (deviceState == null) {
-      return CanRuntimeStatus.unsupported();
-    }
-
-    return CanRuntimeStatus.fromSession(
-      deviceId: deviceId,
-      session: deviceState,
+    final deviceStateAsync = ref.watch(deviceSessionProvider(deviceId));
+    return deviceStateAsync.when(
+      loading: () => CanRuntimeStatus.unsupported(),
+      error: (_, __) => CanRuntimeStatus.unsupported(),
+      data: (deviceState) {
+        if (deviceState == null) {
+          return CanRuntimeStatus.unsupported();
+        }
+        return CanRuntimeStatus.fromSession(
+          deviceId: deviceId,
+          session: deviceState,
+        );
+      },
     );
   },
 );
@@ -223,26 +229,30 @@ class CanRuntimeStatus {
 /// Provider para gerenciar dados CAN por dispositivo.
 final canDataProvider = Provider.family<Map<String, dynamic>, String>(
   (ref, deviceId) {
-    final deviceState = ref.watch(deviceSessionProvider(deviceId));
-    if (deviceState == null) {
-      return {};
-    }
+    final deviceStateAsync = ref.watch(deviceSessionProvider(deviceId));
+    return deviceStateAsync.when(
+      loading: () => {},
+      error: (_, __) => {},
+      data: (deviceState) {
+        if (deviceState == null) {
+          return {};
+        }
 
-    final canMeasurements = deviceState.measurements.where((m) {
-      final category = m.category.toLowerCase();
-      final key = m.key.toLowerCase();
-      return category.contains('can') ||
-          key.contains('can') ||
-          key.contains('obd') ||
-          key.contains('rpm') ||
-          key.contains('speed') ||
-          key.contains('odometer');
-    }).toList();
+        final canMeasurements = deviceState.measurements.where((m) {
+          final category = m.category.toLowerCase();
+          final key = m.key.toLowerCase();
+          return category.contains('can') ||
+              key.contains('can') ||
+              key.contains('obd') ||
+              key.contains('rpm') ||
+              key.contains('speed') ||
+              key.contains('odometer');
+        }).toList();
 
-    final canData = <String, dynamic>{};
-    for (final measurement in canMeasurements) {
-      canData[measurement.key] = {
-        'value': measurement.value,
+        final canData = <String, dynamic>{};
+        for (final measurement in canMeasurements) {
+          canData[measurement.key] = {
+            'value': measurement.value,
         'unit': measurement.unit,
         'timestamp': measurement.timestamp.toIso8601String(),
         'name': measurement.name,
@@ -251,6 +261,8 @@ final canDataProvider = Provider.family<Map<String, dynamic>, String>(
     }
 
     return canData;
+      },
+    );
   },
 );
 
@@ -275,34 +287,36 @@ class CanUpdater {
     required String name,
     String? unit,
   }) {
-    final deviceState = _ref.read(deviceSessionProvider(_deviceId));
-    if (deviceState == null) {
-      return;
-    }
-
-    final normalized = NormalizedMeasurement(
-      key: key,
-      rawKey: key,
-      category: category,
-      name: name,
-      unit: unit,
-      value: value,
-      timestamp: timestamp,
-      metadata: {'source': 'can'},
-    );n
-    final newSession = deviceState.updateState(
-      newState: deviceState.normalizedState,
-      newMeasurements: [normalized],
-      newRawData: {
-        'can_${key}': {
-          'value': value,
-          'timestamp': timestamp.toIso8601String(),
-          'category': category,
-        },
+final deviceStateAsync = _ref.read(deviceSessionProvider(_deviceId));
+    deviceStateAsync.when(
+      loading: () {},
+      error: (_, __) {},
+      data: (deviceState) {
+        if (deviceState == null) return;
+        final normalized = NormalizedMeasurement(
+          key: key,
+          rawKey: key,
+          category: category,
+          name: name,
+          unit: unit,
+          value: value,
+          timestamp: timestamp,
+          metadata: {'source': 'can'},
+        );
+        final newSession = deviceState.updateState(
+          newState: deviceState.normalizedState,
+          newMeasurements: [normalized],
+          newRawData: {
+            'can_$key': {
+              'value': value,
+              'timestamp': timestamp.toIso8601String(),
+              'category': category,
+            },
+          },
+          timestamp: timestamp,
+        );
+        _ref.read(deviceSessionProvider(_deviceId).notifier).updateSession(newSession);
       },
-      timestamp: timestamp,
     );
-
-    _ref.read(deviceSessionProvider(_deviceId).notifier).updateSession(newSession);
   }
 }

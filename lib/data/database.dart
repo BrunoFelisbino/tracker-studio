@@ -44,12 +44,44 @@ class Financeiros extends Table {
   TextColumn get descricao => text().nullable()();
 }
 
-@DriftDatabase(tables: [Equipamentos, Antenas, Testes, Usuarios, Financeiros])
+// Tabelas para persistência real de DeviceSession e Transporte
+class DeviceSessionsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get manufacturer => text()();
+  TextColumn get identityJson => text()();
+  TextColumn get capabilitiesJson => text()();
+  TextColumn get normalizedStateJson => text()();
+  TextColumn get measurementsJson => text()();
+  TextColumn get rawDataJson => text()();
+  TextColumn get responsesJson => text()();
+  TextColumn get configurationSnapshotsJson => text()();
+  TextColumn get diagnosticsJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get lastUpdate => dateTime()();
+  BoolColumn get isActive => boolean()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [Equipamentos, Antenas, Testes, Usuarios, Financeiros, DeviceSessionsTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (migrator) async {
+          await migrator.createAll();
+        },
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            await migrator.createTable(deviceSessionsTable);
+          }
+        },
+      );
 
   // Example CRUD operations
   Future<int> insertEquipamento(EquipamentosCompanion entry) =>

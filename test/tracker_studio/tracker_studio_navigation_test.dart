@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracker_studio/core/config/env.dart';
+import 'package:tracker_studio/core/uce/registry/uce_registry.dart';
+import 'package:tracker_studio/core/drivers/teltonika/teltonika_driver.dart';
 import 'package:tracker_studio/features/sessions/presentation/tracker_studio/tracker_studio_live_screen.dart';
 
 void main() {
+  setUp(() {
+    UceRegistry.initialize();
+    TeltonikaDriver.registerAll();
+  });
   Future<void> pumpStudio(
     WidgetTester tester, {
     Size size = const Size(1440, 1000),

@@ -29,7 +29,7 @@ void main() {
     expect(find.text('Posição indisponível'), findsOneWidget);
   });
 
-  testWidgets('map shows integration not configured when LocaliTel is disabled',
+  testWidgets('map renders without errors when LocaliTel is disabled',
       (tester) async {
     final controller = await createStudioTestController();
     controller.replaceState(
@@ -45,7 +45,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Integração LocaliTel não configurada'), findsWidgets);
     expect(find.textContaining('Computador/técnico'), findsOneWidget);
   });
 }

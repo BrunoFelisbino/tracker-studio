@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../driver_contracts.dart';
+import 'driver_contracts.dart';
+import '../sessions/device_session.dart';
 
 /// Provider para o driver por sessão.
 final deviceDriverProvider = Provider.family<ManufacturerDriver, String>(
   (ref, deviceId) {
     // Factory method para obter driver baseado na identidade do dispositivo
-    return _DeviceDriverResolver(ref, deviceId);
+    return _DeviceDriverResolver(ref, deviceId).driver;
   },
 );
 
@@ -18,21 +19,8 @@ class _DeviceDriverResolver {
   _DeviceDriverResolver(this._ref, this._deviceId);
 
   ManufacturerDriver get driver {
-    // Em produção real, isto consultaria a session store/remote API
-    // Para demonstração, retorna um driver mock
-    final deviceState = _ref.read(deviceSessionProvider(_deviceId));
-    if (deviceState != null && deviceState.identity.manufacturer != Manufacturer.unknown) {
-      switch (deviceState.identity.manufacturer) {
-        case Manufacturer.suntech:
-          return const SuntechDriver();
-        case Manufacturer.teltonika:
-          return const TeltonikaDriver();
-        default:
-          return const DefaultDriver();
-      }
-    }
     // Default para novos dispositivos
-    return const DefaultDriver();
+    return DefaultDriver();
   }
 }
 
@@ -175,72 +163,49 @@ class SuntechDriver implements ManufacturerDriver {
     if (input.asciiLine != null) {
       final line = input.asciiLine!;
 
+      void add(String key, String rawKey, String name, String? unit, dynamic val, [String cat = 'vehicle']) {
+        measurements.add(
+          NormalizedMeasurement(
+            key: key,
+            rawKey: rawKey,
+            category: cat,
+            name: name,
+            unit: unit,
+            multiplier: 1,
+            value: val,
+            timestamp: input.timestamp,
+            metadata: {'raw': line},
+          ),
+        );
+      }
+
       if (line.contains('IGNO=') || line.contains('IGN=')) {
-        final value = _extractNumeric(line, 'IGNO', 'IGN') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'ignition',
-            rawKey: 'IGNO',
-            category: 'vehicle',
-            name: 'Ignição',
-            unit: null,
-            multiplier: null,
-            value: value == 1,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
+        final val = _extractNumeric(line, 'IGNO', 'IGN') ?? 0;
+        add('ignition', 'IGNO', 'Ignição', null, val == 1);
       }
-
-      if (line.contains('RPM=') || line.contains('RPM')) {
-        final value = _extractNumeric(line, 'RPM=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'rpm',
-            rawKey: 'RPM',
-            category: 'vehicle',
-            name: 'RPM',
-            unit: 'rpm',
-            multiplier: 1,
-            value: value,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
+      if (line.contains('MOV=')) {
+        final val = _extractNumeric(line, 'MOV=') ?? 0;
+        add('movement', 'MOV', 'Movimento', null, val == 1);
       }
-
       if (line.contains('SPEED=')) {
-        final value = _extractNumeric(line, 'SPEED=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'speed',
-            rawKey: 'SPEED',
-            category: 'vehicle',
-            name: 'Velocidade',
-            unit: 'km/h',
-            multiplier: 1,
-            value: value,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
+        final val = _extractNumeric(line, 'SPEED=') ?? 0;
+        add('speedKph', 'SPEED', 'Velocidade', 'km/h', val);
       }
-
-      if (line.contains('ODOMETER=') || line.contains('OD')) {
-        final value = _extractNumeric(line, 'ODOMETER=', 'OD') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'odometer',
-            rawKey: 'ODOMETER',
-            category: 'vehicle',
-            name: 'Odômetro',
-            unit: 'km',
-            multiplier: 1,
-            value: value,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
+      if (line.contains('GPS=')) {
+        final val = _extractNumeric(line, 'GPS=') ?? 0;
+        add('position', 'GPS', 'Posição GPS', null, val == 1, 'position');
+      }
+      if (line.contains('NET=')) {
+        final val = _extractNumeric(line, 'NET=') ?? 0;
+        add('network', 'NET', 'Rede', null, val, 'network');
+      }
+      if (line.contains('PWR=')) {
+        final val = _extractNumeric(line, 'PWR=') ?? 0;
+        add('power', 'PWR', 'Alimentação', 'V', val, 'power');
+      }
+      if (line.contains('BATT=')) {
+        final val = _extractNumeric(line, 'BATT=') ?? 0;
+        add('battery', 'BATT', 'Bateria', '%', val, 'power');
       }
     }
 
@@ -303,13 +268,13 @@ class SuntechDriver implements ManufacturerDriver {
         return EncodedCommand(
           commandId: commandId,
           encoded: 'AT^GSN;<ESN>;03;01',
-          transport: CommandTransport.usbTerminal,
+          transport: CommandTransport.usb,
         );
       case 'suntech.status':
         return EncodedCommand(
           commandId: commandId,
           encoded: 'AT^ST300CMD;;02;Status',
-          transport: CommandTransport.usbTerminal,
+          transport: CommandTransport.usb,
         );
       default:
         throw ArgumentError('Comando desconhecido: $commandId');
@@ -335,8 +300,9 @@ class SuntechDriver implements ManufacturerDriver {
     if (session.normalizedState.vehicle.speedKph <= 0) {
       findings.add(
         DiagnosticFinding(
+          id: 'ST-VEH-001',
           code: 'ST-VEH-001',
-          severity: DiagnosticSeverity.warning,
+          severity: RiskLevel.safe,
           title: 'Sem movimento detectado',
           message: 'O veículo não está se movendo.',
         ),
@@ -368,12 +334,16 @@ class SuntechDriver implements ManufacturerDriver {
     return null;
   }
 
-  num? _extractNumeric(String line, ...String patterns) {
+  num? _extractNumeric(String line, [String? p1, String? p2, String? p3, String? p4]) {
+    final patterns = [p1, p2, p3, p4].whereType<String>();
     for (final pattern in patterns) {
       if (line.contains(pattern)) {
         final regex = RegExp(r'\d+');
         final match = regex.firstMatch(line);
-        return match?.group(0)?.toNum();
+        final numStr = match?.group(0);
+        if (numStr != null) {
+          return num.tryParse(numStr);
+        }
       }
     }
     return null;
@@ -445,86 +415,62 @@ class TeltonikaDriver implements ManufacturerDriver {
     if (input.asciiLine != null) {
       final line = input.asciiLine!;
 
+      void add(String key, String rawKey, String name, String? unit, dynamic val, [String cat = 'vehicle']) {
+        measurements.add(
+          NormalizedMeasurement(
+            key: key,
+            rawKey: rawKey,
+            category: cat,
+            name: name,
+            unit: unit,
+            multiplier: 1,
+            value: val,
+            timestamp: input.timestamp,
+            metadata: {'raw': line},
+          ),
+        );
+      }
+
+      if (line.contains('RPM=') || line.contains('rpm')) {
+        final val = _extractNumeric(line, 'RPM=', 'rpm') ?? 0;
+        add('rpm', 'RPM', 'RPM', 'rpm', val);
+      }
+      if (line.contains('OBD_SPEED=') || line.contains('speed')) {
+        final val = _extractNumeric(line, 'OBD_SPEED=', 'speed') ?? 0;
+        add('obd-speed', 'OBD_SPEED', 'Velocidade CAN', 'km/h', val);
+      }
+      if (line.contains('OBD_ODOMETER=')) {
+        final val = _extractNumeric(line, 'OBD_ODOMETER=') ?? 0;
+        add('obd-odometer', 'OBD_ODOMETER', 'Odômetro CAN', 'km', val);
+      }
+      if (line.contains('FUEL_LEVEL=')) {
+        final val = _extractNumeric(line, 'FUEL_LEVEL=') ?? 0;
+        add('fuelLevelPercentage', 'FUEL_LEVEL', 'Nível de combustível', '%', val);
+      }
+      if (line.contains('THROTTLE=')) {
+        final val = _extractNumeric(line, 'THROTTLE=') ?? 0;
+        add('throttle', 'THROTTLE', 'Acelerador', '%', val);
+      }
+      if (line.contains('FUEL_USED=')) {
+        final val = _extractNumeric(line, 'FUEL_USED=') ?? 0;
+        add('fuelUsed', 'FUEL_USED', 'Combustível Usado', 'L', val);
+      }
+      if (line.contains('IO89=')) {
+        final val = _extractNumeric(line, 'IO89=') ?? 0;
+        add('io89', 'IO89', 'IO 89', null, val, 'io');
+      }
+      if (line.contains('IO105=')) {
+        final val = _extractNumeric(line, 'IO105=') ?? 0;
+        add('io105', 'IO105', 'IO 105', null, val, 'io');
+      }
+      if (line.contains('IO107=')) {
+        final val = _extractNumeric(line, 'IO107=') ?? 0;
+        add('io107', 'IO107', 'IO 107', null, val, 'io');
+      }
+
       if (line.contains('IGN=')) {
         final value = _extractNumeric(line, 'IGN=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'ignition',
-            rawKey: 'IGN',
-            category: 'vehicle',
-            name: 'Ignição',
-            unit: null,
-            multiplier: null,
-            value: value == 1,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
-      }
-
-      if (line.contains('SPEED=')) {
-        final value = _extractNumeric(line, 'SPEED=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'speed',
-            rawKey: 'SPEED',
-            category: 'vehicle',
-            name: 'Velocidade',
-            unit: 'km/h',
-            multiplier: 1,
-            value: value,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
-      }
-
-      if (line.contains('LAT=') && line.contains('LON=')) {
-        final lat = _extractNumeric(line, 'LAT=') ?? 0;
-        final lon = _extractNumeric(line, 'LON=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'latitude',
-            rawKey: 'LAT',
-            category: 'position',
-            name: 'Latitude',
-            unit: 'deg',
-            multiplier: 1,
-            value: lat,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'longitude',
-            rawKey: 'LON',
-            category: 'position',
-            name: 'Longitude',
-            unit: 'deg',
-            multiplier: 1,
-            value: lon,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
-      }
-
-      if (line.contains('ALT=')) {
-        final value = _extractNumeric(line, 'ALT=') ?? 0;
-        measurements.add(
-          NormalizedMeasurement(
-            key: 'altitude',
-            rawKey: 'ALT',
-            category: 'position',
-            name: 'Altitude',
-            unit: 'm',
-            multiplier: 1,
-            value: value,
-            timestamp: input.timestamp,
-            metadata: {'raw': line},
-          ),
-        );
+        add('ignition', 'IGN', 'Ignição', null, value == 1);
       }
     }
 
@@ -587,13 +533,13 @@ class TeltonikaDriver implements ManufacturerDriver {
         return EncodedCommand(
           commandId: commandId,
           encoded: 'IDENTITY;ESN',
-          transport: CommandTransport.tcpCodec12,
+          transport: CommandTransport.tcp,
         );
       case 'teltonika.status':
         return EncodedCommand(
           commandId: commandId,
           encoded: 'STATUS',
-          transport: CommandTransport.tcpCodec12,
+          transport: CommandTransport.tcp,
         );
       default:
         throw ArgumentError('Comando desconhecido: $commandId');
@@ -619,8 +565,9 @@ class TeltonikaDriver implements ManufacturerDriver {
     if (session.normalizedState.vehicle.speedKph > 120) {
       findings.add(
         DiagnosticFinding(
+          id: 'TLT-VEH-001',
           code: 'TLT-VEH-001',
-          severity: DiagnosticSeverity.warning,
+          severity: RiskLevel.safe,
           title: 'Velocidade alta detectada',
           message: 'Velocidade acima do limite recomendado.',
         ),
@@ -652,12 +599,16 @@ class TeltonikaDriver implements ManufacturerDriver {
     return null;
   }
 
-  num? _extractNumeric(String line, ...String patterns) {
+  num? _extractNumeric(String line, [String? p1, String? p2, String? p3, String? p4]) {
+    final patterns = [p1, p2, p3, p4].whereType<String>();
     for (final pattern in patterns) {
       if (line.contains(pattern)) {
         final regex = RegExp(r'\d+(\.\d+)?');
         final match = regex.firstMatch(line);
-        return match?.group(0)?.toNum();
+        final numStr = match?.group(0);
+        if (numStr != null) {
+          return num.tryParse(numStr);
+        }
       }
     }
     return null;

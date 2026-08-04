@@ -2,6 +2,130 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 
+import '../uce/uce_interfaces.dart' show Manufacturer, CommandTransport, RiskLevel, ParameterCategory, ParameterValueType;
+import '../sessions/device_session.dart';
+
+export '../uce/uce_interfaces.dart' show Manufacturer, CommandTransport, RiskLevel, ParameterCategory, ParameterValueType;
+
+/// Tipo de valor de um campo.
+enum FieldValueType {
+  string,
+  number,
+  boolean,
+  enumValue,
+  timestamp,
+  coordinate,
+  hex,
+  binary,
+}
+
+/// Solicitação de comando normalizada.
+class CommandRequest extends Equatable {
+  final String commandId;
+  final Map<String, dynamic> arguments;
+  final String? rawPayload;
+
+  const CommandRequest({
+    required this.commandId,
+    required this.arguments,
+    this.rawPayload,
+  });
+
+  @override
+  List<Object?> get props => [commandId, arguments, rawPayload];
+}
+
+/// Resposta bruta do transporte.
+class RawResponse extends Equatable {
+  final String responseId;
+  final DateTime timestamp;
+  final List<int>? bytes;
+  final String? ascii;
+  final String? error;
+
+  const RawResponse({
+    required this.responseId,
+    required this.timestamp,
+    this.bytes,
+    this.ascii,
+    this.error,
+  });
+
+  @override
+  List<Object?> get props => [responseId, timestamp, bytes, ascii, error];
+}
+
+/// Transação de comando para histórico.
+class CommandTransaction extends Equatable {
+  final String id;
+  final String command;
+  final DateTime requestSentAt;
+  final DateTime? responseReceivedAt;
+  final String? responseRaw;
+  final bool success;
+  final String portId;
+  final String request;
+  final List<String> responseLines;
+  final Map<String, dynamic>? parsedResponse;
+  final String? error;
+  final CommandTransport transport;
+
+  const CommandTransaction({
+    required this.id,
+    required this.command,
+    required this.requestSentAt,
+    this.responseReceivedAt,
+    this.responseRaw,
+    this.success = false,
+    required this.portId,
+    required this.request,
+    required this.responseLines,
+    this.parsedResponse,
+    this.error,
+    required this.transport,
+  });
+
+  @override
+  List<Object?> get props => [
+        id,
+        command,
+        requestSentAt,
+        responseReceivedAt,
+        responseRaw,
+        success,
+        portId,
+        request,
+        responseLines,
+        parsedResponse,
+        error,
+        transport,
+      ];
+}
+
+/// Resultado de diagnóstico individual.
+class DiagnosticFinding extends Equatable {
+  final String id;
+  final String? code;
+  final String? title;
+  final String message;
+  final RiskLevel severity;
+  final String? relatedCommand;
+  final Map<String, dynamic>? metadata;
+
+  const DiagnosticFinding({
+    required this.id,
+    this.code,
+    this.title,
+    required this.message,
+    required this.severity,
+    this.relatedCommand,
+    this.metadata,
+  });
+
+  @override
+  List<Object?> get props => [id, code, title, message, severity, relatedCommand, metadata];
+}
+
 /// Interface contrat para o driver de fabricante.
 ///
 /// Implementação por fabricante (Teltonika, Suntech, etc.) gerencia todos os detalhes

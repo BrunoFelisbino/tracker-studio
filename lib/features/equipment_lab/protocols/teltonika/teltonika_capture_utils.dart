@@ -360,8 +360,9 @@ class TeltonikaCaptureUtils {
     required num? minCritical,
     required num? maxCritical,
   }) {
-    if (value == null || minCritical == null || maxCritical == null)
+    if (value == null || minCritical == null || maxCritical == null) {
       return false;
+    }
 
     final numValue = value is num ? value : num.tryParse('$value');
     if (numValue == null) return false;

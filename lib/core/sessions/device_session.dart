@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../driver_contracts.dart';
+import '../drivers/driver_contracts.dart';
 
 /// Representa uma sessão ativa de um dispositivo com todos os seus dados normalizados.
 class DeviceSession extends Equatable {
@@ -109,7 +109,7 @@ class DeviceSession extends Equatable {
       createdAt: createdAt,
       lastUpdate: DateTime.now(),
       isActive: active,
-    );n    return this;
+    );
   }
 
   /// Atualiza o estado de diagnóstico.

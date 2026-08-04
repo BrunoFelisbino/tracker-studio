@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/design/tracker_colors.dart';
+import '../../../../core/sessions/device_session.dart';
+import '../../../../core/sessions/device_session_provider.dart';
+import '../../../../core/design/tracker_colors.dart';
 
 /// Screens para as três experiências principais.
 class DeviceBasicAnalysisScreen extends ConsumerWidget {
@@ -77,7 +79,7 @@ class DeviceConfigurationScreen extends ConsumerWidget {
 class _BasicAnalysisContent extends StatelessWidget {
   final DeviceSession session;
 
-  const _BasicAnalysisContent({super.key, required this.session});
+  const _BasicAnalysisContent({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -93,14 +95,14 @@ class _BasicAnalysisContent extends StatelessWidget {
             _SystemInfoSection(session: session),
           ],
         ),
-        n);
+      );
   }
 }
 
 class _AdvancedAnalysisContent extends StatelessWidget {
   final DeviceSession session;
 
-  const _AdvancedAnalysisContent({super.key, required this.session});
+  const _AdvancedAnalysisContent({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +137,7 @@ class _AdvancedAnalysisContent extends StatelessWidget {
 class _ConfigurationContent extends StatelessWidget {
   final DeviceSession session;
 
-  const _ConfigurationContent({super.key, required this.session});
+  const _ConfigurationContent({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +168,7 @@ class _ConfigurationContent extends StatelessWidget {
 class _MapSection extends StatelessWidget {
   final DeviceSession session;
 
-  const _MapSection({super.key, required this.session});
+  const _MapSection({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +202,7 @@ class _MapSection extends StatelessWidget {
 class _StatusCardsSection extends StatelessWidget {
   final DeviceSession session;
 
-  const _StatusCardsSection({super.key, required this.session});
+  const _StatusCardsSection({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +250,7 @@ class _StatusCardsSection extends StatelessWidget {
 class _SystemInfoSection extends StatelessWidget {
   final DeviceSession session;
 
-  const _SystemInfoSection({super.key, required this.session});
+  const _SystemInfoSection({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +300,6 @@ class _InfoCard extends StatelessWidget {
   final Color color;
 
   const _InfoCard({
-    super.key,
     required this.icon,
     required this.title,
     required this.value,
@@ -341,7 +342,6 @@ class _SystemInfoRow extends StatelessWidget {
   final String? subvalue;
 
   const _SystemInfoRow({
-    super.key,
     required this.icon,
     required this.label,
     required this.value,
@@ -363,8 +363,8 @@ class _SystemInfoRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-              if (subvalue != null)
-                Text(subvalue,
+              if (subvalue != null && subvalue!.isNotEmpty)
+                Text(subvalue!,
                     style: const TextStyle(
                         fontSize: 12, color: TrackerColors.textSecondary)),
             ],
@@ -379,7 +379,7 @@ class _SystemInfoRow extends StatelessWidget {
 class _CanTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _CanTab({super.key, required this.session});
+  const _CanTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -390,7 +390,7 @@ class _CanTab extends StatelessWidget {
 class _IoTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _IoTab({super.key, required this.session});
+  const _IoTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +401,7 @@ class _IoTab extends StatelessWidget {
 class _SensorsTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _SensorsTab({super.key, required this.session});
+  const _SensorsTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +412,7 @@ class _SensorsTab extends StatelessWidget {
 class _TimelineTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _TimelineTab({super.key, required this.session});
+  const _TimelineTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -423,7 +423,7 @@ class _TimelineTab extends StatelessWidget {
 class _ConfigurationSectionsTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _ConfigurationSectionsTab({super.key, required this.session});
+  const _ConfigurationSectionsTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -434,7 +434,7 @@ class _ConfigurationSectionsTab extends StatelessWidget {
 class _ExecuteTestsTab extends StatelessWidget {
   final DeviceSession session;
 
-  const _ExecuteTestsTab({super.key, required this.session});
+  const _ExecuteTestsTab({required this.session});
 
   @override
   Widget build(BuildContext context) {
