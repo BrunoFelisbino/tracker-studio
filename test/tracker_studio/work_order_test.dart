@@ -77,7 +77,8 @@ void main() {
     expect(validation.result, ServiceValidationStatus.warning);
   });
 
-  test('repository records warning when required evidence is missing', () async {
+  test('repository records warning when required evidence is missing',
+      () async {
     final workOrder = fixtureWorkOrders().first;
     final repository = MemoryWorkOrderRepository(seed: [workOrder]);
 

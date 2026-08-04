@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tracker_studio/core/design/tracker_theme.dart';
 import 'package:tracker_studio/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:tracker_studio/core/widgets/tracker_module_tile.dart';
 
 void main() {
   testWidgets('home opens without login and shows technical modules only',
@@ -39,8 +38,11 @@ void main() {
     final router = GoRouter(
       initialLocation: '/dashboard',
       routes: [
-        GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-        GoRoute(path: '/commands', builder: (_, __) => const Scaffold(body: Text('commands-route'))),
+        GoRoute(
+            path: '/dashboard', builder: (_, __) => const DashboardScreen()),
+        GoRoute(
+            path: '/commands',
+            builder: (_, __) => const Scaffold(body: Text('commands-route'))),
       ],
     );
 

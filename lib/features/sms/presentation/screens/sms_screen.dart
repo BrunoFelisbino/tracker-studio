@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,7 +65,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
 
   Future<String> _readCatalog() async {
     try {
-      return await rootBundle.loadString('assets/catalogs/suntech_commands.json');
+      return await rootBundle
+          .loadString('assets/catalogs/suntech_commands.json');
     } catch (e) {
       debugPrint('SmsScreen: catalog load fallback failed: $e');
       final file = File('assets/catalogs/suntech_commands.json');
@@ -92,9 +92,10 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
   List<Map<String, dynamic>> _filteredCommands(String familyKey) {
     return _commands.where((cmd) {
       final familyMatches = familyKey == 'all' || cmd['family'] == familyKey;
-      final text = '${cmd['name'] ?? ''} ${cmd['rawCommand'] ?? ''}'
-          .toLowerCase();
-      final searchMatches = _search.isEmpty || text.contains(_search.toLowerCase());
+      final text =
+          '${cmd['name'] ?? ''} ${cmd['rawCommand'] ?? ''}'.toLowerCase();
+      final searchMatches =
+          _search.isEmpty || text.contains(_search.toLowerCase());
       return familyMatches && searchMatches;
     }).toList();
   }
@@ -103,10 +104,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     required String raw,
     required String esn,
   }) {
-    return raw
-        .replaceAll('AT^', '')
-        .replaceAll('<ESN>', esn)
-        .trim();
+    return raw.replaceAll('AT^', '').replaceAll('<ESN>', esn).trim();
   }
 
   void _selectCommand(Map<String, dynamic> command, String esn) {
@@ -136,7 +134,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final familyKey = _familyKey(session.selectedSuntechFamily);
     final filtered = _filteredCommands(familyKey);
     final esn = session.hasDeviceRead ? session.device.esn : 'XXXX';
-    final selected = filtered.where((cmd) => cmd['id'] == _selectedCommandId).firstOrNull;
+    final selected =
+        filtered.where((cmd) => cmd['id'] == _selectedCommandId).firstOrNull;
 
     return TrackerScaffold(
       title: 'SMS',
@@ -166,7 +165,9 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                   spacing: TrackerSpacing.sm,
                   runSpacing: TrackerSpacing.sm,
                   children: [
-                    Chip(label: Text('Família: ${session.selectedSuntechFamily.name}')),
+                    Chip(
+                        label: Text(
+                            'Família: ${session.selectedSuntechFamily.name}')),
                     Chip(label: Text('Modelo: ${session.device.model}')),
                     Chip(label: Text('ESN: $esn')),
                   ],
@@ -193,7 +194,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
             const TrackerEmptyState(
               icon: Icons.sms_failed_outlined,
               title: 'Nenhum comando SMS disponível',
-              message: 'Conecte e identifique um dispositivo ou ajuste a busca.',
+              message:
+                  'Conecte e identifique um dispositivo ou ajuste a busca.',
             )
           else
             ...filtered.map((cmd) {
@@ -219,7 +221,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                             children: [
                               Text(
                                 cmd['name']?.toString() ?? '-',
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -258,7 +261,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                     padding: const EdgeInsets.only(bottom: TrackerSpacing.sm),
                     child: Text(
                       'Destino sugerido: ${_phoneController.text.trim()}',
-                      style: const TextStyle(color: TrackerColors.textSecondary),
+                      style:
+                          const TextStyle(color: TrackerColors.textSecondary),
                     ),
                   ),
                 TextField(
@@ -275,7 +279,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                   const SizedBox(height: TrackerSpacing.sm),
                   Text(
                     selected['notes']?.toString() ?? '',
-                    style: const TextStyle(fontSize: 12, color: TrackerColors.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 12, color: TrackerColors.textSecondary),
                   ),
                 ],
                 const SizedBox(height: TrackerSpacing.sm),

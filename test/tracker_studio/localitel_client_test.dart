@@ -24,7 +24,7 @@ void main() {
                 'radiusMeters': 5000,
                 'bestOperator': 'Claro',
                 'bestTechnology': '4G',
-                 'sources': ['example-provider'],
+                'sources': ['example-provider'],
               },
             ),
           );

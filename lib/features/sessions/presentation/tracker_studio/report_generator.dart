@@ -1,11 +1,11 @@
-import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:tracker_studio/features/sessions/presentation/tracker_studio/tracker_session_state.dart';
 
 class ReportGenerator {
-  static Future<void> generateAndPrintSessionReport(TrackerSessionState session) async {
+  static Future<void> generateAndPrintSessionReport(
+      TrackerSessionState session) async {
     final doc = pw.Document();
 
     doc.addPage(
@@ -20,9 +20,11 @@ class ReportGenerator {
             pw.SizedBox(height: 20),
             _buildDiagnosticSummary(session),
             pw.SizedBox(height: 20),
-            _buildHistorySection('Histórico de Ignição', session.ignitionHistory),
+            _buildHistorySection(
+                'Histórico de Ignição', session.ignitionHistory),
             pw.SizedBox(height: 20),
-            _buildHistorySection('Histórico de Comandos', session.commandHistory),
+            _buildHistorySection(
+                'Histórico de Comandos', session.commandHistory),
           ];
         },
       ),
@@ -30,7 +32,8 @@ class ReportGenerator {
 
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => doc.save(),
-      name: 'Relatorio_${session.device.esn}_${DateTime.now().toIso8601String()}.pdf',
+      name:
+          'Relatorio_${session.device.esn}_${DateTime.now().toIso8601String()}.pdf',
     );
   }
 
@@ -39,7 +42,8 @@ class ReportGenerator {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Relatório de Sessão - Tracker Studio',
-            style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 24, fontWeight: pw.FontWeight.bold)),
         pw.Text('Gerado em: ${DateTime.now().toString()}'),
         pw.Divider(),
       ],
@@ -51,13 +55,15 @@ class ReportGenerator {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Identidade do Equipamento',
-            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 18, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 8),
         _buildRow('Fabricante', session.device.manufacturer),
         _buildRow('Modelo', session.device.model),
         _buildRow('ESN', session.device.esn),
         _buildRow('Firmware', session.device.firmware),
-        _buildRow('IMEI', session.device.imei.isNotEmpty ? session.device.imei : '-'),
+        _buildRow(
+            'IMEI', session.device.imei.isNotEmpty ? session.device.imei : '-'),
       ],
     );
   }
@@ -67,14 +73,17 @@ class ReportGenerator {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Último Diagnóstico',
-            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 18, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 8),
         ...session.diagnostics.map((group) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(group.title, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-              ...group.values.entries.map((e) => _buildRow('  ${e.key}', e.value)),
+              pw.Text(group.title,
+                  style: const pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              ...group.values.entries
+                  .map((e) => _buildRow('  ${e.key}', e.value)),
               pw.SizedBox(height: 4),
             ],
           );
@@ -83,17 +92,21 @@ class ReportGenerator {
     );
   }
 
-  static pw.Widget _buildHistorySection(String title, List<EventRecord> history) {
+  static pw.Widget _buildHistorySection(
+      String title, List<EventRecord> history) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(title, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+        pw.Text(title,
+            style: const pw.TextStyle(
+                fontSize: 18, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 8),
         if (history.isEmpty)
           pw.Text('Sem registros.')
         else
           ...history.map((evt) {
-            final timeStr = '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}';
+            final timeStr =
+                '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}';
             return pw.Text('[$timeStr] ${evt.event} - ${evt.detail}');
           }),
       ],

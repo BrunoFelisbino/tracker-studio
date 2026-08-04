@@ -51,8 +51,7 @@ TeltonikaNetworkCommands buildTeltonikaConfigSequence({
   return TeltonikaNetworkCommands(
     commands: [
       if (connectFirst) TeltonikaDriver.encodeConnect(),
-      for (final (parameterId, value) in parameters)
-        write(parameterId, value),
+      for (final (parameterId, value) in parameters) write(parameterId, value),
       if (saveLast) TeltonikaDriver.encodeSaveConfiguration(),
       if (disconnectLast) TeltonikaDriver.encodeDisconnect(),
     ],

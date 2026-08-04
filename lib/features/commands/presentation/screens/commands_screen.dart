@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +50,8 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
 
   Future<String> _readCatalog() async {
     try {
-      return await rootBundle.loadString('assets/catalogs/suntech_commands.json');
+      return await rootBundle
+          .loadString('assets/catalogs/suntech_commands.json');
     } catch (e) {
       debugPrint('CommandsScreen: catalog load fallback failed: $e');
       final file = File('assets/catalogs/suntech_commands.json');
@@ -65,12 +65,18 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
   List<Map<String, dynamic>> get _filtered {
     return _commands.where((cmd) {
       final matchSearch = _search.isEmpty ||
-          (cmd['code']?.toString().toLowerCase().contains(_search.toLowerCase()) ??
+          (cmd['code']
+                  ?.toString()
+                  .toLowerCase()
+                  .contains(_search.toLowerCase()) ??
               false) ||
-          (cmd['name']?.toString().toLowerCase().contains(_search.toLowerCase()) ??
+          (cmd['name']
+                  ?.toString()
+                  .toLowerCase()
+                  .contains(_search.toLowerCase()) ??
               false);
-      final matchRisk = _riskFilter == 'Todos' ||
-          cmd['risk']?.toString() == _riskFilter;
+      final matchRisk =
+          _riskFilter == 'Todos' || cmd['risk']?.toString() == _riskFilter;
       return matchSearch && matchRisk;
     }).toList();
   }
@@ -106,7 +112,9 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(trackerSessionControllerProvider);
-    final liveCatalog = session.handshakeResult?.commandCatalog.values.toList() ?? const <SuntechCommandDefinition>[];
+    final liveCatalog =
+        session.handshakeResult?.commandCatalog.values.toList() ??
+            const <SuntechCommandDefinition>[];
     return TrackerScaffold(
       title: 'Comandos',
       subtitle: 'Catálogo técnico e comandos do equipamento conectado',
@@ -138,145 +146,157 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
             height: 48,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: TrackerSpacing.lg),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: TrackerSpacing.lg),
               children: [
-                 _buildChip('Risco', _riskFilter, ['Todos', 'read', 'destructive', 'warning']),
-               ],
-             ),
-           ),
-           const SizedBox(height: TrackerSpacing.sm),
-           if (liveCatalog.isNotEmpty)
-             Padding(
-               padding: const EdgeInsets.symmetric(horizontal: TrackerSpacing.lg),
-               child: TrackerCard(
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     const Text('Equipamento conectado', style: TextStyle(fontWeight: FontWeight.bold)),
-                     const SizedBox(height: 8),
-                     Text('${liveCatalog.length} comando(s) carregado(s) do handshake real.'),
-                   ],
-                 ),
-               ),
-             ),
-           if (liveCatalog.isNotEmpty) const SizedBox(height: TrackerSpacing.sm),
-           _filtered.isEmpty
-               ? const TrackerEmptyState(
-                   icon: Icons.search_off,
-                   title: 'Nenhum comando encontrado',
-                   message: 'Sem template válido no catálogo carregado.',
-                 )
-               : ListView.builder(
+                _buildChip('Risco', _riskFilter,
+                    ['Todos', 'read', 'destructive', 'warning']),
+              ],
+            ),
+          ),
+          const SizedBox(height: TrackerSpacing.sm),
+          if (liveCatalog.isNotEmpty)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: TrackerSpacing.lg),
+              child: TrackerCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Equipamento conectado',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text(
+                        '${liveCatalog.length} comando(s) carregado(s) do handshake real.'),
+                  ],
+                ),
+              ),
+            ),
+          if (liveCatalog.isNotEmpty) const SizedBox(height: TrackerSpacing.sm),
+          _filtered.isEmpty
+              ? const TrackerEmptyState(
+                  icon: Icons.search_off,
+                  title: 'Nenhum comando encontrado',
+                  message: 'Sem template válido no catálogo carregado.',
+                )
+              : ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: TrackerSpacing.lg,
-                    ),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final cmd = _filtered[index];
-                      final isClickable = cmd['risk'] != 'destructive' && cmd['critical'] != true;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: TrackerSpacing.sm),
-                        child: TrackerCard(
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(TrackerSpacing.sm),
-                            onTap: isClickable ? () => _executeCommand(context, ref, cmd) : null,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _categoryIcon(cmd['category']),
-                                  color: isClickable
-                                      ? TrackerColors.communicationBlue
-                                      : TrackerColors.textSecondary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: TrackerSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                       Text(
-                                         cmd['rawCommand'] ?? '',
-                                         style: TextStyle(
-                                           fontWeight: FontWeight.bold,
-                                           fontFamily: 'monospace',
-                                           color: isClickable
-                                               ? TrackerColors.textPrimary
-                                               : TrackerColors.textSecondary,
-                                         ),
-                                       ),
-                                       const SizedBox(height: 2),
-                                       Text(
-                                         '${cmd['name'] ?? ''} · ${cmd['family'] ?? '-'}',
-                                         style: const TextStyle(
-                                           color: TrackerColors.textSecondary,
-                                           fontSize: 13,
-                                         ),
-                                       ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _riskColor(cmd['risk']).withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    (cmd['risk'] ?? '').toString().toUpperCase(),
-                                    style: TextStyle(
-                                      color: _riskColor(cmd['risk']),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TrackerSpacing.lg,
+                  ),
+                  itemCount: _filtered.length,
+                  itemBuilder: (context, index) {
+                    final cmd = _filtered[index];
+                    final isClickable =
+                        cmd['risk'] != 'destructive' && cmd['critical'] != true;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: TrackerSpacing.sm),
+                      child: TrackerCard(
+                        child: InkWell(
+                          borderRadius:
+                              BorderRadius.circular(TrackerSpacing.sm),
+                          onTap: isClickable
+                              ? () => _executeCommand(context, ref, cmd)
+                              : null,
+                          child: Row(
+                            children: [
+                              Icon(
+                                _categoryIcon(cmd['category']),
+                                color: isClickable
+                                    ? TrackerColors.communicationBlue
+                                    : TrackerColors.textSecondary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: TrackerSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      cmd['rawCommand'] ?? '',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'monospace',
+                                        color: isClickable
+                                            ? TrackerColors.textPrimary
+                                            : TrackerColors.textSecondary,
+                                      ),
                                     ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${cmd['name'] ?? ''} · ${cmd['family'] ?? '-'}',
+                                      style: const TextStyle(
+                                        color: TrackerColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _riskColor(cmd['risk'])
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  (cmd['risk'] ?? '').toString().toUpperCase(),
+                                  style: TextStyle(
+                                    color: _riskColor(cmd['risk']),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: TrackerSpacing.sm),
-                                if (isClickable)
-                                  Icon(
-                                    Icons.play_circle_outline,
-                                    size: 20,
-                                    color: TrackerColors.communicationBlue,
-                                  )
-                                else
-                                  Icon(
-                                     ((cmd['channels'] as List<dynamic>?) ?? const []).contains('usb')
-                                         ? Icons.usb
-                                         : Icons.cable,
-                                     size: 16,
-                                     color: TrackerColors.textSecondary,
-                                   ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: TrackerSpacing.sm),
+                              if (isClickable)
+                                const Icon(
+                                  Icons.play_circle_outline,
+                                  size: 20,
+                                  color: TrackerColors.communicationBlue,
+                                )
+                              else
+                                Icon(
+                                  ((cmd['channels'] as List<dynamic>?) ??
+                                              const [])
+                                          .contains('usb')
+                                      ? Icons.usb
+                                      : Icons.cable,
+                                  size: 16,
+                                  color: TrackerColors.textSecondary,
+                                ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
-         if (liveCatalog.isNotEmpty)
-           Padding(
-             padding: const EdgeInsets.all(TrackerSpacing.lg),
-             child: Wrap(
-               spacing: TrackerSpacing.sm,
-               runSpacing: TrackerSpacing.sm,
-               children: liveCatalog.take(6).map((definition) {
-                 return FilledButton.tonal(
-                   onPressed: ref
-                           .read(trackerSessionControllerProvider.notifier)
-                           .canSendCatalogCommand(definition)
-                       ? () => ref
-                           .read(trackerSessionControllerProvider.notifier)
-                           .sendCatalogCommand(definition)
-                       : null,
-                   child: Text(definition.label),
-                 );
-               }).toList(),
-             ),
-           ),
+                      ),
+                    );
+                  },
+                ),
+          if (liveCatalog.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(TrackerSpacing.lg),
+              child: Wrap(
+                spacing: TrackerSpacing.sm,
+                runSpacing: TrackerSpacing.sm,
+                children: liveCatalog.take(6).map((definition) {
+                  return FilledButton.tonal(
+                    onPressed: ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .canSendCatalogCommand(definition)
+                        ? () => ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .sendCatalogCommand(definition)
+                        : null,
+                    child: Text(definition.label),
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
     );
@@ -305,7 +325,8 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
     );
   }
 
-  void _executeCommand(BuildContext context, WidgetRef ref, Map<String, dynamic> cmd) async {
+  void _executeCommand(
+      BuildContext context, WidgetRef ref, Map<String, dynamic> cmd) async {
     final session = ref.read(trackerSessionControllerProvider);
     if (!session.connection.usbConnected) {
       if (!context.mounted) return;
@@ -320,7 +341,9 @@ class _CommandsScreenState extends ConsumerState<CommandsScreen> {
     final command = rawCommand.replaceAll('<ESN>', esn);
 
     try {
-      await ref.read(trackerSessionControllerProvider.notifier).sendManualCommand(command);
+      await ref
+          .read(trackerSessionControllerProvider.notifier)
+          .sendManualCommand(command);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

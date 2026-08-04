@@ -660,7 +660,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (_disposed || _isDisconnecting) return;
 
-    if (family == SuntechCommandFamily.newGenSt8210St8310 && state.hasDeviceRead) {
+    if (family == SuntechCommandFamily.newGenSt8210St8310 &&
+        state.hasDeviceRead) {
       final iccidCmd = state.handshakeResult?.commandCatalog['ReqICCID'];
       if (iccidCmd != null) {
         await _sendCommand(iccidCmd.command(esn: state.device.esn));
@@ -674,7 +675,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
     state = _appendLog(
       state,
-      LogEntry(_clock(), 'AutoID', 'Identificacao pos-handshake concluida: ${familyLabel(family)}'),
+      LogEntry(_clock(), 'AutoID',
+          'Identificacao pos-handshake concluida: ${familyLabel(family)}'),
     );
 
     _startStatusPolling();
@@ -940,7 +942,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
     state = _appendLog(
       state,
-      LogEntry(_clock(), 'Handshake', 'Identificacao automatica iniciada apos conectar USB'),
+      LogEntry(_clock(), 'Handshake',
+          'Identificacao automatica iniciada apos conectar USB'),
     );
 
     await autoIdentifyDevice();
@@ -1014,15 +1017,20 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       return;
     }
     if (family == SuntechCommandFamily.legacySt300St310) {
-      await _sendCommand(SuntechLegacyCommands.status.command(), silent: silent);
+      await _sendCommand(SuntechLegacyCommands.status.command(),
+          silent: silent);
       return;
     }
     if (!state.hasDeviceRead) {
-      if (!silent) throw StateError('Status New Gen bloqueado: ESN não identificado pelo JSON.');
+      if (!silent) {
+        throw StateError(
+            'Status New Gen bloqueado: ESN não identificado pelo JSON.');
+      }
       return;
     }
     await _sendCommand(
-        SuntechNewGenCommands.status.command(esn: state.device.esn), silent: silent);
+        SuntechNewGenCommands.status.command(esn: state.device.esn),
+        silent: silent);
   }
 
   Future<void> readPreset({bool silent = false}) async {
@@ -1536,8 +1544,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     if (line.startsWith('[READ_HEX] ')) {
       final hex = line.substring('[READ_HEX] '.length).trim();
       if (hex.isNotEmpty) {
-        final nextHex =
-            <String>[...state.logCapture.hexChunks, hex];
+        final nextHex = <String>[...state.logCapture.hexChunks, hex];
         state = _copy(
           state,
           logCapture: state.logCapture.copyWith(hexChunks: nextHex),
@@ -2160,16 +2167,20 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     );
 
     final nowDateTime = DateTime.now();
-    final newVoltageHistory = List<TelemetryDataPoint>.from(current.voltageHistory);
-    final newBackupVoltageHistory = List<TelemetryDataPoint>.from(current.backupVoltageHistory);
+    final newVoltageHistory =
+        List<TelemetryDataPoint>.from(current.voltageHistory);
+    final newBackupVoltageHistory =
+        List<TelemetryDataPoint>.from(current.backupVoltageHistory);
     final newIgnitionHistory = List<EventRecord>.from(current.ignitionHistory);
     final newCommandHistory = List<EventRecord>.from(current.commandHistory);
 
     if (snapshot.mainVoltage != null) {
-      newVoltageHistory.add(TelemetryDataPoint(nowDateTime, snapshot.mainVoltage!));
+      newVoltageHistory
+          .add(TelemetryDataPoint(nowDateTime, snapshot.mainVoltage!));
     }
     if (snapshot.backupVoltage != null) {
-      newBackupVoltageHistory.add(TelemetryDataPoint(nowDateTime, snapshot.backupVoltage!));
+      newBackupVoltageHistory
+          .add(TelemetryDataPoint(nowDateTime, snapshot.backupVoltage!));
     }
 
     final tests = [...next.tests];
@@ -2238,7 +2249,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
           ));
         }
       }
-      
+
       next = _copy(
         next,
         behaviorChanges: [...current.behaviorChanges, ...changes],
@@ -2310,7 +2321,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
           field: 'gprs',
           previousValue: wasOnline ? 'Online' : 'Offline',
           newValue: isOnline ? 'Online' : 'Offline',
-          description: 'GPRS mudou: ${wasOnline ? 'Online' : 'Offline'} -> ${isOnline ? 'Online' : 'Offline'}',
+          description:
+              'GPRS mudou: ${wasOnline ? 'Online' : 'Offline'} -> ${isOnline ? 'Online' : 'Offline'}',
         ));
       }
     }
@@ -2428,7 +2440,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       pendingSyncServices: pendingSyncServices ?? current.pendingSyncServices,
       behaviorChanges: behaviorChanges ?? current.behaviorChanges,
       voltageHistory: voltageHistory ?? current.voltageHistory,
-      backupVoltageHistory: backupVoltageHistory ?? current.backupVoltageHistory,
+      backupVoltageHistory:
+          backupVoltageHistory ?? current.backupVoltageHistory,
       ignitionHistory: ignitionHistory ?? current.ignitionHistory,
       commandHistory: commandHistory ?? current.commandHistory,
       logCapture: logCapture ?? current.logCapture,

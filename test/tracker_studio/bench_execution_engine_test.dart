@@ -165,7 +165,8 @@ void main() {
         notes: 'test',
         riskClassification: 'destructive',
       );
-      expect(BenchRiskPolicy.requiresConfirmation(cmd.riskClassification), isTrue);
+      expect(
+          BenchRiskPolicy.requiresConfirmation(cmd.riskClassification), isTrue);
     });
 
     test('requires confirmation for action commands', () {

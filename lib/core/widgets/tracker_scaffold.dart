@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../design/tracker_colors.dart';
-import '../design/tracker_spacing.dart';
 import 'tracker_scaffold_header.dart';
 
 enum TrackerScaffoldStyle { flat, headerGradient }

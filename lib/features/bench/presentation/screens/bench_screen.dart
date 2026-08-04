@@ -58,13 +58,19 @@ class BenchScreen extends ConsumerWidget {
                         eyebrow: 'Status USB/Serial',
                       ),
                       const SizedBox(height: TrackerSpacing.xs),
-                      _InfoRow(label: 'Porta', value: session.connection.commandPortName),
+                      _InfoRow(
+                          label: 'Porta',
+                          value: session.connection.commandPortName),
                       const SizedBox(height: TrackerSpacing.xs),
-                      _InfoRow(label: 'Baud Rate', value: '${session.connection.baudRate}'),
+                      _InfoRow(
+                          label: 'Baud Rate',
+                          value: '${session.connection.baudRate}'),
                       const SizedBox(height: TrackerSpacing.xs),
                       _InfoRow(
                         label: 'Status',
-                        value: session.connection.usbConnected ? 'Conectado' : 'Desconectado',
+                        value: session.connection.usbConnected
+                            ? 'Conectado'
+                            : 'Desconectado',
                       ),
                     ],
                   ),
@@ -84,7 +90,8 @@ class BenchScreen extends ConsumerWidget {
                       const SizedBox(height: TrackerSpacing.xs),
                       _InfoRow(label: 'Modelo', value: session.device.model),
                       const SizedBox(height: TrackerSpacing.xs),
-                      _InfoRow(label: 'Firmware', value: session.device.firmware),
+                      _InfoRow(
+                          label: 'Firmware', value: session.device.firmware),
                       const SizedBox(height: TrackerSpacing.xs),
                       _InfoRow(label: 'ESN', value: session.device.esn),
                     ],
@@ -126,7 +133,8 @@ class BenchScreen extends ConsumerWidget {
               Expanded(
                 child: TrackerMetricCard(
                   label: 'Pendentes',
-                  value: '${session.tests.where((t) => t.status == TestStatus.pending || t.status == TestStatus.running).length}',
+                  value:
+                      '${session.tests.where((t) => t.status == TestStatus.pending || t.status == TestStatus.running).length}',
                   icon: Icons.hourglass_empty,
                   color: TrackerColors.attentionAmber,
                 ),
@@ -147,12 +155,14 @@ class BenchScreen extends ConsumerWidget {
                 ? const TrackerEmptyState(
                     icon: Icons.folder_open,
                     title: 'Nenhuma evidência',
-                    message: 'As evidências técnicas aparecerão durante os testes.',
+                    message:
+                        'As evidências técnicas aparecerão durante os testes.',
                   )
                 : Column(
                     children: session.logs.reversed.take(6).map((log) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: TrackerSpacing.xs),
+                        padding:
+                            const EdgeInsets.only(bottom: TrackerSpacing.xs),
                         child: _InfoRow(
                           label: '${log.source} ${log.time}',
                           value: log.message,
@@ -182,7 +192,8 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(color: TrackerColors.textSecondary, fontSize: 13),
+            style: const TextStyle(
+                color: TrackerColors.textSecondary, fontSize: 13),
           ),
         ),
         const SizedBox(width: TrackerSpacing.sm),

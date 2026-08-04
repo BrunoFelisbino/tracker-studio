@@ -6,8 +6,7 @@ import 'package:tracker_studio/core/bootstrap/bootstrap_models.dart';
 import 'package:tracker_studio/features/auth/presentation/screens/splash_screen.dart';
 
 void main() {
-  testWidgets(
-      'failed bootstrap displays error without infinite spinner',
+  testWidgets('failed bootstrap displays error without infinite spinner',
       (tester) async {
     final bootstrap = _controller(
       catalog: () async => throw const BootstrapStepException(

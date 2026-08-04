@@ -6,7 +6,8 @@ import 'package:tracker_studio/core/bootstrap/bootstrap_controller.dart';
 import 'package:tracker_studio/core/bootstrap/bootstrap_models.dart';
 
 void main() {
-  testWidgets('/settings and /reports routes work and invalid route uses internal error screen',
+  testWidgets(
+      '/settings and /reports routes work and invalid route uses internal error screen',
       (tester) async {
     final bootstrap = BootstrapController(
       checkSession: () async {},

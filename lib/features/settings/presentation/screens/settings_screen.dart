@@ -33,9 +33,10 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Logging',
             rows: {
               'Entradas em memória': '${session.logs.length}',
-              'Última resposta manual': session.manualCommand.lastResponse.isEmpty
-                  ? 'Não executado'
-                  : session.manualCommand.lastResponse,
+              'Última resposta manual':
+                  session.manualCommand.lastResponse.isEmpty
+                      ? 'Não executado'
+                      : session.manualCommand.lastResponse,
             },
           ),
           _Section(

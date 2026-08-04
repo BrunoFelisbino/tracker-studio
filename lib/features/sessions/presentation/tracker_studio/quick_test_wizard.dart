@@ -48,14 +48,19 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
   @override
   Widget build(BuildContext context) {
     final hasIdentity = widget.session.device.hasIdentity;
-    final mainVolt = widget.session.voltageHistory.isNotEmpty ? widget.session.voltageHistory.last.value : null;
+    final mainVolt = widget.session.voltageHistory.isNotEmpty
+        ? widget.session.voltageHistory.last.value
+        : null;
     final isPowerOk = mainVolt != null && mainVolt >= 10.5;
     final isIgnitionOn = widget.session.ignitionHistory.isNotEmpty &&
-        widget.session.ignitionHistory.last.event.toLowerCase().contains('liga');
+        widget.session.ignitionHistory.last.event
+            .toLowerCase()
+            .contains('liga');
     final isOutputOk = widget.session.commandHistory.isNotEmpty;
     final gpsTest = widget.session.tests.firstWhere(
       (t) => t.id == 'gps',
-      orElse: () => const TestStepState('gps', 'GPS', TestStatus.pending, 0, 0, ''),
+      orElse: () =>
+          const TestStepState('gps', 'GPS', TestStatus.pending, 0, 0, ''),
     );
     final isGpsOk = gpsTest.status == TestStatus.passed;
 
@@ -63,7 +68,9 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
       QuickTestWizardStep(
         number: 1,
         title: 'Identidade ESN',
-        description: hasIdentity ? 'ESN: ${widget.session.device.esn}' : 'Aguardando ESN...',
+        description: hasIdentity
+            ? 'ESN: ${widget.session.device.esn}'
+            : 'Aguardando ESN...',
         icon: Icons.fingerprint_rounded,
         isCompleted: hasIdentity,
         isPassed: hasIdentity,
@@ -71,7 +78,9 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
       QuickTestWizardStep(
         number: 2,
         title: 'Alimentação',
-        description: mainVolt != null ? '${mainVolt.toStringAsFixed(1)}V (Linha 30)' : 'Aguardando voltagem...',
+        description: mainVolt != null
+            ? '${mainVolt.toStringAsFixed(1)}V (Linha 30)'
+            : 'Aguardando voltagem...',
         icon: Icons.bolt_rounded,
         isCompleted: mainVolt != null,
         isPassed: isPowerOk,
@@ -79,7 +88,9 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
       QuickTestWizardStep(
         number: 3,
         title: 'Chave de Ignição',
-        description: isIgnitionOn ? 'Sinal Ligado Detectado' : 'Ligue a chave do veículo',
+        description: isIgnitionOn
+            ? 'Sinal Ligado Detectado'
+            : 'Ligue a chave do veículo',
         icon: Icons.key_rounded,
         isCompleted: isIgnitionOn,
         isPassed: isIgnitionOn,
@@ -87,7 +98,9 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
       QuickTestWizardStep(
         number: 4,
         title: 'Saída 1 (Bloqueio)',
-        description: isOutputOk ? 'Pulso Enviado com Sucesso' : 'Toque para testar pulso',
+        description: isOutputOk
+            ? 'Pulso Enviado com Sucesso'
+            : 'Toque para testar pulso',
         icon: Icons.lock_rounded,
         isCompleted: isOutputOk,
         isPassed: isOutputOk,
@@ -95,7 +108,8 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
       QuickTestWizardStep(
         number: 5,
         title: 'Fix GPS & Rede',
-        description: isGpsOk ? 'Fix GPS OK & Conectado' : 'Buscando Fix do GPS...',
+        description:
+            isGpsOk ? 'Fix GPS OK & Conectado' : 'Buscando Fix do GPS...',
         icon: Icons.satellite_alt_rounded,
         isCompleted: isGpsOk,
         isPassed: isGpsOk,
@@ -128,13 +142,17 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Check-in Automático Vapt-Vupt', style: TrackerTextStyles.cardTitle),
-                    Text('Sequência de homologação rápida de instalação em campo.', style: TrackerTextStyles.body),
+                    Text('Check-in Automático Vapt-Vupt',
+                        style: TrackerTextStyles.cardTitle),
+                    Text(
+                        'Sequência de homologação rápida de instalação em campo.',
+                        style: TrackerTextStyles.body),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isAllPassed
                       ? TrackerColors.technicalGreen.withValues(alpha: 0.1)
@@ -146,7 +164,9 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isAllPassed ? TrackerColors.technicalGreen : TrackerColors.attentionAmber,
+                    color: isAllPassed
+                        ? TrackerColors.technicalGreen
+                        : TrackerColors.attentionAmber,
                   ),
                 ),
               ),
@@ -174,14 +194,16 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                     onTap: () => setState(() => _currentStep = step.number),
                     borderRadius: TrackerRadius.small,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 2),
                       child: Column(
                         children: [
                           Container(
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: isCurrent ? 0.2 : 0.1),
+                              color: color.withValues(
+                                  alpha: isCurrent ? 0.2 : 0.1),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isCurrent ? color : Colors.transparent,
@@ -199,8 +221,11 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                             step.title,
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-                              color: isCurrent ? TrackerColors.textPrimary : TrackerColors.textMuted,
+                              fontWeight:
+                                  isCurrent ? FontWeight.bold : FontWeight.w500,
+                              color: isCurrent
+                                  ? TrackerColors.textPrimary
+                                  : TrackerColors.textMuted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -233,9 +258,12 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Etapa ${step.number}: ${step.title}', style: TrackerTextStyles.bodyStrong),
+                        Text('Etapa ${step.number}: ${step.title}',
+                            style: TrackerTextStyles.bodyStrong),
                         const SizedBox(height: 2),
-                        Text(step.description, style: TrackerTextStyles.body.copyWith(fontSize: 12)),
+                        Text(step.description,
+                            style:
+                                TrackerTextStyles.body.copyWith(fontSize: 12)),
                       ],
                     ),
                   ),
@@ -245,11 +273,15 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: TrackerColors.communicationBlue,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.small),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: TrackerRadius.small),
                       ),
                       icon: const Icon(Icons.lock_rounded, size: 14),
-                      label: const Text('Testar Pulso', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: const Text('Testar Pulso',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ],
@@ -264,11 +296,13 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
               decoration: BoxDecoration(
                 color: TrackerColors.technicalGreen.withValues(alpha: 0.08),
                 borderRadius: TrackerRadius.medium,
-                border: Border.all(color: TrackerColors.technicalGreen.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: TrackerColors.technicalGreen.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.verified_rounded, color: TrackerColors.technicalGreen, size: 24),
+                  const Icon(Icons.verified_rounded,
+                      color: TrackerColors.technicalGreen, size: 24),
                   const SizedBox(width: TrackerSpacing.md),
                   const Expanded(
                     child: Column(
@@ -285,7 +319,8 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                         ),
                         Text(
                           'Todos os 5 testes nominais foram homologados com sucesso. O veículo está pronto para liberação.',
-                          style: TextStyle(fontSize: 11, color: TrackerColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 11, color: TrackerColors.textSecondary),
                         ),
                       ],
                     ),
@@ -294,16 +329,22 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () {
-                          ReportGenerator.generateAndPrintSessionReport(widget.session);
+                          ReportGenerator.generateAndPrintSessionReport(
+                              widget.session);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: TrackerColors.communicationBlue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.small),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: TrackerRadius.small),
                         ),
-                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 14),
-                        label: const Text('Gerar Relatório (PDF)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        icon:
+                            const Icon(Icons.picture_as_pdf_rounded, size: 14),
+                        label: const Text('Gerar Relatório (PDF)',
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
@@ -311,11 +352,16 @@ class _QuickTestWizardWidgetState extends State<QuickTestWizardWidget> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: TrackerColors.technicalGreen,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.small),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: TrackerRadius.small),
                         ),
-                        icon: const Icon(Icons.assignment_turned_in_rounded, size: 14),
-                        label: const Text('Concluir Laudo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.assignment_turned_in_rounded,
+                            size: 14),
+                        label: const Text('Concluir Laudo',
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),

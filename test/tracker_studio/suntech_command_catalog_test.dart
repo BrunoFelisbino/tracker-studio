@@ -8,7 +8,8 @@ void main() {
   late List<dynamic> commands;
 
   setUpAll(() {
-    var file = File('${Directory.current.path}/assets/catalogs/suntech_commands.json');
+    var file =
+        File('${Directory.current.path}/assets/catalogs/suntech_commands.json');
     if (!file.existsSync()) {
       file = File('assets/catalogs/suntech_commands.json');
     }
@@ -40,7 +41,8 @@ void main() {
         expect(cmd.containsKey('family'), isTrue, reason: 'Missing family');
         expect(cmd.containsKey('name'), isTrue, reason: 'Missing name');
         expect(cmd.containsKey('code'), isTrue, reason: 'Missing code');
-        expect(cmd.containsKey('rawCommand'), isTrue, reason: 'Missing rawCommand');
+        expect(cmd.containsKey('rawCommand'), isTrue,
+            reason: 'Missing rawCommand');
         expect(cmd.containsKey('category'), isTrue, reason: 'Missing category');
         expect(cmd.containsKey('risk'), isTrue, reason: 'Missing risk');
         expect(cmd.containsKey('status'), isTrue, reason: 'Missing status');
@@ -64,9 +66,15 @@ void main() {
 
   group('Valid families', () {
     const validFamilies = {
-      'newgen_st8210', 'newgen_st8310', 'newgen_st8310u', 'newgen_st8310um',
-      'legacy_st300', 'legacy_st310', 'legacy_st310u',
-      'handshake', 'cross_family',
+      'newgen_st8210',
+      'newgen_st8310',
+      'newgen_st8310u',
+      'newgen_st8310um',
+      'legacy_st300',
+      'legacy_st310',
+      'legacy_st310u',
+      'handshake',
+      'cross_family',
     };
 
     test('all families are valid', () {
@@ -80,12 +88,36 @@ void main() {
 
   group('Valid categories', () {
     const validCategories = {
-      'identification', 'network', 'sim', 'apn', 'server', 'gps',
-      'ignition', 'inputs', 'outputs', 'blocking', 'unblocking',
-      'power', 'battery', 'times', 'events', 'sensors', 'position',
-      'maintenance', 'reset', 'preset', 'diagnostic', 'encoding',
-      'geofence', 'security', 'calibration', 'odometer', 'messaging',
-      'work', 'schema', 'config',
+      'identification',
+      'network',
+      'sim',
+      'apn',
+      'server',
+      'gps',
+      'ignition',
+      'inputs',
+      'outputs',
+      'blocking',
+      'unblocking',
+      'power',
+      'battery',
+      'times',
+      'events',
+      'sensors',
+      'position',
+      'maintenance',
+      'reset',
+      'preset',
+      'diagnostic',
+      'encoding',
+      'geofence',
+      'security',
+      'calibration',
+      'odometer',
+      'messaging',
+      'work',
+      'schema',
+      'config',
     };
 
     test('all categories are valid', () {
@@ -103,16 +135,13 @@ void main() {
     test('all risk levels are valid', () {
       for (final cmd in commands) {
         final risk = cmd['risk'] as String;
-        expect(validRisks, contains(risk),
-            reason: 'Invalid risk: $risk');
+        expect(validRisks, contains(risk), reason: 'Invalid risk: $risk');
       }
     });
   });
 
   group('Valid statuses', () {
-    const validStatuses = {
-      'supported', 'partial', 'legacy', 'not_validated'
-    };
+    const validStatuses = {'supported', 'partial', 'legacy', 'not_validated'};
 
     test('all statuses are valid', () {
       for (final cmd in commands) {
@@ -125,8 +154,13 @@ void main() {
 
   group('Models', () {
     const validModels = {
-      'ST8210', 'ST8310', 'ST8310U', 'ST8310UM',
-      'ST300', 'ST310', 'ST310U',
+      'ST8210',
+      'ST8310',
+      'ST8310U',
+      'ST8310UM',
+      'ST300',
+      'ST310',
+      'ST310U',
     };
 
     test('all commands have at least one model', () {
@@ -140,8 +174,7 @@ void main() {
       for (final cmd in commands) {
         final models = (cmd['models'] as List<dynamic>).cast<String>();
         for (final model in models) {
-          expect(validModels, contains(model),
-              reason: 'Invalid model: $model');
+          expect(validModels, contains(model), reason: 'Invalid model: $model');
         }
       }
     });
@@ -180,10 +213,13 @@ void main() {
 
     test('critical destructive configuration commands require readback', () {
       for (final cmd in commands) {
-        if (cmd['risk'] == 'destructive' && cmd['critical'] == true &&
-            cmd['category'] != 'reset' && cmd['category'] != 'messaging') {
+        if (cmd['risk'] == 'destructive' &&
+            cmd['critical'] == true &&
+            cmd['category'] != 'reset' &&
+            cmd['category'] != 'messaging') {
           expect(cmd['requiresReadback'], isTrue,
-              reason: 'Critical destructive config command does not require readback');
+              reason:
+                  'Critical destructive config command does not require readback');
         }
       }
     });
@@ -227,7 +263,8 @@ void main() {
     test('non-probe new gen commands have ESN parameter', () {
       for (final cmd in commands) {
         final family = cmd['family'] as String;
-        if (family.startsWith('newgen_') && cmd['category'] != 'identification') {
+        if (family.startsWith('newgen_') &&
+            cmd['category'] != 'identification') {
           final params = cmd['parameters'] as List<dynamic>;
           final hasEsn = params.any((p) => p['name'] == 'ESN');
           expect(hasEsn, isTrue,

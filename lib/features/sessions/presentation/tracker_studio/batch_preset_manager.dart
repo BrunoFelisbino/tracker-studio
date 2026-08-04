@@ -122,10 +122,17 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
     if (original == null || original.isEmpty) return;
 
     final apn = original['APN'] ?? original['apn'] ?? '';
-    final user = original['Usuário'] ?? original['Usuario'] ?? original['usuario'] ?? '';
+    final user =
+        original['Usuário'] ?? original['Usuario'] ?? original['usuario'] ?? '';
     final pass = original['Senha'] ?? original['senha'] ?? '';
-    final server = original['Servidor primário'] ?? original['Servidor primario'] ?? original['servidor'] ?? '';
-    final port = original['Porta primária'] ?? original['Porta primaria'] ?? original['porta'] ?? '';
+    final server = original['Servidor primário'] ??
+        original['Servidor primario'] ??
+        original['servidor'] ??
+        '';
+    final port = original['Porta primária'] ??
+        original['Porta primaria'] ??
+        original['porta'] ??
+        '';
     final keepAlive = original['Keep-Alive'] ?? original['Intervalo'] ?? '';
 
     if (apn.isNotEmpty) _apnController.text = apn;
@@ -178,7 +185,8 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final hasReadData = widget.session != null && widget.session!.configuration.original.isNotEmpty;
+    final hasReadData = widget.session != null &&
+        widget.session!.configuration.original.isNotEmpty;
 
     return TrackerCard(
       child: Column(
@@ -202,7 +210,8 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
               const SizedBox(width: 8),
               if (hasReadData)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: TrackerColors.technicalGreen.withValues(alpha: 0.1),
                     borderRadius: TrackerRadius.pill,
@@ -230,14 +239,18 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
                   spacing: TrackerSpacing.sm,
                   runSpacing: TrackerSpacing.xs,
                   children: defaultPresets.map((preset) {
-                    final isSelected = !_isCustomEdited && preset.name == _selected.name;
+                    final isSelected =
+                        !_isCustomEdited && preset.name == _selected.name;
                     return ChoiceChip(
                       label: Text(preset.name),
                       selected: isSelected,
                       selectedColor: TrackerColors.communicationBlue,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : TrackerColors.textPrimary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? Colors.white
+                            : TrackerColors.textPrimary,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                         fontSize: 11,
                       ),
                       onSelected: (val) {
@@ -249,14 +262,18 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
-                onPressed: widget.isConnected && widget.onFetchFromDevice != null
-                    ? widget.onFetchFromDevice
-                    : null,
+                onPressed:
+                    widget.isConnected && widget.onFetchFromDevice != null
+                        ? widget.onFetchFromDevice
+                        : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: TrackerColors.communicationBlue,
-                  side: const BorderSide(color: TrackerColors.communicationBlue),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.small),
+                  side:
+                      const BorderSide(color: TrackerColors.communicationBlue),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: TrackerRadius.small),
                 ),
                 icon: const Icon(Icons.download_rounded, size: 14),
                 label: const Text(
@@ -284,15 +301,18 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: _buildFormField('APN (Endereço)', _apnController, 'm2m.vivo.com.br'),
+                      child: _buildFormField(
+                          'APN (Endereço)', _apnController, 'm2m.vivo.com.br'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildFormField('Usuário APN', _userController, 'vivo'),
+                      child: _buildFormField(
+                          'Usuário APN', _userController, 'vivo'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildFormField('Senha APN', _passController, 'vivo'),
+                      child:
+                          _buildFormField('Senha APN', _passController, 'vivo'),
                     ),
                   ],
                 ),
@@ -301,15 +321,18 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: _buildFormField('Servidor IP Primário', _serverController, '192.0.2.10'),
+                      child: _buildFormField('Servidor IP Primário',
+                          _serverController, '192.0.2.10'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildFormField('Porta Servidor', _portController, '5000'),
+                      child: _buildFormField(
+                          'Porta Servidor', _portController, '5000'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildFormField('Tempo Envio / KeepAlive (min)', _keepAliveController, '10'),
+                      child: _buildFormField('Tempo Envio / KeepAlive (min)',
+                          _keepAliveController, '10'),
                     ),
                   ],
                 ),
@@ -322,17 +345,22 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
                         padding: EdgeInsets.only(right: 12),
                         child: Text(
                           '* Parâmetros personalizados',
-                          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: TrackerColors.attentionAmber),
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                              color: TrackerColors.attentionAmber),
                         ),
                       ),
                     ElevatedButton.icon(
-                      onPressed: widget.isConnected && widget.onApplyPreset != null
+                      onPressed: widget.isConnected &&
+                              widget.onApplyPreset != null
                           ? () => widget.onApplyPreset!(_buildCompiledPreset())
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: TrackerColors.communicationBlue,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
                         shape: const RoundedRectangleBorder(
                           borderRadius: TrackerRadius.small,
                         ),
@@ -340,7 +368,8 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
                       icon: const Icon(Icons.send_rounded, size: 14),
                       label: const Text(
                         'Gravar Configuração no Rastreador',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -353,7 +382,8 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
     );
   }
 
-  Widget _buildFormField(String label, TextEditingController controller, String placeholder) {
+  Widget _buildFormField(
+      String label, TextEditingController controller, String placeholder) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -367,25 +397,32 @@ class _BatchPresetWidgetState extends State<BatchPresetWidget> {
           onChanged: (_) {
             if (!_isCustomEdited) setState(() => _isCustomEdited = true);
           },
-          style: const TextStyle(fontSize: 12, fontFamily: 'monospace', fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontSize: 12,
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             isDense: true,
             hintText: placeholder,
-            hintStyle: TextStyle(color: TrackerColors.textMuted.withValues(alpha: 0.5), fontSize: 11),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            hintStyle: TextStyle(
+                color: TrackerColors.textMuted.withValues(alpha: 0.5),
+                fontSize: 11),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             filled: true,
             fillColor: TrackerColors.surfaceMuted,
-            border: OutlineInputBorder(
+            border: const OutlineInputBorder(
               borderRadius: TrackerRadius.small,
-              borderSide: const BorderSide(color: TrackerColors.lineSubtle),
+              borderSide: BorderSide(color: TrackerColors.lineSubtle),
             ),
-            enabledBorder: OutlineInputBorder(
+            enabledBorder: const OutlineInputBorder(
               borderRadius: TrackerRadius.small,
-              borderSide: const BorderSide(color: TrackerColors.lineSubtle),
+              borderSide: BorderSide(color: TrackerColors.lineSubtle),
             ),
-            focusedBorder: OutlineInputBorder(
+            focusedBorder: const OutlineInputBorder(
               borderRadius: TrackerRadius.small,
-              borderSide: const BorderSide(color: TrackerColors.communicationBlue, width: 1.5),
+              borderSide: BorderSide(
+                  color: TrackerColors.communicationBlue, width: 1.5),
             ),
           ),
         ),

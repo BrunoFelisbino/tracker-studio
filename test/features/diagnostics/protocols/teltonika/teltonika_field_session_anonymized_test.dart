@@ -18,123 +18,124 @@ void main() {
 
   group('Teltonika FMB140 Field Session - Anonymized Test Data', () {
     test('FMB140 model identification from anonymized log', () {
-      final line = '2026.08.01 02:01:05  [READ_ASCII] HW ver: FMB140';
+      const line = '2026.08.01 02:01:05  [READ_ASCII] HW ver: FMB140';
       final normalized = normalizer.normalize(line);
       expect(normalized.first.content, contains('HW ver: FMB140'));
     });
 
     test('IMEI extraction from anonymized log (sanitized)', () {
-      final line = '2026.08.01 02:01:06  [READ_ASCII] IMEI: 000000000000001';
+      const line = '2026.08.01 02:01:06  [READ_ASCII] IMEI: 000000000000001';
       final event = classify(line);
       expect(event.details['imei'], '000000000000001');
     });
 
     test('Firmware version extraction from anonymized log', () {
-      final line = '2026.08.01 02:01:07  [READ_ASCII] FW Ver: AXN_5.1.9';
+      const line = '2026.08.01 02:01:07  [READ_ASCII] FW Ver: AXN_5.1.9';
       final event = classify(line);
       expect(event.details['firmware'], 'AXN_5.1.9');
     });
 
     test('Bootloader version extraction from anonymized log', () {
-      final line = '2026.08.01 02:01:08  [READ_ASCII] BL ver: 1.10';
+      const line = '2026.08.01 02:01:08  [READ_ASCII] BL ver: 1.10';
       final event = classify(line);
       expect(event.details['bootloader'], '1.10');
     });
 
     test('BLE availability from anonymized log', () {
-      final line = '2026.08.01 02:01:09  [READ_ASCII] BLE: 1';
+      const line = '2026.08.01 02:01:09  [READ_ASCII] BLE: 1';
       final event = classify(line);
       expect(event.details['ble'], '1');
     });
 
     test('NAND info from anonymized log', () {
-      final line = '2026.08.08 02:01:10  [READ_ASCII] NAND: 1';
+      const line = '2026.08.08 02:01:10  [READ_ASCII] NAND: 1';
       final event = classify(line);
       expect(event.details['nand'], '1');
     });
 
     test('Accelerometer model from anonymized log', () {
-      final line = '2026.08.01 02:01:11  [READ_ASCII] AXL: 2/LIS2DH';
+      const line = '2026.08.01 02:01:11  [READ_ASCII] AXL: 2/LIS2DH';
       final event = classify(line);
       expect(event.details['accelerometer'], '2/LIS2DH');
     });
 
     test('ICCID extraction from anonymized log (sanitized)', () {
-      final line = '2026.08.01 02:01:12  [READ_ASCII] ICCID: 8955000000000000000';
+      const line =
+          '2026.08.01 02:01:12  [READ_ASCII] ICCID: 8955000000000000000';
       final event = classify(line);
       expect(event.details['iccid'], '8955000000000000000');
     });
 
     test('Phone number from anonymized log (sanitized)', () {
-      final line = '2026.08.01 02:01:13  [READ_ASCII] Phone: +5500000000000';
+      const line = '2026.08.01 02:01:13  [READ_ASCII] Phone: +5500000000000';
       final event = classify(line);
       expect(event.details['phone'], '+5500000000000');
     });
 
     test('SIM status from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:14  [2026.08.01 02:01:15]-[MODEM.STATUS] SIM: detectado';
       final event = classify(line);
       expect(event.severity, DiagnosticSeverity.info);
     });
 
     test('PIN status from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:15  [2026.08.01 02:01:16]-[MODEM.STATUS] PIN: status OK';
       final event = classify(line);
       expect(event.severity, DiagnosticSeverity.success);
     });
 
     test('SIM lock status from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:16  [2026.08.01 02:01:17]-[MODEM.STATUS] SIM lock: OFF';
       final event = classify(line);
       expect(event.details['simLock'], 'OFF');
     });
 
     test('Operator from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:17  [2026.08.01 02:01:18]-[MODEM.STATUS] Operadora: TIM';
       final event = classify(line);
       expect(event.details['operator'], 'TIM');
     });
 
     test('MCC from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:19  [2026.08.01 02:01:19]-[MODEM.STATUS] MCC: 724';
       final event = classify(line);
       expect(event.details['mcc'], '724');
     });
 
     test('MNC from anonymized log', () {
-      final line =
+      const line =
           '2026.08.08 02:01:20  [2026.08.01 02:01:20]-[MODEM.STATUS] MNC: 02';
       final event = classify(line);
       expect(event.details['mnc'], '02');
     });
 
     test('Roaming status from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:21  [2026.08.01 02:01:21]-[MODEM.STATUS] Roaming: OFF';
       final event = classify(line);
       expect(event.details['roaming'], 'OFF');
     });
 
     test('Network registration from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:22  [2026.08.01 02:01:22]-[MODEM.STATUS] Registro de rede: 38497';
       final event = classify(line);
       expect(event.details['networkReg'], '38497');
     });
 
     test('Internal modem commands from anonymized log (MODEM.ACTION)', () {
-      final line1 =
+      const line1 =
           '2026.08.01 02:01:23  [2026.08.01 02:01:23]-[MODEM.ACTION] AT+ICCID';
       final event1 = classify(line1);
       expect(event1.source, 'MODEM.ACTION');
       expect(event1.details['command'], 'AT+ICCID');
 
-      final line2 =
+      const line2 =
           '2026.08.01 02:01:24  [2026.08.01 02:01:24]-[MODEM.ACTION] AT+EPINC?';
       final event2 = classify(line2);
       expect(event2.source, 'MODEM.ACTION');
@@ -142,7 +143,7 @@ void main() {
     });
 
     test('Power state from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:47  [2026.08.01 02:01:47]-[LiPo] ExtV: 12368mV';
       final event = classify(line);
       expect(event.value, closeTo(12.368, 0.001));
@@ -150,14 +151,14 @@ void main() {
     });
 
     test('Battery voltage from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:48  [2026.08.01 02:01:48]-[LiPo] BatV: 3953mV';
       final event = classify(line);
       expect(event.value, closeTo(3.953, 0.001));
     });
 
     test('Battery current from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:49  [2026.08.01 02:01:49]-[LiPo] BatI: 93mA';
       final event = classify(line);
       expect(event.value, closeTo(0.093, 0.001));
@@ -165,7 +166,7 @@ void main() {
     });
 
     test('GPS coordinates from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:33  [2026.08.01 02:01:33]-[GPS.API] Lat: 0.0, Lon: 0.0, Alt: 851.5';
       final event = classify(line);
       expect(event.details['latitude'], closeTo(0.0, 0.0001));
@@ -174,12 +175,12 @@ void main() {
     });
 
     test('HDOP critical from anonymized log', () {
-      final line1 =
+      const line1 =
           '2026.08.01 02:01:34  [2026.08.01 02:01:34]-[GPS.API] HDOP: 1.2';
       final event1 = classify(line1);
       expect(event1.details['hdop'], 1.2);
 
-      final line2 =
+      const line2 =
           '2026.08.01 02:01:52  [2026.08.01 02:01:52]-[GPS.API] HDOP: 62.12';
       final event2 = classify(line2);
       expect(event2.details['hdop'], 62.12);
@@ -187,48 +188,48 @@ void main() {
     });
 
     test('Satellites from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:35  [2026.08.01 02:01:35]-[GPS.API] Sat: 12';
       final event = classify(line);
       expect(event.details['satellites'], 12);
     });
 
     test('Speed from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:36  [2026.08.01 02:01:36]-[GPS.API] Spd: 12.5';
       final event = classify(line);
       expect(event.details['speed'], 12.5);
     });
 
     test('Fix status from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:37  [2026.08.01 02:01:37]-[GPS.API] FixStatus: 1';
       final event = classify(line);
       expect(event.details['fixStatus'], 1);
     });
 
     test('Ignition state changes from anonymized log', () {
-      final line1 = '2026.08.01 02:02:39 02:02:39]-[ACC] Ign: ON';
+      const line1 = '2026.08.01 02:02:39 02:02:39]-[ACC] Ign: ON';
       final event1 = classify(line1);
       expect(event1.source, 'ACC');
 
-      final line2 = '2026.08.01 02:02:51 02:02:51]-[ACC] Ign: OFF';
+      const line2 = '2026.08.01 02:02:51 02:02:51]-[ACC] Ign: OFF';
       final event2 = classify(line2);
       expect(event2.source, 'ACC');
     });
 
     test('Movement state changes from anonymized log', () {
-      final line1 = '2026.08.01 02:02:40 02:02:40]-[ACC] Mov: YES';
+      const line1 = '2026.08.01 02:02:40 02:02:40]-[ACC] Mov: YES';
       final event1 = classify(line1);
       expect(event1.source, 'ACC');
 
-      final line2 = '2026.08.01 02:02:52 02:02:52]-[ACC] Mov: NO';
+      const line2 = '2026.08.01 02:02:52 02:02:52]-[ACC] Mov: NO';
       final event2 = classify(line2);
       expect(event2.source, 'ACC');
     });
 
     test('CAN sleep mode from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:02:23  [2026.08.01 02:02:23]-[LVCAN] CAN MODULE in sleep mode';
       final event = classify(line);
       expect(event.source, 'LVCAN');
@@ -236,14 +237,14 @@ void main() {
     });
 
     test('Power unplug from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:50  [2026.08.01 02:01:50]-[UNPLUG] External power removed';
       final event = classify(line);
       expect(event.severity, DiagnosticSeverity.critical);
     });
 
     test('Network socket opened from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:30  [2026.08.01 02:01:30]-[NETWORK] Socket Opened';
       final event = classify(line);
       expect(event.severity, DiagnosticSeverity.success);
@@ -251,7 +252,7 @@ void main() {
     });
 
     test('Network connection attempt from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:31  [2026.08.01 02:01:31]-[NETWORK] Connecting to 192.0.2.10:5027@TCP';
       final event = classify(line);
       expect(event.severity, DiagnosticSeverity.info);
@@ -261,7 +262,7 @@ void main() {
     });
 
     test('Domain resolution from anonymized log', () {
-      final line =
+      const line =
           '2026.08.01 02:01:32  [2026.08.01 02:01:32]-[NETWORK] Domain: device1.example.com, IP: 192.0.2.10';
       final event = classify(line);
       expect(event.details['domain'], 'device1.example.com');

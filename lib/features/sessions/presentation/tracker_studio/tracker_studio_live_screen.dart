@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,6 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/design/tracker_colors.dart';
 import '../../../../core/design/tracker_motion.dart';
 import '../../../../core/design/tracker_theme.dart';
 import '../../../../core/data/can_mapping/can_mapping_store.dart';
@@ -534,8 +532,7 @@ class _TrackerStudioLiveScreenState
                                   controller.clearHandshakeEvidence,
                               onStartCapture: controller.startTeltonikaCapture,
                               onStopCapture: controller.stopTeltonikaCapture,
-                              onClearCapture:
-                                  controller.clearTeltonikaCapture,
+                              onClearCapture: controller.clearTeltonikaCapture,
                               onSaveCapture: () => _run(
                                   controller.saveTeltonikaCaptureForAnalysis),
                             ),
@@ -718,7 +715,6 @@ class _AgendaView extends StatelessWidget {
   final ValueChanged<WorkOrder> onWhatsApp;
 
   const _AgendaView({
-    super.key,
     required this.session,
     required this.onOpenWorkOrder,
     required this.onStartWorkOrder,
@@ -1175,7 +1171,8 @@ class _LaboratoryView extends StatelessWidget {
         const SizedBox(height: 18),
         TroubleshootingWidget(
           session: session,
-          onFixApn: (apn) => onManualCommand('AT^CMD;${session.device.esn};20;01;$apn;T1;T1;'),
+          onFixApn: (apn) =>
+              onManualCommand('AT^CMD;${session.device.esn};20;01;$apn;T1;T1;'),
           onReadStatus: onStatus,
         ),
         const SizedBox(height: 18),
@@ -1187,8 +1184,11 @@ class _LaboratoryView extends StatelessWidget {
             onStatus();
           },
           onApplyPreset: (preset) {
-            final esn = session.device.esn.isNotEmpty ? session.device.esn : '000000000';
-            if (session.effectiveSuntechFamily == SuntechCommandFamily.newGenSt8210St8310) {
+            final esn = session.device.esn.isNotEmpty
+                ? session.device.esn
+                : '000000000';
+            if (session.effectiveSuntechFamily ==
+                SuntechCommandFamily.newGenSt8210St8310) {
               onManualCommand(
                 'AT^PRG;$esn;20;01#${preset.apn};02#${preset.user};03#${preset.password};05#${preset.primaryServer};06#${preset.primaryPort}',
               );
@@ -1991,9 +1991,8 @@ class _ParameterFormCardState extends State<_ParameterFormCard> {
 
   Map<int, String> _values() => {
         for (final parameterId in widget.parameterIds)
-          parameterId:
-              _enumSelections[parameterId] ??
-                  _controllers[parameterId]!.text.trim(),
+          parameterId: _enumSelections[parameterId] ??
+              _controllers[parameterId]!.text.trim(),
       };
 
   String? _firstError(Map<int, String> values) {
@@ -2087,9 +2086,8 @@ class _ParameterFormCardState extends State<_ParameterFormCard> {
       } else {
         fields.add(_NetworkField(
           controller: _controllers[parameterId]!,
-          label: spec.unit != null
-              ? '${spec.label} (${spec.unit})'
-              : spec.label,
+          label:
+              spec.unit != null ? '${spec.label} (${spec.unit})' : spec.label,
           obscureText: spec.obscureText,
           width: 220,
         ));
@@ -2100,7 +2098,8 @@ class _ParameterFormCardState extends State<_ParameterFormCard> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(widget.title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
           const SizedBox(height: 6),
           Text(widget.hint, style: const TextStyle(color: _Studio.warning)),
           if (_capturedCount > 0) ...[
@@ -2167,7 +2166,8 @@ class _TeltonikaNetworkCard extends StatelessWidget {
   final TrackerSessionState session;
   final TrackerStudioController controller;
 
-  const _TeltonikaNetworkCard({required this.session, required this.controller});
+  const _TeltonikaNetworkCard(
+      {required this.session, required this.controller});
 
   @override
   Widget build(BuildContext context) => _ParameterFormCard(
@@ -2239,7 +2239,17 @@ class _TeltonikaSystemCard extends StatelessWidget {
         title: 'Sistema Teltonika',
         hint:
             'Voltagem de ignição (104/105), NTP (901–903) e Low Power Mode (19500–19504). Campos gerados do catálogo UCE.',
-        parameterIds: const [104, 105, 901, 902, 903, 19500, 19501, 19502, 19504],
+        parameterIds: const [
+          104,
+          105,
+          901,
+          902,
+          903,
+          19500,
+          19501,
+          19502,
+          19504
+        ],
         applyLabel: 'Aplicar sistema',
         applyTitle: 'Aplicar sistema?',
         applyMessage:
@@ -2472,8 +2482,7 @@ class TeltonikaCanCardState extends State<TeltonikaCanCard> {
                 ),
               const Spacer(),
               Text('${io.packetReferences.length} ocorrência(s)',
-                  style:
-                      const TextStyle(color: _Studio.muted, fontSize: 11)),
+                  style: const TextStyle(color: _Studio.muted, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 6),
@@ -2575,8 +2584,8 @@ class TeltonikaCanCardState extends State<TeltonikaCanCard> {
                     style: TextButton.styleFrom(
                         foregroundColor: _Studio.danger,
                         padding: const EdgeInsets.symmetric(horizontal: 6)),
-                    child: const Text('Remover',
-                        style: TextStyle(fontSize: 11)),
+                    child:
+                        const Text('Remover', style: TextStyle(fontSize: 11)),
                   ),
                 ],
               ),
@@ -2593,7 +2602,8 @@ class _NetworkField extends StatelessWidget {
   final bool obscureText;
 
   const _NetworkField({
-    required this.controller,    required this.label,
+    required this.controller,
+    required this.label,
     this.width = 220,
     this.obscureText = false,
   });
@@ -3323,10 +3333,9 @@ class _LogCaptureCard extends StatelessWidget {
                 label: const Text('Parar análise'),
               ),
               OutlinedButton.icon(
-                onPressed:
-                    capture.capturedLines.isNotEmpty || analysis != null
-                        ? onClear
-                        : null,
+                onPressed: capture.capturedLines.isNotEmpty || analysis != null
+                    ? onClear
+                    : null,
                 icon: const Icon(Icons.delete_sweep_outlined, size: 17),
                 label: const Text('Limpar'),
               ),
@@ -3398,13 +3407,10 @@ class _LogCaptureCard extends StatelessWidget {
               ? 'Não identificado'
               : '${device.model ?? 'Teltonika'} (confiança ${device.confidence.toStringAsFixed(0)}%)',
         ),
-        if (device?.imei != null)
-          _KeyValue('IMEI', _maskImei(device!.imei!)),
+        if (device?.imei != null) _KeyValue('IMEI', _maskImei(device!.imei!)),
         _KeyValue('Registros AVL', '${analysis.avlRecords.length}'),
         _KeyValue('IOs observados', '${analysis.observedIos.length}'),
-        _KeyValue(
-            'Comandos config',
-            '${analysis.configCommands.length}'),
+        _KeyValue('Comandos config', '${analysis.configCommands.length}'),
         _KeyValue('Linhas', '${analysis.rawLines.length}'),
       ],
     );
@@ -3489,8 +3495,7 @@ class _LogCaptureCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: _Studio.warning.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: _Studio.warning.withValues(alpha: 0.5)),
+              border: Border.all(color: _Studio.warning.withValues(alpha: 0.5)),
             ),
             child: Text(
               'IOs sem definição no catálogo foram alterados '
@@ -3616,7 +3621,9 @@ class _LogCaptureCard extends StatelessWidget {
       final text = value.toStringAsFixed(2);
       return text.endsWith('.00')
           ? value.toInt().toString()
-          : text.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+          : text
+              .replaceFirst(RegExp(r'0+$'), '')
+              .replaceFirst(RegExp(r'\.$'), '');
     }
     return '$value';
   }
@@ -3642,9 +3649,7 @@ class _IoChangeTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            change.known
-                ? Icons.sensors
-                : Icons.help_outline,
+            change.known ? Icons.sensors : Icons.help_outline,
             size: 17,
             color: color,
           ),
@@ -3691,7 +3696,8 @@ class _IoChangeTile extends StatelessWidget {
       final text = value.toStringAsFixed(2);
       return text.endsWith('.00')
           ? value.toInt().toString()
-          : text.replaceFirst(RegExp(r'0+$'), '')
+          : text
+              .replaceFirst(RegExp(r'0+$'), '')
               .replaceFirst(RegExp(r'\.$'), '');
     }
     return '$value';

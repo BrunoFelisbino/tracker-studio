@@ -30,7 +30,9 @@ void main() {
       startedAt: '10:00:00',
       stoppedAt: '10:01:00',
       lines: [':cfg_connect'],
-      analysis: {'parameterValues': {'2001': 'internet'}},
+      analysis: {
+        'parameterValues': {'2001': 'internet'}
+      },
     ));
     await store.append(const CaptureLogRecord(
       id: '2',
@@ -56,8 +58,7 @@ void main() {
   });
 
   test('survives a corrupt file and overwrites on next append', () async {
-    await File('${tempDir.path}/corrupt.json')
-        .writeAsString('not json {');
+    await File('${tempDir.path}/corrupt.json').writeAsString('not json {');
     final store = storeFor('corrupt.json');
     await store.load();
     expect(store.all, isEmpty);
@@ -69,9 +70,9 @@ void main() {
       stoppedAt: '10:01:00',
       lines: [':cfg_connect'],
     ));
-    final decoded = jsonDecode(
-            await File('${tempDir.path}/corrupt.json').readAsString())
-        as Map<String, dynamic>;
+    final decoded =
+        jsonDecode(await File('${tempDir.path}/corrupt.json').readAsString())
+            as Map<String, dynamic>;
     expect((decoded['records'] as List), hasLength(1));
   });
 }

@@ -55,7 +55,8 @@ class SuntechPrgCommandBuilders {
       );
     }
 
-    final hexHigh = highThreshold.toRadixString(16).toUpperCase().padLeft(2, '0');
+    final hexHigh =
+        highThreshold.toRadixString(16).toUpperCase().padLeft(2, '0');
     final hexLow = lowThreshold.toRadixString(16).toUpperCase().padLeft(2, '0');
 
     final highVoltage = (highThreshold / 10).toStringAsFixed(1);
@@ -109,8 +110,7 @@ class SuntechPrgCommandBuilders {
       requiresBackup: false,
       namespace: 'ST8-PRG',
       code: '1801',
-      notes:
-          'Input1: $input1Time ms, Input2: $input2Time ms. '
+      notes: 'Input1: $input1Time ms, Input2: $input2Time ms. '
           'Range: 0-10000ms cada.',
       supportedModels: _st8Models,
       firmwareMin: '1.0.13',

@@ -28,10 +28,10 @@ class WorkOrderRoute {
     }
 
     if (!hasDestination) return null;
-    final destination = destinationLatitude != null &&
-            destinationLongitude != null
-        ? '${destinationLatitude!},${destinationLongitude!}'
-        : destinationAddress.trim();
+    final destination =
+        destinationLatitude != null && destinationLongitude != null
+            ? '${destinationLatitude!},${destinationLongitude!}'
+            : destinationAddress.trim();
 
     return Uri.https('www.google.com', '/maps/search/', {
       'api': '1',
@@ -41,10 +41,10 @@ class WorkOrderRoute {
 
   Uri? routeLink({String? origin}) {
     if (!hasDestination) return null;
-    final destination = destinationLatitude != null &&
-            destinationLongitude != null
-        ? '${destinationLatitude!},${destinationLongitude!}'
-        : destinationAddress.trim();
+    final destination =
+        destinationLatitude != null && destinationLongitude != null
+            ? '${destinationLatitude!},${destinationLongitude!}'
+            : destinationAddress.trim();
 
     final query = <String, String>{
       'api': '1',

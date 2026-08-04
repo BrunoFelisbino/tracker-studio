@@ -71,14 +71,20 @@ class TrackerMapScreen extends ConsumerWidget {
                           if (isCompact) ...[
                             _buildLocaliTelCard(tracker),
                             const SizedBox(height: TrackerSpacing.sm),
-                            _buildComparisonCard(service, tracker, distanceMeters, isWithinTolerance),
+                            _buildComparisonCard(service, tracker,
+                                distanceMeters, isWithinTolerance),
                           ] else ...[
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(child: _buildLocaliTelCard(tracker)),
                                 const SizedBox(width: TrackerSpacing.md),
-                                Expanded(child: _buildComparisonCard(service, tracker, distanceMeters, isWithinTolerance)),
+                                Expanded(
+                                    child: _buildComparisonCard(
+                                        service,
+                                        tracker,
+                                        distanceMeters,
+                                        isWithinTolerance)),
                               ],
                             ),
                           ],
@@ -97,20 +103,30 @@ class TrackerMapScreen extends ConsumerWidget {
                                     TrackerColors.communicationBlue,
                                   ),
                                 ),
-                                Container(height: 30, width: 1, color: TrackerColors.lineSubtle),
+                                Container(
+                                    height: 30,
+                                    width: 1,
+                                    color: TrackerColors.lineSubtle),
                                 Expanded(
                                   child: _buildTile(
                                     'Rede GPRS',
                                     isGprsOnline ? 'ONLINE' : 'PENDENTE',
                                     Icons.signal_cellular_alt_rounded,
-                                    isGprsOnline ? TrackerColors.technicalGreen : TrackerColors.attentionAmber,
+                                    isGprsOnline
+                                        ? TrackerColors.technicalGreen
+                                        : TrackerColors.attentionAmber,
                                   ),
                                 ),
-                                Container(height: 30, width: 1, color: TrackerColors.lineSubtle),
+                                Container(
+                                    height: 30,
+                                    width: 1,
+                                    color: TrackerColors.lineSubtle),
                                 Expanded(
                                   child: _buildTile(
                                     'Cartão SIM (ICCID)',
-                                    session.device.sim.isNotEmpty ? session.device.sim : '-',
+                                    session.device.sim.isNotEmpty
+                                        ? session.device.sim
+                                        : '-',
                                     Icons.sim_card_rounded,
                                     TrackerColors.textSecondary,
                                   ),
@@ -183,15 +199,18 @@ class TrackerMapScreen extends ConsumerWidget {
           const SizedBox(height: TrackerSpacing.sm),
           _buildInfoRow('Endereço', tracker.address),
           _buildInfoRow('Raio Estimado', '${tracker.radiusKm} km'),
-          _buildInfoRow('Validação de Serviço', tracker.serviceCheck.toString().toUpperCase()),
-          _buildInfoRow('Status Integração', tracker.status.toString().toUpperCase()),
+          _buildInfoRow('Validação de Serviço',
+              tracker.serviceCheck.toString().toUpperCase()),
+          _buildInfoRow(
+              'Status Integração', tracker.status.toString().toUpperCase()),
           _buildInfoRow('Resumo Cobertura', tracker.summary),
         ],
       ),
     );
   }
 
-  Widget _buildComparisonCard(dynamic service, dynamic tracker, double? distanceMeters, bool isWithinTolerance) {
+  Widget _buildComparisonCard(dynamic service, dynamic tracker,
+      double? distanceMeters, bool isWithinTolerance) {
     return TrackerCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +233,8 @@ class TrackerMapScreen extends ConsumerWidget {
               const SizedBox(width: 4),
               if (distanceMeters != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: isWithinTolerance
                         ? TrackerColors.technicalGreen.withValues(alpha: 0.1)
@@ -297,7 +317,9 @@ class TrackerMapScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TrackerTextStyles.label, overflow: TextOverflow.ellipsis),
+                Text(title,
+                    style: TrackerTextStyles.label,
+                    overflow: TextOverflow.ellipsis),
                 Text(
                   value,
                   style: TrackerTextStyles.bodyStrong.copyWith(fontSize: 12),

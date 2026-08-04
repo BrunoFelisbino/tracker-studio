@@ -34,10 +34,12 @@ class TrackerSectionHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: TrackerColors.communicationBlue.withValues(alpha: 0.08),
+                  color:
+                      TrackerColors.communicationBlue.withValues(alpha: 0.08),
                   borderRadius: TrackerRadius.small,
                 ),
-                child: Icon(icon, size: 18, color: TrackerColors.communicationBlue),
+                child: Icon(icon,
+                    size: 18, color: TrackerColors.communicationBlue),
               ),
               const SizedBox(width: TrackerSpacing.sm),
             ],

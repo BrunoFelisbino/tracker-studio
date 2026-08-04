@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tracker_studio/core/design/tracker_colors.dart';
 import 'package:tracker_studio/core/design/tracker_theme.dart';
 import 'package:tracker_studio/core/widgets/tracker_bottom_navigation.dart';
 import 'package:tracker_studio/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -24,7 +23,13 @@ void main() {
       theme: TrackerTheme.light(),
       home: TrackerBottomNavigation(selectedIndex: 2, onSelected: (_) {}),
     ));
-    for (final label in ['Início', 'Teste', 'Comandos', 'Mapa', 'Dispositivos']) {
+    for (final label in [
+      'Início',
+      'Teste',
+      'Comandos',
+      'Mapa',
+      'Dispositivos'
+    ]) {
       expect(
         find.byWidgetPredicate(
           (widget) => widget is Semantics && widget.properties.label == label,

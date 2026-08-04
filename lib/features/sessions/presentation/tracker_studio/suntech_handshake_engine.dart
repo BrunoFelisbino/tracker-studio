@@ -1106,7 +1106,8 @@ Map<String, dynamic>? _extractJson(String response) {
         final decoded = jsonDecode(response.substring(start, index + 1));
         if (decoded is Map<String, dynamic>) return decoded;
       } catch (e) {
-        debugPrint('SuntechHandshakeEngine: JSON parse in handshake failed: $e');
+        debugPrint(
+            'SuntechHandshakeEngine: JSON parse in handshake failed: $e');
         // Continue with a later object if this framed block is malformed.
       }
       start = -1;

@@ -66,9 +66,9 @@ class SunTechAdapter implements EquipmentProtocolAdapter {
         ));
         score += 40;
       }
-      final modelMatch = RegExp(r'\b(ST30\d|ST31\d|ST8210|ST8310)\b',
-              caseSensitive: false)
-          .firstMatch(line);
+      final modelMatch =
+          RegExp(r'\b(ST30\d|ST31\d|ST8210|ST8310)\b', caseSensitive: false)
+              .firstMatch(line);
       if (modelMatch != null) {
         model = modelMatch.group(1)!.toUpperCase();
         evidence.add(DetectionEvidence(
@@ -112,14 +112,13 @@ class SunTechAdapter implements EquipmentProtocolAdapter {
       if (esnMatch != null && esn == null) {
         esn = esnMatch.group(2);
       }
-      final imeiMatch =
-          RegExp(r'\b(IMEI[=:]?\s*)(\d{15})\b').firstMatch(line);
+      final imeiMatch = RegExp(r'\b(IMEI[=:]?\s*)(\d{15})\b').firstMatch(line);
       if (imeiMatch != null && imei == null) {
         imei = imeiMatch.group(2);
       }
-      final modelMatch = RegExp(r'\b(ST30\d|ST31\d|ST8210|ST8310)\b',
-              caseSensitive: false)
-          .firstMatch(line);
+      final modelMatch =
+          RegExp(r'\b(ST30\d|ST31\d|ST8210|ST8310)\b', caseSensitive: false)
+              .firstMatch(line);
       if (modelMatch != null && model == null) {
         model = modelMatch.group(1)!.toUpperCase();
       }

@@ -59,13 +59,15 @@ class DeviceControlPanel extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Controle do Equipamento',
                   style: TrackerTextStyles.cardTitle,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  connected ? 'Equipamento conectado e pronto' : 'Nenhum equipamento conectado',
+                  connected
+                      ? 'Equipamento conectado e pronto'
+                      : 'Nenhum equipamento conectado',
                   style: TrackerTextStyles.body.copyWith(fontSize: 13),
                 ),
               ],
@@ -73,7 +75,9 @@ class DeviceControlPanel extends ConsumerWidget {
           ),
           _StatusChip(
             label: connected ? 'CONECTADO' : 'DESCONECTADO',
-            color: connected ? TrackerColors.technicalGreen : TrackerColors.failureRed,
+            color: connected
+                ? TrackerColors.technicalGreen
+                : TrackerColors.failureRed,
           ),
         ],
       ),
@@ -88,11 +92,11 @@ class DeviceControlPanel extends ConsumerWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: TrackerColors.surfaceMuted,
                 borderRadius: TrackerRadius.pill,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.usb_off_rounded,
                 size: 32,
                 color: TrackerColors.textMuted,

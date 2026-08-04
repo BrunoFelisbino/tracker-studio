@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
@@ -320,17 +319,17 @@ class LibSerialPortTransport
     final commandPort = _commandPort;
     final readPort = _readPort;
     try {
-        try {
-          await subscription?.cancel();
-        } catch (e) {
-          debugPrint('UsbSerialTransport: subscription cancel failed: $e');
-        }
-        _readerSubscription = null;
-        try {
-          reader?.close();
-        } catch (e) {
-          debugPrint('UsbSerialTransport: reader close failed: $e');
-        }
+      try {
+        await subscription?.cancel();
+      } catch (e) {
+        debugPrint('UsbSerialTransport: subscription cancel failed: $e');
+      }
+      _readerSubscription = null;
+      try {
+        reader?.close();
+      } catch (e) {
+        debugPrint('UsbSerialTransport: reader close failed: $e');
+      }
       _reader = null;
       _lineBuffer.clear();
       if (readPort != null && !identical(readPort, commandPort)) {

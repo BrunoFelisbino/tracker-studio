@@ -35,7 +35,7 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
     super.initState();
     _loadErbs();
   }
-  
+
   @override
   void didUpdateWidget(ServiceMapPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -48,13 +48,15 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
   }
 
   Future<void> _loadErbs() async {
-    final service = _validPoint(widget.serviceLatitude, widget.serviceLongitude);
-    final tracker = _validPoint(widget.trackerLatitude, widget.trackerLongitude);
+    final service =
+        _validPoint(widget.serviceLatitude, widget.serviceLongitude);
+    final tracker =
+        _validPoint(widget.trackerLatitude, widget.trackerLongitude);
     final points = [if (service != null) service, if (tracker != null) tracker];
     if (points.isEmpty) return;
 
     setState(() => _loadingErbs = true);
-    
+
     final center = points.length == 1
         ? points.first
         : LatLng(
@@ -66,7 +68,8 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
 
     final uniqueErbs = <String, ErbStation>{};
     for (final erb in allErbs) {
-      final key = '${erb.position.latitude.toStringAsFixed(5)}_${erb.position.longitude.toStringAsFixed(5)}';
+      final key =
+          '${erb.position.latitude.toStringAsFixed(5)}_${erb.position.longitude.toStringAsFixed(5)}';
       uniqueErbs[key] = erb;
     }
 
@@ -80,8 +83,10 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final service = _validPoint(widget.serviceLatitude, widget.serviceLongitude);
-    final tracker = _validPoint(widget.trackerLatitude, widget.trackerLongitude);
+    final service =
+        _validPoint(widget.serviceLatitude, widget.serviceLongitude);
+    final tracker =
+        _validPoint(widget.trackerLatitude, widget.trackerLongitude);
     final points = [if (service != null) service, if (tracker != null) tracker];
     if (points.isEmpty) {
       return const Center(child: Text('Aguardando coordenadas reais.'));
@@ -150,7 +155,8 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
                         width: 40,
                         height: 40,
                         child: Tooltip(
-                          message: 'ERB: ${erb.operadoras}\n${erb.tecnologias}\n${erb.endereco}',
+                          message:
+                              'ERB: ${erb.operadoras}\n${erb.tecnologias}\n${erb.endereco}',
                           child: const Icon(Icons.cell_tower_outlined,
                               color: Color(0xFF6B7280), size: 30),
                         ),

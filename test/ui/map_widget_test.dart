@@ -8,7 +8,8 @@ import 'package:tracker_studio/features/sessions/presentation/tracker_studio/tra
 import '../test_helpers/studio_test_harness.dart';
 
 void main() {
-  testWidgets('map does not show field concepts and shows empty state without positions',
+  testWidgets(
+      'map does not show field concepts and shows empty state without positions',
       (tester) async {
     final controller = await createStudioTestController();
 
@@ -31,7 +32,8 @@ void main() {
   testWidgets('map shows integration not configured when LocaliTel is disabled',
       (tester) async {
     final controller = await createStudioTestController();
-    controller.replaceState(_withMapState(TrackerSessionState.empty(), disabledLocalitel: true));
+    controller.replaceState(
+        _withMapState(TrackerSessionState.empty(), disabledLocalitel: true));
 
     await tester.pumpWidget(
       ProviderScope(
@@ -64,7 +66,9 @@ TrackerSessionState _withMapState(TrackerSessionState state,
           : 'Cobertura consultada',
       radiusKm: 5,
       status: disabledLocalitel ? 'disabled' : 'ok',
-      summary: disabledLocalitel ? 'Integração LocaliTel não configurada' : 'Cobertura recebida',
+      summary: disabledLocalitel
+          ? 'Integração LocaliTel não configurada'
+          : 'Cobertura recebida',
     ),
     serviceLocation: const ServiceLocation(
       latitude: 0.0,

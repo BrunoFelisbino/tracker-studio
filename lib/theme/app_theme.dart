@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static final ThemeData light = ThemeData(
-    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00796B)), // teal
+    colorScheme:
+        ColorScheme.fromSeed(seedColor: const Color(0xFF00796B)), // teal
     brightness: Brightness.light,
     textTheme: GoogleFonts.interTextTheme(),
     useMaterial3: true,
@@ -15,7 +16,8 @@ class AppTheme {
       brightness: Brightness.dark,
     ),
     brightness: Brightness.dark,
-    textTheme: GoogleFonts.interTextTheme(ThemeData(brightness: Brightness.dark).textTheme),
+    textTheme: GoogleFonts.interTextTheme(
+        ThemeData(brightness: Brightness.dark).textTheme),
     useMaterial3: true,
   );
 }

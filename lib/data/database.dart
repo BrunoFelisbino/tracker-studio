@@ -24,7 +24,8 @@ class Antenas extends Table {
 
 class Testes extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get equipamentoId => integer().customConstraint('REFERENCES equipamentos(id) NOT NULL')();
+  IntColumn get equipamentoId =>
+      integer().customConstraint('REFERENCES equipamentos(id) NOT NULL')();
   DateTimeColumn get data => dateTime()();
   TextColumn get resultado => text().nullable()();
 }
@@ -51,19 +52,23 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 
   // Example CRUD operations
-  Future<int> insertEquipamento(EquipamentosCompanion entry) => into(equipamentos).insert(entry);
+  Future<int> insertEquipamento(EquipamentosCompanion entry) =>
+      into(equipamentos).insert(entry);
   Future<List<Equipamento>> getAllEquipamentos() => select(equipamentos).get();
 
-  Future<int> insertAntena(AntenasCompanion entry) => into(antenas).insert(entry);
+  Future<int> insertAntena(AntenasCompanion entry) =>
+      into(antenas).insert(entry);
   Future<List<Antena>> getAllAntenas() => select(antenas).get();
 
   Future<int> insertTeste(TestesCompanion entry) => into(testes).insert(entry);
   Future<List<Teste>> getAllTestes() => select(testes).get();
 
-  Future<int> insertUsuario(UsuariosCompanion entry) => into(usuarios).insert(entry);
+  Future<int> insertUsuario(UsuariosCompanion entry) =>
+      into(usuarios).insert(entry);
   Future<List<Usuario>> getAllUsuarios() => select(usuarios).get();
 
-  Future<int> insertFinanceiro(FinanceirosCompanion entry) => into(financeiros).insert(entry);
+  Future<int> insertFinanceiro(FinanceirosCompanion entry) =>
+      into(financeiros).insert(entry);
   Future<List<Financeiro>> getAllFinanceiros() => select(financeiros).get();
 }
 

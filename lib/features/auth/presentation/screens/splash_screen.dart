@@ -559,7 +559,7 @@ class _AntennaSignalPainter extends CustomPainter {
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = Color(0xFF33B9FF).withValues(alpha: opacity)
+        ..color = const Color(0xFF33B9FF).withValues(alpha: opacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
       canvas.drawArc(

@@ -35,7 +35,8 @@ class CommandExecutionResult {
     this.parsedResponse,
   });
 
-  factory CommandExecutionResult.success(String response, {int? executionTime}) {
+  factory CommandExecutionResult.success(String response,
+      {int? executionTime}) {
     return CommandExecutionResult(
       success: true,
       response: response,
@@ -231,8 +232,10 @@ class DeviceManualConfig {
       'manufacturer': manufacturer,
       'firmware_version': firmwareVersion,
       'generation_date': generationDate,
-      'parameters': parameters.map((key, value) => MapEntry(key, value.toJson())),
-      'commands': commandCatalog.map((key, value) => MapEntry(key, value.toJson())),
+      'parameters':
+          parameters.map((key, value) => MapEntry(key, value.toJson())),
+      'commands':
+          commandCatalog.map((key, value) => MapEntry(key, value.toJson())),
       'device_info': deviceInfo,
       'security': security,
       'ui': ui,
@@ -282,7 +285,8 @@ class ManualCommandFlowService {
     try {
       _loadBuiltInManuals();
     } catch (e) {
-      debugPrint('ManualCommandFlowService: built-in manual loading failed: $e');
+      debugPrint(
+          'ManualCommandFlowService: built-in manual loading failed: $e');
     }
   }
 
@@ -300,7 +304,7 @@ class ManualCommandFlowService {
 
   static Future<DeviceManualConfig?> getManualConfig(String model) async {
     model = model.toUpperCase();
-    
+
     if (_deviceManuals.containsKey(model)) {
       return _deviceManuals[model];
     }
@@ -310,7 +314,8 @@ class ManualCommandFlowService {
       try {
         return await _loadManualFromAssets(model);
       } catch (e) {
-        debugPrint('ManualCommandFlowService: failed to load manual from assets: $e');
+        debugPrint(
+            'ManualCommandFlowService: failed to load manual from assets: $e');
         return _getGenericManualConfig();
       }
     }
@@ -320,21 +325,21 @@ class ManualCommandFlowService {
 
   static Future<DeviceManualConfig?> _loadManualFromAssets(String model) async {
     final directory = Directory('assets/manuals');
-    
+
     if (!await directory.exists()) {
       return null;
     }
 
     final filename = '${model}_manual_mapping.json';
     final file = File('${directory.path}/$filename');
-    
+
     if (!await file.exists()) {
       return null;
     }
 
     final content = await file.readAsString();
     final jsonData = jsonDecode(content);
-    
+
     return DeviceManualConfig.fromJson(Map<String, dynamic>.from(jsonData));
   }
 
@@ -361,25 +366,30 @@ class ManualCommandFlowService {
     Map<String, String> customMappings = const {},
   }) async {
     final startTime = DateTime.now();
-    
+
     try {
       final manualConfig = await getManualConfig(model);
       if (manualConfig == null) {
-        return ManualCommandResult.error('Manual não encontrado para modelo: $model');
+        return ManualCommandResult.error(
+            'Manual não encontrado para modelo: $model');
       }
 
       final parameter = manualConfig.parameters[parameterId];
       if (parameter == null) {
-        return ManualCommandResult.error('Parâmetro não encontrado: $parameterId');
+        return ManualCommandResult.error(
+            'Parâmetro não encontrado: $parameterId');
       }
 
       final commandTemplate = parameter.commands
-          .where((cmd) => cmd.mappings?.entries.any((entry) => 
-              entry.value == targetState) ?? false)
+          .where((cmd) =>
+              cmd.mappings?.entries
+                  .any((entry) => entry.value == targetState) ??
+              false)
           .firstOrNull;
 
       if (commandTemplate == null) {
-        return ManualCommandResult.error('Nenhum comando encontrado para estado: $targetState');
+        return ManualCommandResult.error(
+            'Nenhum comando encontrado para estado: $targetState');
       }
 
       final command = commandTemplate.buildCommand(
@@ -391,7 +401,6 @@ class ManualCommandFlowService {
       final executionTime = DateTime.now().difference(startTime).inMilliseconds;
 
       return ManualCommandResult.success(command, executionTime: executionTime);
-
     } catch (e) {
       return ManualCommandResult.error('Falha ao construir comando: $e');
     }
@@ -423,7 +432,8 @@ class ManualCommandFlowService {
     return manualConfig?.commandCatalog.keys.toList() ?? [];
   }
 
-  static Map<String, dynamic> analyzeDeviceModel(String model, String esn, String firmware) {
+  static Map<String, dynamic> analyzeDeviceModel(
+      String model, String esn, String firmware) {
     final manualConfig = _deviceManuals[model];
     if (manualConfig == null) return {};
 
@@ -432,22 +442,20 @@ class ManualCommandFlowService {
     analysis['model'] = model;
     analysis['esn'] = esn;
     analysis['firmware'] = firmware;
-    analysis['parameters'] = manualConfig.parameters.map((key, param) => 
-        MapEntry(key, {
-          'type': param.type,
-          'defaultState': param.currentState,
-          'states': param.states,
-        })
-    );
+    analysis['parameters'] =
+        manualConfig.parameters.map((key, param) => MapEntry(key, {
+              'type': param.type,
+              'defaultState': param.currentState,
+              'states': param.states,
+            }));
 
-    analysis['commands'] = manualConfig.commandCatalog.map((key, cmd) => 
-        MapEntry(key, {
-          'template': cmd.commandTemplate,
-          'risk': cmd.riskLevel,
-          'destructive': cmd.destructive,
-          'requiresEsn': cmd.requiresEsn,
-        })
-    );
+    analysis['commands'] =
+        manualConfig.commandCatalog.map((key, cmd) => MapEntry(key, {
+              'template': cmd.commandTemplate,
+              'risk': cmd.riskLevel,
+              'destructive': cmd.destructive,
+              'requiresEsn': cmd.requiresEsn,
+            }));
 
     return analysis;
   }
@@ -742,7 +750,8 @@ class ManualCommandFlowService {
         notes: 'Leitura de configurações atuais',
       ),
       'network_setup': CommandTemplate(
-        commandTemplate: 'AT^ST300NTN;;02;0;<APN>;<USER>;<PASS>;<HOST>;<PORT>;;;;',
+        commandTemplate:
+            'AT^ST300NTN;;02;0;<APN>;<USER>;<PASS>;<HOST>;<PORT>;;;;',
         expectedResponse: 'OK',
         riskLevel: RiskLevel.high,
         requiresEsn: false,

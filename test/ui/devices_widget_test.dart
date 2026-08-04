@@ -49,7 +49,8 @@ void main() {
     expect(transport.listPortsCalls, greaterThan(before));
   });
 
-  testWidgets('connection only enables with selected real port', (tester) async {
+  testWidgets('connection only enables with selected real port',
+      (tester) async {
     final controller = await createStudioTestController(
       ports: const [
         SerialPortInfo(

@@ -13,8 +13,8 @@ import '../test_helpers/studio_test_harness.dart';
 List<String> _record({required int index, required List<String> ioLines}) => [
       '[REC.GEN] Record Content:',
       'Priority: 1',
-    'Lat: 0.0',
-    'Lon: 0.0',
+      'Lat: 0.0',
+      'Lon: 0.0',
       'Alt: 780',
       'Angle: 45',
       'Speed: 0',
@@ -60,7 +60,8 @@ void main() {
 
     final tmpPath =
         '${Directory.systemTemp.path}/can_card_test_${DateTime.now().microsecondsSinceEpoch}';
-    final store = CanMappingStore(pathResolver: () async => '$tmpPath/mapping.json');
+    final store =
+        CanMappingStore(pathResolver: () async => '$tmpPath/mapping.json');
 
     await tester.runAsync(() async {
       await tester.pumpWidget(MaterialApp(

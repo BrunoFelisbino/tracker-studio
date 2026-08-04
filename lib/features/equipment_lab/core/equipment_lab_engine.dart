@@ -101,12 +101,15 @@ class EquipmentLabEngine {
     if (session.equipment.model != null) {
       buffer.writeln('Modelo: ${session.equipment.model}');
     }
-    if (session.equipment.imei != null)
+    if (session.equipment.imei != null) {
       buffer.writeln('IMEI: ${session.equipment.imei}');
-    if (session.equipment.esn != null)
+    }
+    if (session.equipment.esn != null) {
       buffer.writeln('ESN: ${session.equipment.esn}');
-    if (session.equipment.iccid != null)
+    }
+    if (session.equipment.iccid != null) {
       buffer.writeln('ICCID: ${session.equipment.iccid}');
+    }
     if (session.equipment.firmware != null) {
       buffer.writeln('Firmware: ${session.equipment.firmware}');
     }

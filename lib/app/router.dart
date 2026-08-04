@@ -10,6 +10,10 @@ import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/bench/presentation/screens/bench_screen.dart';
 import '../features/commands/presentation/screens/commands_screen.dart';
 import '../features/devices/presentation/screens/devices_screen.dart';
+import '../features/devices/presentation/providers/device_providers.dart';
+import '../features/devices/presentation/screens/device_basic_analysis_screen.dart';
+import '../features/devices/presentation/screens/device_advanced_analysis_screen.dart';
+import '../features/devices/presentation/screens/device_configuration_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/map/presentation/tracker_map_screen.dart';
 import '../features/reports/presentation/screens/reports_screen.dart';
@@ -48,8 +52,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/quick-test',
-            builder: (_, __) =>
-                const TrackerStudioLiveScreen(initialMode: StudioMode.quickTest),
+            builder: (_, __) => const TrackerStudioLiveScreen(
+                initialMode: StudioMode.quickTest),
           ),
           GoRoute(
             path: '/bench',
@@ -63,6 +67,32 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/devices',
             builder: (_, __) => const DevicesScreen(),
+          ),
+          GoRoute(
+            path: '/device/:deviceId',
+            redirect: (context, state) =>
+                '/device/${state.pathParameters['deviceId']}/basic',
+          ),
+          GoRoute(
+            path: '/device/:deviceId/basic',
+            builder: (_, state) {
+              final deviceId = state.pathParameters['deviceId'];
+              return DeviceBasicAnalysisScreen(deviceId: deviceId);
+            },
+          ),
+          GoRoute(
+            path: '/device/:deviceId/advanced',
+            builder: (_, state) {
+              final deviceId = state.pathParameters['deviceId'];
+              return DeviceAdvancedAnalysisScreen(deviceId: deviceId);
+            },
+          ),
+          GoRoute(
+            path: '/device/:deviceId/configuration',
+            builder: (_, state) {
+              final deviceId = state.pathParameters['deviceId'];
+              return DeviceConfigurationScreen(deviceId: deviceId);
+            },
           ),
           GoRoute(
             path: '/commands',

@@ -44,11 +44,14 @@ class TelemetryMatrixCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIgnitionOn = ignitionState.toLowerCase().contains('ligada') || ignitionState == 'ON';
+    final isIgnitionOn =
+        ignitionState.toLowerCase().contains('ligada') || ignitionState == 'ON';
     final isGprsOnline = session.connection.gprsOnline;
     final isGpsOk = (int.tryParse(satCount) ?? 0) >= 4;
-    final isLockActive = output1State.toLowerCase().contains('ativ') || output1Code == '01';
-    final apn = session.configuration.desired['APN'] ?? session.configuration.original['APN'];
+    final isLockActive =
+        output1State.toLowerCase().contains('ativ') || output1Code == '01';
+    final apn = session.configuration.desired['APN'] ??
+        session.configuration.original['APN'];
 
     return TrackerCard(
       child: Column(
@@ -60,7 +63,8 @@ class TelemetryMatrixCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: TrackerColors.communicationBlue.withValues(alpha: 0.08),
+                  color:
+                      TrackerColors.communicationBlue.withValues(alpha: 0.08),
                   borderRadius: TrackerRadius.small,
                 ),
                 child: const Icon(
@@ -70,10 +74,12 @@ class TelemetryMatrixCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: TrackerSpacing.sm),
-              const Text('Matriz de Diagnóstico de Campo', style: TrackerTextStyles.cardTitle),
+              const Text('Matriz de Diagnóstico de Campo',
+                  style: TrackerTextStyles.cardTitle),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: connected
                       ? TrackerColors.technicalGreen.withValues(alpha: 0.1)
@@ -84,9 +90,13 @@ class TelemetryMatrixCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      connected ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+                      connected
+                          ? Icons.sensors_rounded
+                          : Icons.sensors_off_rounded,
                       size: 14,
-                      color: connected ? TrackerColors.technicalGreen : TrackerColors.textMuted,
+                      color: connected
+                          ? TrackerColors.technicalGreen
+                          : TrackerColors.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -94,7 +104,9 @@ class TelemetryMatrixCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: connected ? TrackerColors.technicalGreen : TrackerColors.textMuted,
+                        color: connected
+                            ? TrackerColors.technicalGreen
+                            : TrackerColors.textMuted,
                       ),
                     ),
                   ],
@@ -126,7 +138,8 @@ class TelemetryMatrixCard extends StatelessWidget {
                   title: 'Chave de Ignição',
                   value: ignitionState,
                   subtitle: 'Entradas (Mask): $inputMask',
-                  icon: isIgnitionOn ? Icons.key_rounded : Icons.key_off_rounded,
+                  icon:
+                      isIgnitionOn ? Icons.key_rounded : Icons.key_off_rounded,
                   statusColor: isIgnitionOn
                       ? TrackerColors.technicalGreen
                       : TrackerColors.textMuted,
@@ -264,9 +277,11 @@ class _MatrixTile extends StatelessWidget {
                   if (badgeLabel != null) ...[
                     const SizedBox(width: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (badgeColor ?? statusColor).withValues(alpha: 0.1),
+                        color:
+                            (badgeColor ?? statusColor).withValues(alpha: 0.1),
                         borderRadius: TrackerRadius.pill,
                       ),
                       child: Text(
@@ -332,12 +347,13 @@ class _MatrixActuationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = isLockActive
-        ? TrackerColors.failureRed
-        : TrackerColors.technicalGreen;
-    final statusLabel = isLockActive ? 'BLOQUEADO (Corte Ativo)' : 'Desbloqueado (Inativo)';
+    final statusColor =
+        isLockActive ? TrackerColors.failureRed : TrackerColors.technicalGreen;
+    final statusLabel =
+        isLockActive ? 'BLOQUEADO (Corte Ativo)' : 'Desbloqueado (Inativo)';
     final actionLabel = isLockActive ? 'Desbloquear' : 'Bloquear';
-    final buttonColor = isLockActive ? TrackerColors.technicalGreen : TrackerColors.failureRed;
+    final buttonColor =
+        isLockActive ? TrackerColors.technicalGreen : TrackerColors.failureRed;
 
     return Container(
       padding: const EdgeInsets.all(TrackerSpacing.sm),
@@ -355,11 +371,14 @@ class _MatrixActuationBar extends StatelessWidget {
                 onTap: onTapHistory,
                 borderRadius: TrackerRadius.small,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     children: [
                       Icon(
-                        isLockActive ? Icons.lock_rounded : Icons.lock_open_rounded,
+                        isLockActive
+                            ? Icons.lock_rounded
+                            : Icons.lock_open_rounded,
                         size: 18,
                         color: statusColor,
                       ),

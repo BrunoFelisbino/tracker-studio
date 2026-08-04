@@ -5,15 +5,20 @@ import 'package:tracker_studio/features/sessions/presentation/tracker_studio/sun
 void main() {
   test('car standard uses physical ignition', () {
     expect(InstallationProfiles.carStandard.mode, InstallationMode.car);
-    expect(InstallationProfiles.carStandard.ignitionMode, IgnitionMode.physical);
+    expect(
+        InstallationProfiles.carStandard.ignitionMode, IgnitionMode.physical);
   });
 
   test('motorcycle standard uses virtual ignition', () {
-    expect(InstallationProfiles.motorcycleStandard.mode, InstallationMode.motorcycle);
-    expect(InstallationProfiles.motorcycleStandard.ignitionMode, IgnitionMode.virtual);
+    expect(InstallationProfiles.motorcycleStandard.mode,
+        InstallationMode.motorcycle);
+    expect(InstallationProfiles.motorcycleStandard.ignitionMode,
+        IgnitionMode.virtual);
   });
 
-  test('command plan stays blocked without backup and has no executable command', () {
+  test(
+      'command plan stays blocked without backup and has no executable command',
+      () {
     final plan = generateInstallationCommandPlan(
       profile: InstallationProfiles.carStandard,
       hasBackup: false,
@@ -22,7 +27,10 @@ void main() {
 
     expect(plan, isNotEmpty);
     expect(plan.every((item) => item.status == 'blocked'), isTrue);
-    expect(plan.every((item) => item.commandPreview.contains('pendente de homologação')), isTrue);
+    expect(
+        plan.every(
+            (item) => item.commandPreview.contains('pendente de homologação')),
+        isTrue);
   });
 
   test('custom profile updates timing without changing the source preset', () {
@@ -65,6 +73,10 @@ void main() {
       hasBackup: true,
       family: SuntechCommandFamily.newGenSt8210St8310,
     );
-    expect(plan.any((item) => item.commandPreview.contains('NTW') || item.commandPreview.contains('NTN')), isFalse);
+    expect(
+        plan.any((item) =>
+            item.commandPreview.contains('NTW') ||
+            item.commandPreview.contains('NTN')),
+        isFalse);
   });
 }

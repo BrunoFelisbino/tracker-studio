@@ -199,18 +199,15 @@ void main() {
     });
 
     test('parses device responses (accepted / rejected / saved)', () {
-      final ok =
-          TeltonikaDriver.parseConfigCommand('<SETPARAM_RESULT>:1\r',
-              direction: 'device-to-host');
+      final ok = TeltonikaDriver.parseConfigCommand('<SETPARAM_RESULT>:1\r',
+          direction: 'device-to-host');
       expect(ok!.command, 'set-parameter-result');
       expect(ok.parsedValue, 'accepted');
 
-      final fail =
-          TeltonikaDriver.parseConfigCommand('<SETPARAM_RESULT>:0\r');
+      final fail = TeltonikaDriver.parseConfigCommand('<SETPARAM_RESULT>:0\r');
       expect(fail!.parsedValue, 'rejected');
 
-      final saved =
-          TeltonikaDriver.parseConfigCommand('<SAVE_CFG_RESULT>:1\r');
+      final saved = TeltonikaDriver.parseConfigCommand('<SAVE_CFG_RESULT>:1\r');
       expect(saved!.command, 'save-result');
       expect(saved.parsedValue, 'saved');
 

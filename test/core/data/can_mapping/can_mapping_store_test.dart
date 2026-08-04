@@ -24,8 +24,8 @@ void main() {
     expect(store.all, isEmpty);
 
     await store.upsert(const CanSensorMapping(avlId: 283, name: 'Engine RPM'));
-    await store.upsert(const CanSensorMapping(
-        avlId: 3845, name: 'Odometer', unit: 'km'));
+    await store.upsert(
+        const CanSensorMapping(avlId: 3845, name: 'Odometer', unit: 'km'));
 
     expect(store.byId(283)?.name, 'Engine RPM');
     expect(store.byId(3845)?.unit, 'km');

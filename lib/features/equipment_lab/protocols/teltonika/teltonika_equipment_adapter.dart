@@ -233,36 +233,41 @@ class TeltonikaAdapter implements EquipmentProtocolAdapter {
             value: event.event == 'ignition_on');
         break;
       case 'NETWORK':
-        if (details['ip'] != null)
+        if (details['ip'] != null) {
           add(
               id: 'teltonika.network.ip',
               rawName: 'IP',
               category: 'network',
               value: details['ip']);
-        if (details['port'] != null)
+        }
+        if (details['port'] != null) {
           add(
               id: 'teltonika.network.port',
               rawName: 'Porta',
               category: 'network',
               value: details['port']);
-        if (details['protocol'] != null)
+        }
+        if (details['protocol'] != null) {
           add(
               id: 'teltonika.network.protocol',
               rawName: 'Protocolo',
               category: 'network',
               value: details['protocol']);
-        if (details['domain'] != null)
+        }
+        if (details['domain'] != null) {
           add(
               id: 'teltonika.network.domain',
               rawName: 'Domínio',
               category: 'network',
               value: details['domain']);
-        if (details['timeoutSeconds'] != null)
+        }
+        if (details['timeoutSeconds'] != null) {
           add(
               id: 'teltonika.network.timeout',
               rawName: 'Timeout',
               category: 'network',
               value: details['timeoutSeconds']);
+        }
         break;
       case 'REC.SEND.1':
       case 'REC.SEND.2':
@@ -1222,9 +1227,10 @@ class TeltonikaAdapter implements EquipmentProtocolAdapter {
   @override
   Future<PortProbeResult> probePort(PortProbeInput input) async {
     final line = input.readLine?.call();
-    if (line == null)
+    if (line == null) {
       return const PortProbeResult(
           isReadable: false, confidence: 0, purpose: PortPurpose.unknown);
+    }
     final result = detect(line);
     return PortProbeResult(
       detectedManufacturer: result.manufacturer,

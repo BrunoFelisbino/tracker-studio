@@ -97,8 +97,7 @@ class BenchExecution {
     DateTime? createdAt,
     this.completedAt,
     this.totalDuration,
-  })  : id = id ??
-            DateTime.now().millisecondsSinceEpoch.toRadixString(36),
+  })  : id = id ?? DateTime.now().millisecondsSinceEpoch.toRadixString(36),
         steps = steps ?? [],
         observations = observations ?? [],
         createdAt = createdAt ?? DateTime.now();
@@ -107,8 +106,7 @@ class BenchExecution {
 class BenchExecutionEngine {
   final List<BenchExecution> _executions = [];
 
-  List<BenchExecution> get executions =>
-      List.unmodifiable(_executions);
+  List<BenchExecution> get executions => List.unmodifiable(_executions);
 
   BenchExecution createExecution({
     required String commandId,

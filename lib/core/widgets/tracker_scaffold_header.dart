@@ -52,7 +52,8 @@ class TrackerScaffoldHeader extends StatelessWidget {
                 Text(
                   title,
                   style: TrackerTextStyles.sectionTitle.copyWith(
-                    color: isGradient ? Colors.white : TrackerColors.textPrimary,
+                    color:
+                        isGradient ? Colors.white : TrackerColors.textPrimary,
                     fontSize: 22,
                   ),
                 ),

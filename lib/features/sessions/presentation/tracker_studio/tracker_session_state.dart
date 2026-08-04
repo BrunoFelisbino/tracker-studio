@@ -113,7 +113,8 @@ class TrackerSessionState {
   SuntechCommandFamily get effectiveSuntechFamily {
     final fromModel = resolveSuntechFamily(device.model);
     if (fromModel != SuntechCommandFamily.unknown) return fromModel;
-    if (handshakeResult != null && handshakeResult!.family != SuntechCommandFamily.unknown) {
+    if (handshakeResult != null &&
+        handshakeResult!.family != SuntechCommandFamily.unknown) {
       return handshakeResult!.family;
     }
     return selectedSuntechFamily;
@@ -247,13 +248,13 @@ class TrackerSessionState {
       serviceValidation: ServiceValidation(),
       handshakeResult: null,
       networkWriteResult: null,
-      recentCompletedServices: const [],
-      pendingSyncServices: const [],
-      behaviorChanges: const [],
-      voltageHistory: const [],
-      backupVoltageHistory: const [],
-      ignitionHistory: const [],
-      commandHistory: const [],
+      recentCompletedServices: [],
+      pendingSyncServices: [],
+      behaviorChanges: [],
+      voltageHistory: [],
+      backupVoltageHistory: [],
+      ignitionHistory: [],
+      commandHistory: [],
     );
   }
 

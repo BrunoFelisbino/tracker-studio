@@ -18,8 +18,10 @@ List<LatLng> generateCircularPositions({
     // Random radius between 0.5 and 1.0 of the max radius to keep points inside the area.
     final r = radiusKm * (0.5 + rand.nextDouble() * 0.5);
     // Convert polar to latitude/longitude offsets.
-    final deltaLat = (r * math.cos(angle)) / 111.0; // approx degrees per km latitude
-    final deltaLon = (r * math.sin(angle)) / (111.0 * math.cos(center.latitude * math.pi / 180));
+    final deltaLat =
+        (r * math.cos(angle)) / 111.0; // approx degrees per km latitude
+    final deltaLon = (r * math.sin(angle)) /
+        (111.0 * math.cos(center.latitude * math.pi / 180));
     points.add(LatLng(center.latitude + deltaLat, center.longitude + deltaLon));
   }
   return points;

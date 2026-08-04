@@ -8,8 +8,9 @@ void showIdentityModal(BuildContext context, TrackerSessionState session) {
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: TrackerColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
-      title: const Text('Identidade do Equipamento', style: TrackerTextStyles.cardTitle),
+      shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+      title: const Text('Identidade do Equipamento',
+          style: TrackerTextStyles.cardTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -18,14 +19,17 @@ void showIdentityModal(BuildContext context, TrackerSessionState session) {
           _buildDetailRow('Modelo', session.device.model),
           _buildDetailRow('ESN', session.device.esn),
           _buildDetailRow('Firmware', session.device.firmware),
-          _buildDetailRow('IMEI', session.device.imei.isNotEmpty ? session.device.imei : '-'),
-          _buildDetailRow('SIM (ICCID)', session.device.sim.isNotEmpty ? session.device.sim : '-'),
+          _buildDetailRow('IMEI',
+              session.device.imei.isNotEmpty ? session.device.imei : '-'),
+          _buildDetailRow('SIM (ICCID)',
+              session.device.sim.isNotEmpty ? session.device.sim : '-'),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar', style: TextStyle(color: TrackerColors.primary)),
+          child: const Text('Fechar',
+              style: TextStyle(color: TrackerColors.primary)),
         ),
       ],
     ),
@@ -37,17 +41,24 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
     context: context,
     builder: (context) {
       final hasData = session.voltageHistory.isNotEmpty;
-      final mainVoltNum = session.voltageHistory.isEmpty ? null : session.voltageHistory.last.value;
-      final backupVoltNum = session.backupVoltageHistory.isEmpty ? null : session.backupVoltageHistory.last.value;
-      final currentMain = mainVoltNum != null ? '${mainVoltNum.toStringAsFixed(1)} V' : '-';
-      final currentBackup = backupVoltNum != null ? '${backupVoltNum.toStringAsFixed(1)} V' : '-';
+      final mainVoltNum = session.voltageHistory.isEmpty
+          ? null
+          : session.voltageHistory.last.value;
+      final backupVoltNum = session.backupVoltageHistory.isEmpty
+          ? null
+          : session.backupVoltageHistory.last.value;
+      final currentMain =
+          mainVoltNum != null ? '${mainVoltNum.toStringAsFixed(1)} V' : '-';
+      final currentBackup =
+          backupVoltNum != null ? '${backupVoltNum.toStringAsFixed(1)} V' : '-';
 
       return AlertDialog(
         backgroundColor: TrackerColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+        shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
         title: Row(
           children: [
-            const Text('Histórico de Alimentação', style: TrackerTextStyles.cardTitle),
+            const Text('Histórico de Alimentação',
+                style: TrackerTextStyles.cardTitle),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -113,7 +124,8 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
                         ),
                       ],
                     ),
-                    Container(height: 36, width: 1, color: const Color(0xFFE0E0E0)),
+                    Container(
+                        height: 36, width: 1, color: const Color(0xFFE0E0E0)),
                     Column(
                       children: [
                         const Text(
@@ -148,10 +160,14 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
                 height: 200,
                 child: hasData
                     ? LineChart(
-                        LineChartData(minY: 0,
+                        LineChartData(
+                          minY: 0,
                           lineBarsData: [
                             LineChartBarData(
-                              spots: session.voltageHistory.asMap().entries.map((e) {
+                              spots: session.voltageHistory
+                                  .asMap()
+                                  .entries
+                                  .map((e) {
                                 return FlSpot(e.key.toDouble(), e.value.value);
                               }).toList(),
                               isCurved: true,
@@ -161,7 +177,8 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
                               dotData: const FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: TrackerColors.communicationBlue.withValues(alpha: 0.2),
+                                color: TrackerColors.communicationBlue
+                                    .withValues(alpha: 0.2),
                               ),
                             ),
                           ],
@@ -190,19 +207,27 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
                                 reservedSize: 40,
                                 getTitlesWidget: (value, meta) {
                                   return Text('${value.toStringAsFixed(1)} V',
-                                      style: const TextStyle(fontSize: 10, color: TrackerColors.textMuted));
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          color: TrackerColors.textMuted));
                                 },
                               ),
                             ),
-                            bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
                           ),
-                          gridData: const FlGridData(show: true, drawVerticalLine: false),
+                          gridData: const FlGridData(
+                              show: true, drawVerticalLine: false),
                           borderData: FlBorderData(show: false),
                         ),
                       )
-                    : const Center(child: Text('Aguardando dados...', style: TrackerTextStyles.body)),
+                    : const Center(
+                        child: Text('Aguardando dados...',
+                            style: TrackerTextStyles.body)),
               ),
             ],
           ),
@@ -210,7 +235,8 @@ void showPowerModal(BuildContext context, TrackerSessionState session) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fechar', style: TextStyle(color: TrackerColors.primary)),
+            child: const Text('Fechar',
+                style: TextStyle(color: TrackerColors.primary)),
           ),
         ],
       );
@@ -223,25 +249,34 @@ void showIgnitionModal(BuildContext context, TrackerSessionState session) {
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: TrackerColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
-      title: const Text('Histórico de Ignição', style: TrackerTextStyles.cardTitle),
+      shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+      title: const Text('Histórico de Ignição',
+          style: TrackerTextStyles.cardTitle),
       content: SizedBox(
         width: 400,
         height: 300,
         child: session.ignitionHistory.isEmpty
-            ? const Center(child: Text('Sem mudanças de estado nesta sessão.', style: TrackerTextStyles.body))
+            ? const Center(
+                child: Text('Sem mudanças de estado nesta sessão.',
+                    style: TrackerTextStyles.body))
             : ListView.builder(
                 itemCount: session.ignitionHistory.length,
                 itemBuilder: (context, index) {
                   final evt = session.ignitionHistory[index];
-                  final timeStr = '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}:${evt.timestamp.second.toString().padLeft(2, '0')}';
+                  final timeStr =
+                      '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}:${evt.timestamp.second.toString().padLeft(2, '0')}';
                   return ListTile(
                     leading: Icon(
-                      evt.event == 'Ligada' ? Icons.key_rounded : Icons.key_off_rounded,
-                      color: evt.event == 'Ligada' ? TrackerColors.technicalGreen : TrackerColors.textMuted,
+                      evt.event == 'Ligada'
+                          ? Icons.key_rounded
+                          : Icons.key_off_rounded,
+                      color: evt.event == 'Ligada'
+                          ? TrackerColors.technicalGreen
+                          : TrackerColors.textMuted,
                     ),
                     title: Text(evt.event, style: TrackerTextStyles.body),
-                    subtitle: Text(timeStr, style: TrackerTextStyles.body.copyWith(fontSize: 12)),
+                    subtitle: Text(timeStr,
+                        style: TrackerTextStyles.body.copyWith(fontSize: 12)),
                   );
                 },
               ),
@@ -249,20 +284,23 @@ void showIgnitionModal(BuildContext context, TrackerSessionState session) {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar', style: TextStyle(color: TrackerColors.primary)),
+          child: const Text('Fechar',
+              style: TextStyle(color: TrackerColors.primary)),
         ),
       ],
     ),
   );
 }
 
-void showOutputModal(BuildContext context, TrackerSessionState session, VoidCallback onEnable, VoidCallback onDisable) {
+void showOutputModal(BuildContext context, TrackerSessionState session,
+    VoidCallback onEnable, VoidCallback onDisable) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: TrackerColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
-      title: const Text('Comandos de Saída 1 (Bloqueio)', style: TrackerTextStyles.cardTitle),
+      shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+      title: const Text('Comandos de Saída 1 (Bloqueio)',
+          style: TrackerTextStyles.cardTitle),
       content: SizedBox(
         width: 420,
         child: Column(
@@ -304,17 +342,24 @@ void showOutputModal(BuildContext context, TrackerSessionState session, VoidCall
             SizedBox(
               height: 150,
               child: session.commandHistory.isEmpty
-                  ? const Center(child: Text('Nenhum comando enviado.', style: TrackerTextStyles.body))
+                  ? const Center(
+                      child: Text('Nenhum comando enviado.',
+                          style: TrackerTextStyles.body))
                   : ListView.builder(
                       itemCount: session.commandHistory.length,
                       itemBuilder: (context, index) {
                         final evt = session.commandHistory[index];
-                        final timeStr = '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}';
+                        final timeStr =
+                            '${evt.timestamp.hour.toString().padLeft(2, '0')}:${evt.timestamp.minute.toString().padLeft(2, '0')}';
                         return ListTile(
                           dense: true,
                           title: Text(evt.event, style: TrackerTextStyles.body),
-                          subtitle: Text(evt.detail, style: TrackerTextStyles.body.copyWith(fontSize: 12)),
-                          trailing: Text(timeStr, style: TrackerTextStyles.body.copyWith(fontSize: 12)),
+                          subtitle: Text(evt.detail,
+                              style: TrackerTextStyles.body
+                                  .copyWith(fontSize: 12)),
+                          trailing: Text(timeStr,
+                              style: TrackerTextStyles.body
+                                  .copyWith(fontSize: 12)),
                         );
                       },
                     ),
@@ -325,34 +370,43 @@ void showOutputModal(BuildContext context, TrackerSessionState session, VoidCall
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar', style: TextStyle(color: TrackerColors.primary)),
+          child: const Text('Fechar',
+              style: TextStyle(color: TrackerColors.primary)),
         ),
       ],
     ),
   );
 }
 
-void showGprsModal(BuildContext context, TrackerSessionState session, Function(String) onUpdateApn) {
-  final apnController = TextEditingController(text: session.configuration.desired['APN'] ?? session.configuration.original['APN'] ?? '');
+void showGprsModal(BuildContext context, TrackerSessionState session,
+    Function(String) onUpdateApn) {
+  final apnController = TextEditingController(
+      text: session.configuration.desired['APN'] ??
+          session.configuration.original['APN'] ??
+          '');
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: TrackerColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+      shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
       title: const Text('Rede GPRS e APN', style: TrackerTextStyles.cardTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailRow('Status', session.connection.gprsOnline ? 'Online' : 'Offline'),
-              _buildDetailRow('Código de Rede', session.connection.networkCode ?? '-'),
-    _buildDetailRow('SIM (ICCID)', session.device.sim.isNotEmpty ? session.device.sim : '-'),
+          _buildDetailRow(
+              'Status', session.connection.gprsOnline ? 'Online' : 'Offline'),
+          _buildDetailRow(
+              'Código de Rede', session.connection.networkCode ?? '-'),
+          _buildDetailRow('SIM (ICCID)',
+              session.device.sim.isNotEmpty ? session.device.sim : '-'),
           if (session.connection.networkWarning != null)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
                 session.connection.networkWarning!,
-                style: const TextStyle(color: TrackerColors.attentionAmber, fontSize: 12),
+                style: const TextStyle(
+                    color: TrackerColors.attentionAmber, fontSize: 12),
               ),
             ),
           const SizedBox(height: TrackerSpacing.lg),
@@ -372,14 +426,17 @@ void showGprsModal(BuildContext context, TrackerSessionState session, Function(S
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar', style: TextStyle(color: TrackerColors.textMuted)),
+          child: const Text('Cancelar',
+              style: TextStyle(color: TrackerColors.textMuted)),
         ),
         ElevatedButton(
           onPressed: () {
             onUpdateApn(apnController.text.trim());
             Navigator.of(context).pop();
           },
-          style: ElevatedButton.styleFrom(backgroundColor: TrackerColors.primary, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: TrackerColors.primary,
+              foregroundColor: Colors.white),
           child: const Text('Atualizar APN'),
         ),
       ],
@@ -388,25 +445,29 @@ void showGprsModal(BuildContext context, TrackerSessionState session, Function(S
 }
 
 void showGpsModal(BuildContext context, TrackerSessionState session) {
-  // Try to find the raw GPS snapshot data if we had it in state, 
+  // Try to find the raw GPS snapshot data if we had it in state,
   // but for now we'll just show what's in diagnostics.
-  final gpsDiag = session.diagnostics.firstWhere((d) => d.title == 'GPS', orElse: () => const DiagnosticGroup('GPS', {}));
-  
+  final gpsDiag = session.diagnostics.firstWhere((d) => d.title == 'GPS',
+      orElse: () => const DiagnosticGroup('GPS', {}));
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: TrackerColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: TrackerRadius.large),
+      shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.large),
       title: const Text('GPS e Satélites', style: TrackerTextStyles.cardTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: gpsDiag.values.entries.map((e) => _buildDetailRow(e.key, e.value)).toList(),
+        children: gpsDiag.values.entries
+            .map((e) => _buildDetailRow(e.key, e.value))
+            .toList(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar', style: TextStyle(color: TrackerColors.primary)),
+          child: const Text('Fechar',
+              style: TextStyle(color: TrackerColors.primary)),
         ),
       ],
     ),
@@ -419,8 +480,12 @@ Widget _buildDetailRow(String label, String value) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TrackerTextStyles.body.copyWith(color: TrackerColors.textMuted)),
-        Text(value, style: TrackerTextStyles.body.copyWith(fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TrackerTextStyles.body
+                .copyWith(color: TrackerColors.textMuted)),
+        Text(value,
+            style:
+                TrackerTextStyles.body.copyWith(fontWeight: FontWeight.w600)),
       ],
     ),
   );

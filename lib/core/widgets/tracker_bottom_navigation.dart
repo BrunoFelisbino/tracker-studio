@@ -29,7 +29,7 @@ class TrackerBottomNavigation extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Material(
-            color: TrackerColors.surface.withOpacity(0.8),
+            color: TrackerColors.surface.withValues(alpha: 0.8),
             child: DecoratedBox(
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: TrackerColors.line)),
@@ -67,7 +67,8 @@ class TrackerBottomNavigation extends StatelessWidget {
                                     borderRadius: central
                                         ? TrackerRadius.medium
                                         : TrackerRadius.pill,
-                                    boxShadow: central ? TrackerShadows.soft : null,
+                                    boxShadow:
+                                        central ? TrackerShadows.soft : null,
                                   ),
                                   child: Icon(
                                     selected ? item.$2 : item.$1,

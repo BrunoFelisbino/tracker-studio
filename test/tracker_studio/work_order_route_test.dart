@@ -29,8 +29,7 @@ void main() {
       destinationLongitude: 0.0,
     );
 
-    expect(route.routeLink()?.queryParameters['destination'],
-        '0.0,0.0');
+    expect(route.routeLink()?.queryParameters['destination'], '0.0,0.0');
   });
 
   test('provided Google Maps link is accepted', () {

@@ -116,7 +116,8 @@ abstract final class TrackerTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceMuted,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: TrackerRadius.medium,
           borderSide: BorderSide(color: line),
@@ -127,7 +128,8 @@ abstract final class TrackerTheme {
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: TrackerRadius.medium,
-          borderSide: BorderSide(color: TrackerColors.communicationBlue, width: 2),
+          borderSide:
+              BorderSide(color: TrackerColors.communicationBlue, width: 2),
         ),
       ),
       dialogTheme: DialogThemeData(

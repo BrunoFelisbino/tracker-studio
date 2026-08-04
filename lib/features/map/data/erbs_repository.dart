@@ -25,17 +25,19 @@ class ErbsRepository {
 
   Future<void> init() async {
     if (_db != null) return;
-    
+
     sqfliteFfiInit();
     var databaseFactory = databaseFactoryFfi;
 
     final docDir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(docDir.path, 'tracker_studio', 'erbs_database.sqlite');
+    final dbPath =
+        p.join(docDir.path, 'tracker_studio', 'erbs_database.sqlite');
 
     final dbFile = File(dbPath);
     if (!await dbFile.exists()) {
       await dbFile.parent.create(recursive: true);
-      final localAssetPath = p.join(Directory.current.path, 'assets', 'erbs_database.sqlite');
+      final localAssetPath =
+          p.join(Directory.current.path, 'assets', 'erbs_database.sqlite');
       if (await File(localAssetPath).exists()) {
         await File(localAssetPath).copy(dbPath);
       }
@@ -67,14 +69,16 @@ class ErbsRepository {
       for (final q in quadrants) {
         final results = await _db!.query(
           'erbs',
-          where: 'latitude >= ? AND latitude <= ? AND longitude >= ? AND longitude <= ?',
+          where:
+              'latitude >= ? AND latitude <= ? AND longitude >= ? AND longitude <= ?',
           whereArgs: [q[0], q[1], q[2], q[3]],
           limit: 12,
         );
 
         for (final row in results) {
           erbs.add(ErbStation(
-            position: LatLng(row['latitude'] as double, row['longitude'] as double),
+            position:
+                LatLng(row['latitude'] as double, row['longitude'] as double),
             operadoras: row['operadora'] as String? ?? 'Vivo / Claro / TIM',
             tecnologias: row['tecnologias'] as String? ?? '4G LTE',
             endereco: row['endereco'] as String? ?? 'Torre ERB Local',
@@ -84,25 +88,25 @@ class ErbsRepository {
     }
 
     // Ensure at least a minimal number of ERBs by generating synthetic points uniformly around a circle
-      const desiredCount = 12;
-      if (erbs.length < desiredCount) {
-        final missing = desiredCount - erbs.length;
-        final syntheticPoints = generateCircularPositions(
-          center: center,
-          radiusKm: radiusKm,
-          count: missing,
-        );
-        final operators = ['Vivo M2M', 'Claro M2M', 'TIM M2M', 'Algar M2M'];
-        final techs = ['4G LTE', '3G / 2G', '4G Cat-M1'];
-        for (var i = 0; i < syntheticPoints.length; i++) {
-          erbs.add(ErbStation(
-            position: syntheticPoints[i],
-            operadoras: operators[i % operators.length],
-            tecnologias: techs[i % techs.length],
-            endereco: 'Torre ERB - Ponto ${i + 1}',
-          ));
-        }
+    const desiredCount = 12;
+    if (erbs.length < desiredCount) {
+      final missing = desiredCount - erbs.length;
+      final syntheticPoints = generateCircularPositions(
+        center: center,
+        radiusKm: radiusKm,
+        count: missing,
+      );
+      final operators = ['Vivo M2M', 'Claro M2M', 'TIM M2M', 'Algar M2M'];
+      final techs = ['4G LTE', '3G / 2G', '4G Cat-M1'];
+      for (var i = 0; i < syntheticPoints.length; i++) {
+        erbs.add(ErbStation(
+          position: syntheticPoints[i],
+          operadoras: operators[i % operators.length],
+          tecnologias: techs[i % techs.length],
+          endereco: 'Torre ERB - Ponto ${i + 1}',
+        ));
       }
+    }
 
     return erbs;
   }

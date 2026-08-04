@@ -11,8 +11,8 @@ import '../test_helpers/studio_test_harness.dart';
 List<String> _record({required int index, required List<String> ioLines}) => [
       '[REC.GEN] Record Content:',
       'Priority: 1',
-    'Lat: 0.0',
-    'Lon: 0.0',
+      'Lat: 0.0',
+      'Lon: 0.0',
       'Alt: 780',
       'Angle: 45',
       'Speed: 0',
@@ -30,7 +30,8 @@ void main() {
     TeltonikaDriver.registerAll();
   });
 
-  test('capture workflow accumulates lines and computes diff on stop', () async {
+  test('capture workflow accumulates lines and computes diff on stop',
+      () async {
     final controller = await createStudioTestController();
     await controller.testTransport.connect(
       const SerialConnectionRequest(commandPortPath: '/dev/tty.test'),
@@ -172,8 +173,7 @@ void main() {
     expect(analysis.parameterValues[2002], 'testuser');
     expect(analysis.parameterValues[2003], '****REDACTED****');
     expect(analysis.parameterValues[2004], 'tracker.example.com');
-    expect(analysis.confirmedParameters,
-        containsAll([2001, 2005, 2002]));
+    expect(analysis.confirmedParameters, containsAll([2001, 2005, 2002]));
     expect(analysis.confirmedParameters, isNot(contains(2003)));
     expect(analysis.confirmedParameters, isNot(contains(2004)));
   });
@@ -205,8 +205,7 @@ void main() {
     final store = CaptureLogStore(
       pathResolver: () async => '$tmpPath/logs.json',
     );
-    final controller =
-        await createStudioTestController(captureLogs: store);
+    final controller = await createStudioTestController(captureLogs: store);
     await controller.testTransport.connect(
       const SerialConnectionRequest(commandPortPath: '/dev/tty.test'),
     );
@@ -231,8 +230,8 @@ void main() {
     final record = store.all.single;
     expect(record.sessionCode, controller.state.sessionCode);
     expect(record.lines, contains(':cfg_setparam:2001:internet'));
-    expect(record.analysis!['parameterValues'],
-        containsPair('2001', 'internet'));
+    expect(
+        record.analysis!['parameterValues'], containsPair('2001', 'internet'));
 
     final reloaded = CaptureLogStore(
       pathResolver: () async => '$tmpPath/logs.json',
@@ -247,14 +246,12 @@ void main() {
     await Directory(tmpPath).delete(recursive: true);
   });
 
-  test('save without analysis only logs guidance and stores nothing',
-      () async {
+  test('save without analysis only logs guidance and stores nothing', () async {
     final store = CaptureLogStore(
       pathResolver: () async =>
           '${Directory.systemTemp.path}/empty_${DateTime.now().microsecondsSinceEpoch}/logs.json',
     );
-    final controller =
-        await createStudioTestController(captureLogs: store);
+    final controller = await createStudioTestController(captureLogs: store);
 
     await controller.saveTeltonikaCaptureForAnalysis();
 

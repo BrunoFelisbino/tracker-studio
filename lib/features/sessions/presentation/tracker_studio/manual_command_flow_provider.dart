@@ -69,7 +69,8 @@ class ManualCommandSession {
       'model': model,
       'deviceId': deviceId,
       'createdAt': createdAt.toIso8601String(),
-      'parameters': parameters.map((key, value) => MapEntry(key, value.toJson())),
+      'parameters':
+          parameters.map((key, value) => MapEntry(key, value.toJson())),
       'logs': logs,
       'isConfirmed': isConfirmed,
     };
@@ -136,7 +137,8 @@ class ManualCommandFlowProvider extends StateNotifier<ManualCommandFlowState> {
     try {
       final supportedModels = ManualCommandFlowService.getSupportedModels();
       state = state.copyWith(
-        selectedModel: supportedModels.isNotEmpty ? supportedModels.first : null,
+        selectedModel:
+            supportedModels.isNotEmpty ? supportedModels.first : null,
         isLoading: false,
       );
     } catch (e) {
@@ -150,7 +152,8 @@ class ManualCommandFlowProvider extends StateNotifier<ManualCommandFlowState> {
   Future<void> loadManualConfig(String model) async {
     state = state.copyWith(isLoading: true);
     try {
-      final manualConfig = await ManualCommandFlowService.getManualConfig(model);
+      final manualConfig =
+          await ManualCommandFlowService.getManualConfig(model);
       if (manualConfig == null) {
         throw Exception('No manual configuration found for model: $model');
       }
@@ -178,7 +181,8 @@ class ManualCommandFlowProvider extends StateNotifier<ManualCommandFlowState> {
   }
 
   void updateParameterValue(String parameterId, String newValue) {
-    final parameters = Map<String, ManualParameterState>.from(state.currentParameters);
+    final parameters =
+        Map<String, ManualParameterState>.from(state.currentParameters);
 
     if (parameters.containsKey(parameterId)) {
       final currentParam = parameters[parameterId]!;

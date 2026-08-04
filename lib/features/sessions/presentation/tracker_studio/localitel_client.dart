@@ -6,14 +6,15 @@ class LocalitelClient {
   late final Dio _dio;
 
   LocalitelClient({Dio? dio}) {
-    _dio = dio ?? Dio(BaseOptions(
-      baseUrl: AppEnv.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    ));
+    _dio = dio ??
+        Dio(BaseOptions(
+          baseUrl: AppEnv.apiBaseUrl,
+          connectTimeout: const Duration(seconds: 8),
+          receiveTimeout: const Duration(seconds: 8),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ));
   }
 
   bool get enabled => AppEnv.apiBaseUrl.isNotEmpty;

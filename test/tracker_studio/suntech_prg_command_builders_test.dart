@@ -38,7 +38,8 @@ void main() {
 
       test('supports all New Gen models', () {
         final cmd = SuntechPrgCommandBuilders.keepAlive(intervalMinutes: 10);
-        expect(cmd.supportedModels, containsAll(['ST8210', 'ST8310', 'ST8310U', 'ST8310UM']));
+        expect(cmd.supportedModels,
+            containsAll(['ST8210', 'ST8310', 'ST8310U', 'ST8310UM']));
       });
     });
 

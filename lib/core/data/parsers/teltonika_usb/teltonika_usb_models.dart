@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -42,20 +41,20 @@ class UsbCaptureChunk {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'fileId': fileId,
-    'packetNumber': packetNumber,
-    'timestamp': timestamp.toIso8601String(),
-    'interfaceId': interfaceId,
-    'busId': busId,
-    'deviceAddress': deviceAddress,
-    'endpoint': '0x${endpoint.toRadixString(16).padLeft(2, '0')}',
-    'direction': direction,
-    'transferType': transferType,
-    'byteLength': rawBytes.length,
-    'hex': hex,
-    'asciiCandidate': asciiCandidate,
-  };
+        'id': id,
+        'fileId': fileId,
+        'packetNumber': packetNumber,
+        'timestamp': timestamp.toIso8601String(),
+        'interfaceId': interfaceId,
+        'busId': busId,
+        'deviceAddress': deviceAddress,
+        'endpoint': '0x${endpoint.toRadixString(16).padLeft(2, '0')}',
+        'direction': direction,
+        'transferType': transferType,
+        'byteLength': rawBytes.length,
+        'hex': hex,
+        'asciiCandidate': asciiCandidate,
+      };
 }
 
 /// Key for grouping USB stream chunks
@@ -89,7 +88,8 @@ class UsbStreamKey {
       endpoint.hashCode ^
       direction.hashCode;
 
-  String get keyString => '$interfaceId-$deviceAddress-${endpoint.toRadixString(16)}-$direction';
+  String get keyString =>
+      '$interfaceId-$deviceAddress-${endpoint.toRadixString(16)}-$direction';
 }
 
 /// Reassembled USB stream from multiple chunks
@@ -110,15 +110,15 @@ class ReassembledUsbStream {
   int get byteLength => bytes.length;
 
   Map<String, dynamic> toJson() => {
-    'key': key.keyString,
-    'chunkCount': chunkCount,
-    'byteLength': byteLength,
-    'textLength': text.length,
-    'textPreview': text.length > 500 ? text.substring(0, 500) : text,
-    'firstTimestamp': chunks.first.timestamp.toIso8601String(),
-    'lastTimestamp': chunks.last.timestamp.toIso8601String(),
-    'packetNumbers': chunks.map((c) => c.packetNumber).toList(),
-  };
+        'key': key.keyString,
+        'chunkCount': chunkCount,
+        'byteLength': byteLength,
+        'textLength': text.length,
+        'textPreview': text.length > 500 ? text.substring(0, 500) : text,
+        'firstTimestamp': chunks.first.timestamp.toIso8601String(),
+        'lastTimestamp': chunks.last.timestamp.toIso8601String(),
+        'packetNumbers': chunks.map((c) => c.packetNumber).toList(),
+      };
 }
 
 /// Extracted text fragment with metadata
@@ -148,16 +148,16 @@ class ExtractedTextFragment {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'streamKey': streamKey.keyString,
-    'packetStart': packetStart,
-    'packetEnd': packetEnd,
-    'timestampStart': timestampStart.toIso8601String(),
-    'timestampEnd': timestampEnd.toIso8601String(),
-    'text': text,
-    'encoding': encoding,
-    'confidence': confidence,
-  };
+        'id': id,
+        'streamKey': streamKey.keyString,
+        'packetStart': packetStart,
+        'packetEnd': packetEnd,
+        'timestampStart': timestampStart.toIso8601String(),
+        'timestampEnd': timestampEnd.toIso8601String(),
+        'text': text,
+        'encoding': encoding,
+        'confidence': confidence,
+      };
 }
 
 /// Reconstructed log line from fragments
@@ -185,16 +185,16 @@ class ReconstructedLogLine {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'timestamp': timestamp?.toIso8601String(),
-    'category': category,
-    'message': message,
-    'complete': complete,
-    'reconstructionConfidence': reconstructionConfidence,
-    'packetReferences': packetReferences,
-    'rawFragments': rawFragments,
-    'rawBytesHex': rawBytes.map((b) => bytesToHex(b)).toList(),
-  };
+        'id': id,
+        'timestamp': timestamp?.toIso8601String(),
+        'category': category,
+        'message': message,
+        'complete': complete,
+        'reconstructionConfidence': reconstructionConfidence,
+        'packetReferences': packetReferences,
+        'rawFragments': rawFragments,
+        'rawBytesHex': rawBytes.map((b) => bytesToHex(b)).toList(),
+      };
 }
 
 /// Teltonika device identity detected from USB capture
@@ -229,20 +229,20 @@ class DetectedTeltonikaDevice {
   });
 
   Map<String, dynamic> toJson() => {
-    'manufacturer': manufacturer,
-    'model': model,
-    'imei': imei != null ? _maskImei(imei!) : null,
-    'iccid': iccid != null ? _maskIccid(iccid!) : null,
-    'firmware': firmware,
-    'internalFirmware': internalFirmware,
-    'hardwareVersion': hardwareVersion,
-    'bootloaderVersion': bootloaderVersion,
-    'modemVersion': modemVersion,
-    'bluetoothMac': bluetoothMac,
-    'accelerometerModel': accelerometerModel,
-    'confidence': confidence,
-    'evidence': evidence,
-  };
+        'manufacturer': manufacturer,
+        'model': model,
+        'imei': imei != null ? _maskImei(imei!) : null,
+        'iccid': iccid != null ? _maskIccid(iccid!) : null,
+        'firmware': firmware,
+        'internalFirmware': internalFirmware,
+        'hardwareVersion': hardwareVersion,
+        'bootloaderVersion': bootloaderVersion,
+        'modemVersion': modemVersion,
+        'bluetoothMac': bluetoothMac,
+        'accelerometerModel': accelerometerModel,
+        'confidence': confidence,
+        'evidence': evidence,
+      };
 
   String _maskImei(String imei) {
     if (imei.length >= 15) {
@@ -306,27 +306,27 @@ class TeltonikaGeneratedAvlRecord {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'generatedAt': generatedAt?.toIso8601String(),
-    'deviceTimestamp': deviceTimestamp,
-    'priority': priority,
-    'latitude': latitude,
-    'longitude': longitude,
-    'altitude': altitude,
-    'angle': angle,
-    'speedKph': speedKph,
-    'hdop': hdop,
-    'satellites': satellites,
-    'gpsFix': gpsFix,
-    'gpsSpeed': gpsSpeed,
-    'eventAvlId': eventAvlId,
-    'ioElements': ioElements.map((k, v) => MapEntry(k.toString(), v)),
-    'recordSizeBytes': recordSizeBytes,
-    'memoryAddress': memoryAddress,
-    'highPriorityAddress': highPriorityAddress,
-    'rawLines': rawLines,
-    'packetReferences': packetReferences,
-  };
+        'id': id,
+        'generatedAt': generatedAt?.toIso8601String(),
+        'deviceTimestamp': deviceTimestamp,
+        'priority': priority,
+        'latitude': latitude,
+        'longitude': longitude,
+        'altitude': altitude,
+        'angle': angle,
+        'speedKph': speedKph,
+        'hdop': hdop,
+        'satellites': satellites,
+        'gpsFix': gpsFix,
+        'gpsSpeed': gpsSpeed,
+        'eventAvlId': eventAvlId,
+        'ioElements': ioElements.map((k, v) => MapEntry(k.toString(), v)),
+        'recordSizeBytes': recordSizeBytes,
+        'memoryAddress': memoryAddress,
+        'highPriorityAddress': highPriorityAddress,
+        'rawLines': rawLines,
+        'packetReferences': packetReferences,
+      };
 }
 
 /// Observed IO ID with value
@@ -358,18 +358,18 @@ class TeltonikaObservedIo {
   });
 
   Map<String, dynamic> toJson() => {
-    'avlId': avlId,
-    'rawValue': rawValue,
-    'definition': definition?.toJson(),
-    'normalizedKey': normalizedKey,
-    'normalizedValue': normalizedValue,
-    'rawUnit': rawUnit,
-    'displayUnit': displayUnit,
-    'definitionStatus': definitionStatus,
-    'source': source,
-    'packetReferences': packetReferences,
-    'rawLine': rawLine,
-  };
+        'avlId': avlId,
+        'rawValue': rawValue,
+        'definition': definition?.toJson(),
+        'normalizedKey': normalizedKey,
+        'normalizedValue': normalizedValue,
+        'rawUnit': rawUnit,
+        'displayUnit': displayUnit,
+        'definitionStatus': definitionStatus,
+        'source': source,
+        'packetReferences': packetReferences,
+        'rawLine': rawLine,
+      };
 }
 
 /// Use AvlDefinition from uce_interfaces.dart instead of duplicate TeltonikaAvlDefinition
@@ -397,15 +397,15 @@ class TeltonikaUsbConfigCommand {
   });
 
   Map<String, dynamic> toJson() => {
-    'timestamp': timestamp?.toIso8601String(),
-    'command': command,
-    'parameterId': parameterId,
-    'rawValue': rawValue,
-    'parsedValue': parsedValue,
-    'direction': direction,
-    'packetReferences': packetReferences,
-    'rawText': rawText,
-  };
+        'timestamp': timestamp?.toIso8601String(),
+        'command': command,
+        'parameterId': parameterId,
+        'rawValue': rawValue,
+        'parsedValue': parsedValue,
+        'direction': direction,
+        'packetReferences': packetReferences,
+        'rawText': rawText,
+      };
 }
 
 /// Configuration parameter definition
@@ -431,15 +431,15 @@ class TeltonikaConfigurationParameter {
   });
 
   Map<String, dynamic> toJson() => {
-    'parameterId': parameterId,
-    'name': name,
-    'description': description,
-    'category': category,
-    'valueType': valueType,
-    'enumValues': enumValues,
-    'supportedModels': supportedModels,
-    'sourceStatus': sourceStatus,
-  };
+        'parameterId': parameterId,
+        'name': name,
+        'description': description,
+        'category': category,
+        'valueType': valueType,
+        'enumValues': enumValues,
+        'supportedModels': supportedModels,
+        'sourceStatus': sourceStatus,
+      };
 }
 
 /// Complete parse result for USB Teltonika capture
@@ -479,28 +479,28 @@ class TeltonikaUsbParseResult {
   });
 
   Map<String, dynamic> toJson() => {
-    'fileId': fileId,
-    'fileName': fileName,
-    'parsedAt': parsedAt.toIso8601String(),
-    'totalPackets': totalPackets,
-    'totalBytes': totalBytes,
-    'chunkCount': chunks.length,
-    'streamCount': streams.length,
-    'textFragmentCount': textFragments.length,
-    'logLineCount': logLines.length,
-    'device': device?.toJson(),
-    'avlRecordCount': avlRecords.length,
-    'observedIoCount': observedIos.length,
-    'configCommandCount': configCommands.length,
-    'warnings': warnings,
-    'errors': errors,
-    'streams': streams.map((s) => s.toJson()).toList(),
-    'textFragments': textFragments.map((t) => t.toJson()).toList(),
-    'logLines': logLines.map((l) => l.toJson()).toList(),
-    'avlRecords': avlRecords.map((a) => a.toJson()).toList(),
-    'observedIos': observedIos.map((i) => i.toJson()).toList(),
-    'configCommands': configCommands.map((c) => c.toJson()).toList(),
-  };
+        'fileId': fileId,
+        'fileName': fileName,
+        'parsedAt': parsedAt.toIso8601String(),
+        'totalPackets': totalPackets,
+        'totalBytes': totalBytes,
+        'chunkCount': chunks.length,
+        'streamCount': streams.length,
+        'textFragmentCount': textFragments.length,
+        'logLineCount': logLines.length,
+        'device': device?.toJson(),
+        'avlRecordCount': avlRecords.length,
+        'observedIoCount': observedIos.length,
+        'configCommandCount': configCommands.length,
+        'warnings': warnings,
+        'errors': errors,
+        'streams': streams.map((s) => s.toJson()).toList(),
+        'textFragments': textFragments.map((t) => t.toJson()).toList(),
+        'logLines': logLines.map((l) => l.toJson()).toList(),
+        'avlRecords': avlRecords.map((a) => a.toJson()).toList(),
+        'observedIos': observedIos.map((i) => i.toJson()).toList(),
+        'configCommands': configCommands.map((c) => c.toJson()).toList(),
+      };
 }
 
 /// Utility functions

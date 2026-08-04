@@ -161,10 +161,14 @@ class SuntechParser {
       return _parseSt8Preset(line);
     }
     // Matches ST300STT, ST340STT, ST430STT, ST490STT, ST830STT, etc.
-    if (RegExp(r'^ST\d{3,4}(U|UM|R)?STT;').hasMatch(line)) return _parseLegacyStatus(line);
-    
+    if (RegExp(r'^ST\d{3,4}(U|UM|R)?STT;').hasMatch(line)) {
+      return _parseLegacyStatus(line);
+    }
+
     // Matches ST300NTW, ST430NTW, etc.
-    if (RegExp(r'^ST\d{3,4}(U|UM|R)?NTW;').hasMatch(line)) return _parseLegacyPreset(line);
+    if (RegExp(r'^ST\d{3,4}(U|UM|R)?NTW;').hasMatch(line)) {
+      return _parseLegacyPreset(line);
+    }
 
     if (line.contains('ST300') || line.contains('ST310')) {
       return NormalizedTrackerSnapshot(
@@ -195,10 +199,12 @@ class SuntechParser {
     final satellites = intAt(13);
     final fixCode = at(14);
     final gpsEvidence = _gpsEvidence(fixCode, satellites);
-    final inputEvidence = _maskEvidence(at(15), 'entrada', minLength: 4, maxLength: 8);
-    final outputEvidence = _maskEvidence(at(16), 'saida', minLength: 4, maxLength: 8);
+    final inputEvidence =
+        _maskEvidence(at(15), 'entrada', minLength: 4, maxLength: 8);
+    final outputEvidence =
+        _maskEvidence(at(16), 'saida', minLength: 4, maxLength: 8);
     final rawIgnition = at(17);
-    
+
     bool? ignitionOn;
     TechnicalEvidence<bool> ignitionEvidence;
 
@@ -212,7 +218,8 @@ class SuntechParser {
         status: TechnicalEvidenceStatus.confirmed,
         value: isIgnitionOn,
         rawValue: inputEvidence.value,
-        binaryState: isIgnitionOn ? TechnicalBinaryState.on : TechnicalBinaryState.off,
+        binaryState:
+            isIgnitionOn ? TechnicalBinaryState.on : TechnicalBinaryState.off,
         detail: 'Ignição extraída da máscara de entradas ST8.',
       );
     } else {
@@ -312,11 +319,12 @@ class SuntechParser {
     // Extract model from header (e.g. ST430STT -> ST430)
     final hdr = parts[0];
     final modelName = hdr.replaceAll('STT', '');
-    
+
     final rawInputMaskIndex = parts.indexWhere(
       (value) => RegExp(r'^[01]{3,8}$').hasMatch(value),
     );
-    final rawInputMask = rawInputMaskIndex >= 0 ? parts[rawInputMaskIndex] : null;
+    final rawInputMask =
+        rawInputMaskIndex >= 0 ? parts[rawInputMaskIndex] : null;
 
     int? latIndex;
     for (int i = 5; i < parts.length; i++) {
@@ -344,9 +352,9 @@ class SuntechParser {
       if (rawInputMaskIndex >= 0) {
         final courseIndex = latIndex + 3;
         final mainVoltIndex = rawInputMaskIndex - 1;
-        
+
         if (mainVoltIndex > 0) {
-           mainVoltage = double.tryParse(parts[mainVoltIndex]);
+          mainVoltage = double.tryParse(parts[mainVoltIndex]);
         }
 
         // Se houver 4 índices de diferença, temos Satélites, Fix e Odometer no meio.

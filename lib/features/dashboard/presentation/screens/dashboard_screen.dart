@@ -12,7 +12,6 @@ import '../../../../core/widgets/tracker_scaffold.dart';
 import '../../../../core/widgets/tracker_section_header.dart';
 import '../../../sessions/presentation/tracker_studio/tracker_studio_controller.dart';
 import '../../../sessions/presentation/tracker_studio/suntech_command_family.dart';
-import '../widgets/device_control_panel.dart';
 import 'modals/dashboard_modals.dart';
 import '../widgets/telemetry_matrix_card.dart';
 import '../../../sessions/presentation/tracker_studio/report_generator.dart';
@@ -31,7 +30,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (mask == '-' || mask.isEmpty) return '--';
     final normalized = mask.trim();
     if (normalized.length < 2) return '--';
-    
+
     String bit;
     if (model.startsWith('ST82')) {
       // No ST8210 a saida 1 costuma ser o ultimo bit da string
@@ -41,8 +40,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // geralmente mapeia a saída 1 para o primeiro bit (índice 0).
       bit = normalized[0];
     }
-    
-    return bit == '1' ? '01' : bit == '0' ? '00' : '--';
+
+    return bit == '1'
+        ? '01'
+        : bit == '0'
+            ? '00'
+            : '--';
   }
 
   String _output1State(String mask, String model) {
@@ -211,7 +214,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Future.microtask(() => showIdentityModal(context, session)),
+        onTap: () =>
+            Future.microtask(() => showIdentityModal(context, session)),
         borderRadius: TrackerRadius.large,
         child: Container(
           padding: const EdgeInsets.all(TrackerSpacing.md),
@@ -226,54 +230,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   : TrackerColors.line,
             ),
           ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: connected
-                  ? TrackerColors.technicalGreen.withValues(alpha: 0.1)
-                  : TrackerColors.failureRed.withValues(alpha: 0.1),
-              borderRadius: TrackerRadius.small,
-            ),
-            child: Icon(
-              connected ? Icons.usb_rounded : Icons.usb_off_rounded,
-              color: connected ? TrackerColors.technicalGreen : TrackerColors.failureRed,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: TrackerSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  connected ? '$model · $esn' : 'Nenhum dispositivo conectado',
-                  style: TrackerTextStyles.cardTitle.copyWith(fontSize: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: connected
+                      ? TrackerColors.technicalGreen.withValues(alpha: 0.1)
+                      : TrackerColors.failureRed.withValues(alpha: 0.1),
+                  borderRadius: TrackerRadius.small,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  connected
-                      ? 'Porta: ${session.connection.commandPortName} · ${session.connection.baudRate} baud'
-                      : 'Acesse Dispositivos para selecionar a porta',
-                  style: TrackerTextStyles.body.copyWith(fontSize: 12),
+                child: Icon(
+                  connected ? Icons.usb_rounded : Icons.usb_off_rounded,
+                  color: connected
+                      ? TrackerColors.technicalGreen
+                      : TrackerColors.failureRed,
+                  size: 22,
                 ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_input_component_rounded),
-            onPressed: () => context.go('/devices'),
-            tooltip: 'Gerenciar Portas USB',
-            style: IconButton.styleFrom(
-              backgroundColor: TrackerColors.surfaceMuted,
-              shape: RoundedRectangleBorder(
-                borderRadius: TrackerRadius.small,
               ),
-            ),
+              const SizedBox(width: TrackerSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      connected
+                          ? '$model · $esn'
+                          : 'Nenhum dispositivo conectado',
+                      style: TrackerTextStyles.cardTitle.copyWith(fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      connected
+                          ? 'Porta: ${session.connection.commandPortName} · ${session.connection.baudRate} baud'
+                          : 'Acesse Dispositivos para selecionar a porta',
+                      style: TrackerTextStyles.body.copyWith(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_input_component_rounded),
+                onPressed: () => context.go('/devices'),
+                tooltip: 'Gerenciar Portas USB',
+                style: IconButton.styleFrom(
+                  backgroundColor: TrackerColors.surfaceMuted,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: TrackerRadius.small,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
@@ -293,7 +301,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required bool connected,
     required dynamic session,
   }) {
-    final isLockActive = output1State.toLowerCase().contains('ativ') || output1Code == '01';
+    final isLockActive =
+        output1State.toLowerCase().contains('ativ') || output1Code == '01';
     return TelemetryMatrixCard(
       satCount: satCount,
       gpsFix: gpsFix,
@@ -311,21 +320,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (isLockActive) {
           _runBlockCommand(
             label: 'Desativar Bloqueio',
-            action: ref.read(trackerSessionControllerProvider.notifier).disable1,
-            verify: ref.read(trackerSessionControllerProvider.notifier).readStatus,
+            action:
+                ref.read(trackerSessionControllerProvider.notifier).disable1,
+            verify:
+                ref.read(trackerSessionControllerProvider.notifier).readStatus,
           );
         } else {
           _runBlockCommand(
             label: 'Ativar Bloqueio',
             action: ref.read(trackerSessionControllerProvider.notifier).enable1,
-            verify: ref.read(trackerSessionControllerProvider.notifier).readStatus,
+            verify:
+                ref.read(trackerSessionControllerProvider.notifier).readStatus,
           );
         }
       },
     );
   }
 
-  Widget _buildQuickCommandsSection(bool connected, String esn, dynamic session) {
+  Widget _buildQuickCommandsSection(
+      bool connected, String esn, dynamic session) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -345,14 +358,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               icon: Icons.lock_open_rounded,
               onPressed: connected
                   ? () => _runBlockCommand(
-                      label: 'Ativar Bloqueio',
-                      action: ref
-                          .read(trackerSessionControllerProvider.notifier)
-                          .enable1,
-                      verify: ref
-                          .read(trackerSessionControllerProvider.notifier)
-                          .readStatus,
-                    )
+                        label: 'Ativar Bloqueio',
+                        action: ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .enable1,
+                        verify: ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .readStatus,
+                      )
                   : null,
             ),
             _CommandChip(
@@ -362,14 +375,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               icon: Icons.lock_rounded,
               onPressed: connected
                   ? () => _runBlockCommand(
-                      label: 'Desativar Bloqueio',
-                      action: ref
-                          .read(trackerSessionControllerProvider.notifier)
-                          .disable1,
-                      verify: ref
-                          .read(trackerSessionControllerProvider.notifier)
-                          .readStatus,
-                    )
+                        label: 'Desativar Bloqueio',
+                        action: ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .disable1,
+                        verify: ref
+                            .read(trackerSessionControllerProvider.notifier)
+                            .readStatus,
+                      )
                   : null,
             ),
             _CommandChip(
@@ -379,12 +392,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               icon: Icons.info_outline_rounded,
               onPressed: connected
                   ? () => _runQuickCommand(
-                      'Ler Status',
-                      session.selectedSuntechFamily ==
-                              SuntechCommandFamily.legacySt300St310
-                          ? 'AT^ST300CMD;;02;StatusReq'
-                          : 'AT^CMD;$esn;03;01',
-                    )
+                        'Ler Status',
+                        session.selectedSuntechFamily ==
+                                SuntechCommandFamily.legacySt300St310
+                            ? 'AT^ST300CMD;;02;StatusReq'
+                            : 'AT^CMD;$esn;03;01',
+                      )
                   : null,
             ),
             _CommandChip(
@@ -394,12 +407,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               icon: Icons.settings_rounded,
               onPressed: connected
                   ? () => _runQuickCommand(
-                      'Ler Preset',
-                      session.selectedSuntechFamily ==
-                              SuntechCommandFamily.legacySt300St310
-                          ? 'AT^ST300CMD;;02;Preset'
-                          : 'AT^CMD;$esn;03;05',
-                    )
+                        'Ler Preset',
+                        session.selectedSuntechFamily ==
+                                SuntechCommandFamily.legacySt300St310
+                            ? 'AT^ST300CMD;;02;Preset'
+                            : 'AT^CMD;$esn;03;05',
+                      )
                   : null,
             ),
           ],
@@ -416,12 +429,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              _CommandReference(
+              const _CommandReference(
                 command: 'CMD;XXXX;04;01',
                 description: 'Ativa Saída 1 (Bloqueio)',
               ),
               const SizedBox(height: 4),
-              _CommandReference(
+              const _CommandReference(
                 command: 'CMD;XXXX;04;02',
                 description: 'Desativa Saída 1 (Desbloqueio)',
               ),
@@ -451,10 +464,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   color: responseColor.withValues(alpha: 0.1),
                   borderRadius: TrackerRadius.small,
                 ),
-                child: Icon(Icons.terminal_rounded, size: 18, color: responseColor),
+                child: Icon(Icons.terminal_rounded,
+                    size: 18, color: responseColor),
               ),
               const SizedBox(width: TrackerSpacing.sm),
-              Text('Visor de Retorno', style: TrackerTextStyles.cardTitle),
+              const Text('Visor de Retorno',
+                  style: TrackerTextStyles.cardTitle),
             ],
           ),
           const SizedBox(height: TrackerSpacing.md),
@@ -561,7 +576,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label: 'Relatório',
                     icon: Icons.picture_as_pdf_rounded,
                     color: TrackerColors.primary,
-                    onPressed: () => ReportGenerator.generateAndPrintSessionReport(session),
+                    onPressed: () =>
+                        ReportGenerator.generateAndPrintSessionReport(session),
                   );
                 },
               ),
@@ -587,8 +603,7 @@ class _MetricCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
-    this.onTap,
-  });
+  }) : onTap = null;
 
   @override
   Widget build(BuildContext context) {
@@ -718,7 +733,7 @@ class _CommandReference extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: TrackerColors.navy800,
             borderRadius: TrackerRadius.small,
           ),

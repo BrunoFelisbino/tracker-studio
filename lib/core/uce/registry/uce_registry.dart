@@ -183,7 +183,8 @@ class UceRegistry {
   void registerAvl(AvlDefinition definition) => _avl.register(definition);
 
   /// Convenience: registers a single command.
-  void registerCommand(CommandDefinition command) => _commands.register(command);
+  void registerCommand(CommandDefinition command) =>
+      _commands.register(command);
 
   /// Convenience: registers a single response pattern.
   void registerResponse(ResponseDefinition response) =>

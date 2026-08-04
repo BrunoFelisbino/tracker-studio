@@ -18,7 +18,8 @@ class ValidationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(trackerSessionControllerProvider);
-    final tests = session.tests.where((test) => test.requiredCount > 0).toList();
+    final tests =
+        session.tests.where((test) => test.requiredCount > 0).toList();
     final connected = session.connection.usbConnected;
     final family = session.selectedSuntechFamily;
     final hasEsn = session.hasDeviceRead;
@@ -49,7 +50,8 @@ class ValidationsScreen extends ConsumerWidget {
                 ? const TrackerEmptyState(
                     icon: Icons.hourglass_empty,
                     title: 'Nenhuma execução ativa',
-                    message: 'Inicie uma validação para acompanhar o progresso.',
+                    message:
+                        'Inicie uma validação para acompanhar o progresso.',
                   )
                 : Column(
                     children: tests.map((test) {
@@ -80,8 +82,12 @@ class ValidationsScreen extends ConsumerWidget {
                         subtitle: 'Enable1 - Saida 1 ON',
                         icon: Icons.lock_open,
                         color: Colors.orange,
-                        enabled: connected && (family == SuntechCommandFamily.legacySt300St310 ||
-                            (family == SuntechCommandFamily.newGenSt8210St8310 && hasEsn)),
+                        enabled: connected &&
+                            (family == SuntechCommandFamily.legacySt300St310 ||
+                                (family ==
+                                        SuntechCommandFamily
+                                            .newGenSt8210St8310 &&
+                                    hasEsn)),
                         onPressed: () => _sendEnable1(ref),
                       ),
                     ),
@@ -92,8 +98,12 @@ class ValidationsScreen extends ConsumerWidget {
                         subtitle: 'Disable1 - Saida 1 OFF',
                         icon: Icons.lock,
                         color: Colors.blue,
-                        enabled: connected && (family == SuntechCommandFamily.legacySt300St310 ||
-                            (family == SuntechCommandFamily.newGenSt8210St8310 && hasEsn)),
+                        enabled: connected &&
+                            (family == SuntechCommandFamily.legacySt300St310 ||
+                                (family ==
+                                        SuntechCommandFamily
+                                            .newGenSt8210St8310 &&
+                                    hasEsn)),
                         onPressed: () => _sendDisable1(ref),
                       ),
                     ),
@@ -108,7 +118,8 @@ class ValidationsScreen extends ConsumerWidget {
                         subtitle: 'StatusReq',
                         icon: Icons.info_outline,
                         color: TrackerColors.technicalGreen,
-                        enabled: connected && family != SuntechCommandFamily.unknown,
+                        enabled:
+                            connected && family != SuntechCommandFamily.unknown,
                         onPressed: () => _sendStatus(ref),
                       ),
                     ),
@@ -119,7 +130,8 @@ class ValidationsScreen extends ConsumerWidget {
                         subtitle: 'Leitura config',
                         icon: Icons.settings_outlined,
                         color: TrackerColors.communicationBlue,
-                        enabled: connected && family != SuntechCommandFamily.unknown,
+                        enabled:
+                            connected && family != SuntechCommandFamily.unknown,
                         onPressed: () => _sendPreset(ref),
                       ),
                     ),
@@ -162,7 +174,8 @@ class ValidationsScreen extends ConsumerWidget {
             const SizedBox(height: TrackerSpacing.sm),
             TrackerCard(
               child: Column(
-                children: session.behaviorChanges.reversed.take(10).map((change) {
+                children:
+                    session.behaviorChanges.reversed.take(10).map((change) {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
@@ -193,33 +206,34 @@ class ValidationsScreen extends ConsumerWidget {
             eyebrow: 'Metricas acumuladas',
           ),
           const SizedBox(height: TrackerSpacing.sm),
-           Row(
-             children: [
-               Expanded(
-                 child: TrackerMetricCard(
-                   label: 'Aprovadas',
-                   value: '${session.approvedTests}',
-                   icon: Icons.check_circle,
-                   color: Colors.green,
-                 ),
-              ),
-              SizedBox(width: TrackerSpacing.sm),
+          Row(
+            children: [
               Expanded(
-                 child: TrackerMetricCard(
-                   label: 'Reprovadas',
-                   value: '${session.failedTests}',
-                   icon: Icons.cancel,
-                   color: Colors.red,
-                 ),
+                child: TrackerMetricCard(
+                  label: 'Aprovadas',
+                  value: '${session.approvedTests}',
+                  icon: Icons.check_circle,
+                  color: Colors.green,
+                ),
               ),
-              SizedBox(width: TrackerSpacing.sm),
+              const SizedBox(width: TrackerSpacing.sm),
               Expanded(
-                 child: TrackerMetricCard(
-                   label: 'Pendentes',
-                   value: '${session.tests.where((test) => test.status == TestStatus.pending || test.status == TestStatus.running).length}',
-                   icon: Icons.schedule,
-                   color: Colors.amber,
-                 ),
+                child: TrackerMetricCard(
+                  label: 'Reprovadas',
+                  value: '${session.failedTests}',
+                  icon: Icons.cancel,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(width: TrackerSpacing.sm),
+              Expanded(
+                child: TrackerMetricCard(
+                  label: 'Pendentes',
+                  value:
+                      '${session.tests.where((test) => test.status == TestStatus.pending || test.status == TestStatus.running).length}',
+                  icon: Icons.schedule,
+                  color: Colors.amber,
+                ),
               ),
             ],
           ),
@@ -333,9 +347,7 @@ class _CommandButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: enabled
-          ? color.withValues(alpha: 0.08)
-          : TrackerColors.surface,
+      color: enabled ? color.withValues(alpha: 0.08) : TrackerColors.surface,
       borderRadius: BorderRadius.circular(TrackerSpacing.sm),
       child: InkWell(
         borderRadius: BorderRadius.circular(TrackerSpacing.sm),
@@ -355,7 +367,9 @@ class _CommandButton extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  color: enabled ? TrackerColors.textPrimary : TrackerColors.textSecondary,
+                  color: enabled
+                      ? TrackerColors.textPrimary
+                      : TrackerColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -364,7 +378,9 @@ class _CommandButton extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 11,
-                  color: enabled ? TrackerColors.textSecondary : TrackerColors.textSecondary.withValues(alpha: 0.5),
+                  color: enabled
+                      ? TrackerColors.textSecondary
+                      : TrackerColors.textSecondary.withValues(alpha: 0.5),
                 ),
                 textAlign: TextAlign.center,
               ),

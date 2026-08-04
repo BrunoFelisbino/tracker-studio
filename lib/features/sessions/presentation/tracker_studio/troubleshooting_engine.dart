@@ -36,13 +36,18 @@ class TroubleshootingEngine {
     final issues = <DiagnosticIssue>[];
 
     // 1. Diagnóstico de Alimentação Principal
-    final mainVolt = session.voltageHistory.isEmpty ? null : session.voltageHistory.last.value;
+    final mainVolt = session.voltageHistory.isEmpty
+        ? null
+        : session.voltageHistory.last.value;
     if (mainVolt != null && mainVolt < 10.5) {
       issues.add(
         DiagnosticIssue(
-          title: 'Subtensão em Alimentação Principal (${mainVolt.toStringAsFixed(1)}V)',
-          description: 'A voltagem lida está abaixo de 10.5V. O equipamento pode sofrer reset ao ligar a partida do veículo.',
-          recommendation: 'Verificar ponto de conexão pós-chave/linha 30 e fusível principal de alimentação.',
+          title:
+              'Subtensão em Alimentação Principal (${mainVolt.toStringAsFixed(1)}V)',
+          description:
+              'A voltagem lida está abaixo de 10.5V. O equipamento pode sofrer reset ao ligar a partida do veículo.',
+          recommendation:
+              'Verificar ponto de conexão pós-chave/linha 30 e fusível principal de alimentação.',
           icon: Icons.bolt_rounded,
           severityColor: TrackerColors.failureRed,
         ),
@@ -50,13 +55,17 @@ class TroubleshootingEngine {
     }
 
     // 2. Diagnóstico de Bateria Interna / Backup
-    final backupVolt = session.backupVoltageHistory.isEmpty ? null : session.backupVoltageHistory.last.value;
+    final backupVolt = session.backupVoltageHistory.isEmpty
+        ? null
+        : session.backupVoltageHistory.last.value;
     if (backupVolt != null && backupVolt < 3.6) {
       issues.add(
         DiagnosticIssue(
           title: 'Acumulador Interno Fraco (${backupVolt.toStringAsFixed(1)}V)',
-          description: 'Bateria interna de backup está descarregada. Alertas de desengate de bateria podem falhar.',
-          recommendation: 'Manter a alimentação principal conectada por ao menos 20 minutos para carga interna.',
+          description:
+              'Bateria interna de backup está descarregada. Alertas de desengate de bateria podem falhar.',
+          recommendation:
+              'Manter a alimentação principal conectada por ao menos 20 minutos para carga interna.',
           icon: Icons.battery_alert_rounded,
           severityColor: TrackerColors.attentionAmber,
         ),
@@ -65,7 +74,9 @@ class TroubleshootingEngine {
 
     // 3. Diagnóstico de APN / GPRS
     if (!session.connection.gprsOnline) {
-      final currentApn = session.configuration.desired['APN'] ?? session.configuration.original['APN'] ?? '';
+      final currentApn = session.configuration.desired['APN'] ??
+          session.configuration.original['APN'] ??
+          '';
       issues.add(
         DiagnosticIssue(
           title: 'Equipamento Offline na Rede GPRS',
@@ -84,14 +95,17 @@ class TroubleshootingEngine {
     // 4. Diagnóstico de Satélites / Antena GPS
     final gpsTest = session.tests.firstWhere(
       (t) => t.id == 'gps',
-      orElse: () => const TestStepState('gps', 'GPS', TestStatus.pending, 0, 0, ''),
+      orElse: () =>
+          const TestStepState('gps', 'GPS', TestStatus.pending, 0, 0, ''),
     );
     if (gpsTest.status == TestStatus.failed) {
       issues.add(
         const DiagnosticIssue(
           title: 'Sinal GPS Fraco / Sem Fix',
-          description: 'Não foi possível obter a sincronização de satélites (Fix GPS).',
-          recommendation: 'Posicionar o equipamento com a face do GPS voltada para o céu, livre de chapas metálicas.',
+          description:
+              'Não foi possível obter a sincronização de satélites (Fix GPS).',
+          recommendation:
+              'Posicionar o equipamento com a face do GPS voltada para o céu, livre de chapas metálicas.',
           icon: Icons.satellite_alt_rounded,
           severityColor: TrackerColors.attentionAmber,
         ),
@@ -143,8 +157,11 @@ class TroubleshootingWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Diagnóstico do Equipamento: Sem Anomalias', style: TrackerTextStyles.cardTitle),
-                  Text('Todos os parâmetros de alimentação, sinal GPRS e GPS estão operando dentro dos limites nominais.', style: TrackerTextStyles.body),
+                  Text('Diagnóstico do Equipamento: Sem Anomalias',
+                      style: TrackerTextStyles.cardTitle),
+                  Text(
+                      'Todos os parâmetros de alimentação, sinal GPRS e GPS estão operando dentro dos limites nominais.',
+                      style: TrackerTextStyles.body),
                 ],
               ),
             ),
@@ -158,9 +175,11 @@ class TroubleshootingWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.auto_awesome_rounded, color: TrackerColors.communicationBlue, size: 18),
+            const Icon(Icons.auto_awesome_rounded,
+                color: TrackerColors.communicationBlue, size: 18),
             const SizedBox(width: 8),
-            const Text('Assistente de Diagnóstico Inteligente', style: TrackerTextStyles.cardTitle),
+            const Text('Assistente de Diagnóstico Inteligente',
+                style: TrackerTextStyles.cardTitle),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -170,7 +189,10 @@ class TroubleshootingWidget extends StatelessWidget {
               ),
               child: Text(
                 '${issues.length} Alerta(s)',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: TrackerColors.attentionAmber),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: TrackerColors.attentionAmber),
               ),
             ),
           ],
@@ -180,7 +202,8 @@ class TroubleshootingWidget extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: issues.length,
-          separatorBuilder: (_, __) => const SizedBox(height: TrackerSpacing.xs),
+          separatorBuilder: (_, __) =>
+              const SizedBox(height: TrackerSpacing.xs),
           itemBuilder: (context, index) {
             final issue = issues[index];
             return Container(
@@ -188,7 +211,8 @@ class TroubleshootingWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: issue.severityColor.withValues(alpha: 0.04),
                 borderRadius: TrackerRadius.medium,
-                border: Border.all(color: issue.severityColor.withValues(alpha: 0.2)),
+                border: Border.all(
+                    color: issue.severityColor.withValues(alpha: 0.2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,11 +223,17 @@ class TroubleshootingWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(issue.title, style: TrackerTextStyles.bodyStrong.copyWith(color: issue.severityColor)),
+                        Text(issue.title,
+                            style: TrackerTextStyles.bodyStrong
+                                .copyWith(color: issue.severityColor)),
                         const SizedBox(height: 2),
-                        Text(issue.description, style: TrackerTextStyles.body.copyWith(fontSize: 12)),
+                        Text(issue.description,
+                            style:
+                                TrackerTextStyles.body.copyWith(fontSize: 12)),
                         const SizedBox(height: 4),
-                        Text('💡 ${issue.recommendation}', style: TrackerTextStyles.body.copyWith(fontSize: 11, color: TrackerColors.textMuted)),
+                        Text('💡 ${issue.recommendation}',
+                            style: TrackerTextStyles.body.copyWith(
+                                fontSize: 11, color: TrackerColors.textMuted)),
                       ],
                     ),
                   ),
@@ -214,10 +244,14 @@ class TroubleshootingWidget extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: issue.severityColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        shape: const RoundedRectangleBorder(borderRadius: TrackerRadius.small),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: TrackerRadius.small),
                       ),
-                      child: Text(issue.actionLabel!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: Text(issue.actionLabel!,
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ],
