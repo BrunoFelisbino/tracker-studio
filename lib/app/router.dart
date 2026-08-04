@@ -6,18 +6,22 @@ import '../core/bootstrap/bootstrap_controller.dart';
 import '../core/bootstrap/bootstrap_diagnostics_screen.dart';
 import '../core/widgets/internal_route_error_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
-import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/bench/presentation/screens/bench_screen.dart';
 import '../features/commands/presentation/screens/commands_screen.dart';
+import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/devices/presentation/screens/devices_screen.dart';
 import '../features/devices/presentation/screens/device_basic_analysis_screen.dart';
+import '../features/equipment/presentation/screens/device_configuration_screen.dart' as eq;
 import '../features/history/presentation/screens/history_screen.dart';
+import '../features/home/presentation/screens/home_screen.dart';
+import '../features/laboratory/presentation/screens/laboratory_screen.dart';
 import '../features/map/presentation/tracker_map_screen.dart';
 import '../features/reports/presentation/screens/reports_screen.dart';
+import '../features/sessions/presentation/tracker_studio/tracker_session_state.dart';
+import '../features/sessions/presentation/tracker_studio/tracker_studio_live_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/sms/presentation/screens/sms_screen.dart';
-import '../features/sessions/presentation/tracker_studio/tracker_studio_live_screen.dart';
-import '../features/sessions/presentation/tracker_studio/tracker_session_state.dart';
+import '../features/tests/presentation/screens/tests_screen.dart';
 import '../features/validations/presentation/screens/validations_screen.dart';
 import 'main_shell.dart';
 
@@ -88,7 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/device/:deviceId/configuration',
             builder: (_, state) {
               final deviceId = state.pathParameters['deviceId']!;
-              return DeviceConfigurationScreen(deviceId: deviceId);
+              return eq.DeviceConfigurationScreen(deviceId: deviceId);
             },
           ),
           GoRoute(
