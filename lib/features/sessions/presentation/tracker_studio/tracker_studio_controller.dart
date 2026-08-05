@@ -2095,6 +2095,15 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
   bool _isKnownProtocolLine(String line) {
     final normalized = line.trimLeft().toUpperCase();
+    final manufacturer = state.device.manufacturerName.toLowerCase();
+    if (manufacturer.contains('teltonika')) {
+      final teltonikaPrefixes = [
+        'TELTONIKA', 'AVL ID', 'RECCODECOUNT', 'CODEC', 'RECORDCOUNT',
+        'GNSS', 'GPS', '[REC.GEN]', 'CFG', 'SETPARAM_RESULT',
+        'SAVE_CFG_RESULT', 'STT', 'OK', 'ACK', 'ERR',
+      ];
+      return teltonikaPrefixes.any(normalized.startsWith);
+    }
     final prefixes = switch (state.selectedSuntechFamily) {
       SuntechCommandFamily.legacySt300St310 => const [
           'ST300STT',
@@ -2210,7 +2219,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       tests.replaceById(const TestStepState('network', 'Rede / GPRS',
           TestStatus.passed, 3, 3, 'GPRS online; pacote recente recebido'));
     }
-    if (snapshot.satellites != null || snapshot.gpsFix != null) {
+     if (snapshot.satellites != null || snapshot.gpsFix != null) {
       final passed = snapshot.gpsFix == true && (snapshot.satellites ?? 0) >= 4;
       tests.replaceById(TestStepState(
         'gps',
@@ -2221,14 +2230,19 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
         '${snapshot.gpsFix == true ? 'Fix' : 'Sem fix'} · ${snapshot.satellites ?? 0} satelites',
       ));
     }
-    if (snapshot.ignitionOn != null || snapshot.inputMask != null) {
+    // Ignição: Suntech (ignitionOn/inputMask) ou Teltonika (IO ID[3] = ignição)
+    final bool? teltonikaIgnitionOn = _extractTeltonikaIgnition(snapshot);
+    if (snapshot.ignitionOn != null ||
+        snapshot.inputMask != null ||
+        teltonikaIgnitionOn != null) {
+      final on = teltonikaIgnitionOn ?? snapshot.ignitionOn;
       tests.replaceById(TestStepState(
         'ignition',
         'Ignicao',
         TestStatus.passed,
         3,
         3,
-        snapshot.ignitionOn == true ? 'Ligada' : 'Desligada ou entrada mapeada',
+        on == true ? 'Ligada' : 'Desligada ou entrada mapeada',
       ));
     }
 
@@ -2272,6 +2286,27 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       commandHistory: newCommandHistory,
     );
     return next;
+  }
+
+  bool? _extractTeltonikaIgnition(NormalizedTrackerSnapshot snapshot) {
+    if (snapshot.manufacturer == null ||
+        !snapshot.manufacturer!.toLowerCase().contains('teltonika')) {
+      return null;
+    }
+    final io3Match = RegExp(r'IO\s+ID\[\s*3\s*\]\s*:\s*(\d+)',
+            caseSensitive: false)
+        .firstMatch(snapshot.rawLine);
+    if (io3Match != null) {
+      final val = int.tryParse(io3Match.group(1)!) ?? 0;
+      return val == 1;
+    }
+    final io3Raw = RegExp(r'\bIO3\b[:=]?\s*(\d+)', caseSensitive: false)
+        .firstMatch(snapshot.rawLine);
+    if (io3Raw != null) {
+      final val = int.tryParse(io3Raw.group(1)!) ?? 0;
+      return val == 1;
+    }
+    return null;
   }
 
   List<BehaviorChange> _detectBehaviorChanges(

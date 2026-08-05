@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../drivers/driver_contracts.dart';
 import '../drivers/implementations.dart';
-import '../uce/uce_interfaces.dart';
 import 'device_session.dart';
 import 'session_persistence.dart';
 
-final deviceSessionProvider = StateNotifierProvider.family<DeviceSessionNotifier, AsyncValue<DeviceSession>, String>(
+final deviceSessionProvider = StateNotifierProvider.family<
+    DeviceSessionNotifier, AsyncValue<DeviceSession>, String>(
   (ref, deviceId) {
     final persistenceService = ref.watch(sessionPersistenceServiceProvider);
     return DeviceSessionNotifier(deviceId, persistenceService, ref);
@@ -33,7 +33,7 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
           manufacturer: Manufacturer.unknown,
           confidence: 0,
         );
-        final capabilities = const DeviceCapabilities(
+        const capabilities = DeviceCapabilities(
           can: false,
           ble: false,
           hasCan: false,
@@ -44,9 +44,19 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
         final normalizedState = NormalizedDeviceState(
           lastUpdate: DateTime.now(),
           connectionStatus: 'connected',
-          vehicle: const VehicleState(ignition: false, movement: false, speedKph: 0, odometerKm: 0),
-          power: const PowerState(externalVoltage: 0, internalVoltage: 0, batteryPercent: 0, charging: false),
-          network: const NetworkState(status: 'connected', operator: '', signalLevel: 0, technology: '', roaming: false),
+          vehicle: const VehicleState(
+              ignition: false, movement: false, speedKph: 0, odometerKm: 0),
+          power: const PowerState(
+              externalVoltage: 0,
+              internalVoltage: 0,
+              batteryPercent: 0,
+              charging: false),
+          network: const NetworkState(
+              status: 'connected',
+              operator: '',
+              signalLevel: 0,
+              technology: '',
+              roaming: false),
           position: PositionState(
             latitude: 0,
             longitude: 0,
@@ -56,7 +66,7 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
             hdop: 0,
             timestamp: DateTime.now(),
           ),
-          measurements: {},
+          measurements: const {},
         );
         session = DeviceSession(
           id: _deviceId,
@@ -94,7 +104,8 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
     final detection = driver.detect(input);
 
     DeviceIdentity identity = current.identity;
-    if (identity.manufacturer == Manufacturer.unknown && detection.confidence > 50) {
+    if (identity.manufacturer == Manufacturer.unknown &&
+        detection.confidence > 50) {
       final identified = driver.identify(input);
       identity = DeviceIdentity(
         id: current.id,
@@ -107,17 +118,20 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
         confidence: detection.confidence,
         firstSeenAt: current.identity.firstSeenAt ?? input.timestamp,
       );
-      if (detection.manufacturer == Manufacturer.suntech) {
-        driver = SuntechDriver();
-      } else if (detection.manufacturer == Manufacturer.teltonika) {
-        driver = TeltonikaDriver();
-      }
+    }
+    if (identity.manufacturer == Manufacturer.suntech) {
+      driver = SuntechDriver();
+    } else if (identity.manufacturer == Manufacturer.teltonika) {
+      driver = TeltonikaDriver();
     }
 
     final context = DeviceContext(
       deviceId: current.id,
       identity: identity,
-      capabilities: driver.capabilities(DeviceContext(deviceId: current.id, identity: identity, capabilities: current.capabilities)),
+      capabilities: driver.capabilities(DeviceContext(
+          deviceId: current.id,
+          identity: identity,
+          capabilities: current.capabilities)),
     );
 
     // 2. Capabilities
@@ -139,7 +153,9 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
     for (final m in measurements) {
       if (m.key == 'ignition') ignition = m.value == true;
       if (m.key == 'speed') speedKph = (m.value as num?)?.toInt() ?? speedKph;
-      if (m.key == 'odometer') odometerKm = (m.value as num?)?.toInt() ?? odometerKm;
+      if (m.key == 'odometer') {
+        odometerKm = (m.value as num?)?.toInt() ?? odometerKm;
+      }
       if (m.key == 'latitude') lat = (m.value as num?)?.toDouble() ?? lat;
       if (m.key == 'longitude') lon = (m.value as num?)?.toDouble() ?? lon;
       if (m.key == 'rpm') movement = true;

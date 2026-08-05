@@ -234,15 +234,17 @@ class LibSerialPortTransport
       _readerSubscription = _reader!.stream.listen(
         (chunk) {
           if (!_acceptingData || !connected) return;
-          final ascii = utf8
-              .decode(chunk, allowMalformed: true)
-              .replaceAll('\r', r'\r')
-              .replaceAll('\n', r'\n');
           final hex = chunk
               .map((byte) =>
                   byte.toRadixString(16).padLeft(2, '0').toUpperCase())
               .join(' ');
-          _addLine('[READ_ASCII] $ascii');
+          // Decodifica como ASCII para exibição no terminal, preservando
+          // os caracteres de controle originais para o buffer de linhas.
+          final asciiDisplay = utf8
+              .decode(chunk, allowMalformed: true)
+              .replaceAll('\r', r'\r')
+              .replaceAll('\n', r'\n');
+          _addLine('[READ_ASCII] $asciiDisplay');
           _addLine('[READ_HEX] $hex');
           for (final line in _lineBuffer.add(chunk)) {
             _addLine('[READ] $line');

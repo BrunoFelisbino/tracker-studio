@@ -181,11 +181,99 @@ class SuntechParser {
       );
     }
 
+    // Se a linha contém marcadores Teltonika (AVL ID, codec, etc.), tenta parsear
+    if (_looksLikeTeltonika(line)) {
+      return _parseTeltonikaLine(line);
+    }
+
     return NormalizedTrackerSnapshot(
       rawLine: line,
       warnings: const [
         'READ bruto recebido; parser ignorou por nao corresponder ao protocolo Suntech ASCII.',
       ],
+    );
+  }
+
+  bool _looksLikeTeltonika(String line) {
+    final upper = line.toUpperCase();
+    return upper.contains('AVL ID:') ||
+        upper.contains('CODEC') ||
+        upper.contains('[REC.GEN]') ||
+        upper.contains('GNSS') ||
+        upper.contains('GPS INFO') ||
+        upper.contains('<CFG_') ||
+        upper.contains('<SETPARAM_RESULT') ||
+        upper.contains('<SAVE_CFG_RESULT');
+  }
+
+  NormalizedTrackerSnapshot _parseTeltonikaLine(String line) {
+    final upper = line.toUpperCase();
+    String? model;
+    String? esn;
+    double? lat;
+    double? lon;
+    double? speed;
+    int? sats;
+    bool? gpsFix;
+    double? hdop;
+    String? apn;
+    String? serverAddr;
+
+    if (upper.contains('FMB140') || upper.contains('FMB150') ||
+        upper.contains('FMC')) {
+      final m = RegExp(r'(FMB\d{3}|FMC\d{3})').firstMatch(line);
+      model = m?.group(1);
+    }
+
+    if (upper.contains('AVL ID:')) {
+      final m = RegExp(r'AVL\s+ID:\s*([0-9A-F]+)', caseSensitive: false)
+          .firstMatch(line);
+      esn = m?.group(1);
+    }
+
+    final latMatch = RegExp(r'(?:Lat|Latitude)(?::|=\s*)(-?\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (latMatch != null) lat = double.tryParse(latMatch.group(1)!);
+
+    final lonMatch = RegExp(r'(?:Lon|Longitude)(?::|=\s*)(-?\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (lonMatch != null) lon = double.tryParse(lonMatch.group(1)!);
+
+    final speedMatch = RegExp(r'(?:Speed|GPS Speed)(?::|=\s*)(\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (speedMatch != null) speed = double.tryParse(speedMatch.group(1)!);
+
+    final satMatch = RegExp(r'Sat(?:ellites)?(?: Used)?(?::|=\s*)(\d+)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (satMatch != null) sats = int.tryParse(satMatch.group(1)!);
+
+    final fixMatch = RegExp(r'GPS Fix(?:d)?(?::|=\s*)(\d+)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (fixMatch != null) gpsFix = fixMatch.group(1) == '1';
+
+    final hdopMatch = RegExp(r'HDOP(?:=|:\s*)(\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (hdopMatch != null) hdop = double.tryParse(hdopMatch.group(1)!);
+
+    return NormalizedTrackerSnapshot(
+      manufacturer: 'Teltonika',
+      model: model,
+      esn: esn,
+      latitude: lat,
+      longitude: lon,
+      speed: speed,
+      satellites: sats,
+      gpsFix: gpsFix,
+      hdop: hdop,
+      apn: apn,
+      serverAddress: serverAddr,
+      rawLine: line,
     );
   }
 
@@ -597,7 +685,8 @@ class NormalizedTrackerSnapshot {
   final TechnicalEvidence<bool> gprsEvidence;
   final String? apn;
   final String? rssi;
-  final String? hdop;
+  final double? hdop;
+  final String? serverAddress;
   final Map<String, String> configuration;
   final List<SuntechPresetSection> presetSections;
   final String rawLine;
@@ -629,6 +718,7 @@ class NormalizedTrackerSnapshot {
     this.apn,
     this.rssi,
     this.hdop,
+    this.serverAddress,
     this.configuration = const {},
     this.presetSections = const [],
     required this.rawLine,

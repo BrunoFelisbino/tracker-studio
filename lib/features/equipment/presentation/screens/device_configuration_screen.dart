@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/tracker_colors.dart';
-import '../../../../core/design/tracker_spacing.dart';
-import '../../../../core/widgets/tracker_card.dart';
 import '../../../../core/widgets/tracker_section_header.dart';
 
 class DeviceConfigurationScreen extends ConsumerWidget {

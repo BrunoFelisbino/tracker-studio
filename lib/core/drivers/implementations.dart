@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'driver_contracts.dart';
 import '../sessions/device_session.dart';
+import '../sessions/device_session_provider.dart';
 
 /// Provider para o driver por sessão.
 final deviceDriverProvider = Provider.family<ManufacturerDriver, String>(
@@ -19,8 +20,28 @@ class _DeviceDriverResolver {
   _DeviceDriverResolver(this._ref, this._deviceId);
 
   ManufacturerDriver get driver {
+    try {
+      final session = _ref.read(deviceSessionProvider(_deviceId)).valueOrNull;
+      if (session != null &&
+          session.identity.manufacturer != Manufacturer.unknown) {
+        return _resolveDriver(session.identity.manufacturer);
+      }
+    } catch (e) {
+      // Se a sessão ainda não foi carregada, retorna o default
+    }
     // Default para novos dispositivos
     return DefaultDriver();
+  }
+
+  ManufacturerDriver _resolveDriver(Manufacturer manufacturer) {
+    switch (manufacturer) {
+      case Manufacturer.teltonika:
+        return TeltonikaDriver();
+      case Manufacturer.suntech:
+        return SuntechDriver();
+      default:
+        return DefaultDriver();
+    }
   }
 }
 
@@ -31,7 +52,7 @@ class DefaultDriver implements ManufacturerDriver {
 
   @override
   DetectionResult detect(RawInput input) {
-    return DetectionResult(
+    return const DetectionResult(
       manufacturer: Manufacturer.unknown,
       confidence: 0,
     );
@@ -107,7 +128,9 @@ class SuntechDriver implements ManufacturerDriver {
   DetectionResult detect(RawInput input) {
     if (input.asciiLine != null) {
       final text = input.asciiLine!.toLowerCase();
-      if (text.contains('at^') || text.contains('^st8') || text.contains('esn')) {
+      if (text.contains('at^') ||
+          text.contains('^st8') ||
+          text.contains('esn')) {
         return DetectionResult(
           manufacturer: Manufacturer.suntech,
           confidence: 90,
@@ -122,7 +145,7 @@ class SuntechDriver implements ManufacturerDriver {
         );
       }
     }
-    return DetectionResult(
+    return const DetectionResult(
       manufacturer: Manufacturer.suntech,
       confidence: 10,
     );
@@ -163,7 +186,9 @@ class SuntechDriver implements ManufacturerDriver {
     if (input.asciiLine != null) {
       final line = input.asciiLine!;
 
-      void add(String key, String rawKey, String name, String? unit, dynamic val, [String cat = 'vehicle']) {
+      void add(
+          String key, String rawKey, String name, String? unit, dynamic val,
+          [String cat = 'vehicle']) {
         measurements.add(
           NormalizedMeasurement(
             key: key,
@@ -215,7 +240,7 @@ class SuntechDriver implements ManufacturerDriver {
   @override
   List<CommandDefinition> commands(DeviceContext context) {
     return [
-      CommandDefinition(
+      const CommandDefinition(
         id: 'suntech.identity',
         manufacturer: Manufacturer.suntech,
         title: 'Identificação',
@@ -223,7 +248,7 @@ class SuntechDriver implements ManufacturerDriver {
         category: 'identification',
         risk: RiskLevel.readOnly,
       ),
-      CommandDefinition(
+      const CommandDefinition(
         id: 'suntech.status',
         manufacturer: Manufacturer.suntech,
         title: 'Status',
@@ -237,7 +262,7 @@ class SuntechDriver implements ManufacturerDriver {
   @override
   List<ConfigurationSection> configuration(DeviceContext context) {
     return [
-      ConfigurationSection(
+      const ConfigurationSection(
         id: 'suntech.general',
         title: 'Geral',
         description: 'Configurações gerais SunTech',
@@ -299,7 +324,7 @@ class SuntechDriver implements ManufacturerDriver {
 
     if (session.normalizedState.vehicle.speedKph <= 0) {
       findings.add(
-        DiagnosticFinding(
+        const DiagnosticFinding(
           id: 'ST-VEH-001',
           code: 'ST-VEH-001',
           severity: RiskLevel.safe,
@@ -328,13 +353,15 @@ class SuntechDriver implements ManufacturerDriver {
 
   String? _extractEsn(RawInput input) {
     if (input.asciiLine != null) {
-      final match = RegExp(r'ESN[=:]?\s*([0-9A-Fa-f]{8,16})').firstMatch(input.asciiLine!);
+      final match = RegExp(r'ESN[=:]?\s*([0-9A-Fa-f]{8,16})')
+          .firstMatch(input.asciiLine!);
       return match?.group(1);
     }
     return null;
   }
 
-  num? _extractNumeric(String line, [String? p1, String? p2, String? p3, String? p4]) {
+  num? _extractNumeric(String line,
+      [String? p1, String? p2, String? p3, String? p4]) {
     final patterns = [p1, p2, p3, p4].whereType<String>();
     for (final pattern in patterns) {
       if (line.contains(pattern)) {
@@ -359,7 +386,9 @@ class TeltonikaDriver implements ManufacturerDriver {
   DetectionResult detect(RawInput input) {
     if (input.asciiLine != null) {
       final text = input.asciiLine!.toLowerCase();
-      if (text.contains('teltonika') || text.contains('fmb140') || text.contains('fmb150')) {
+      if (text.contains('teltonika') ||
+          text.contains('fmb140') ||
+          text.contains('fmb150')) {
         return DetectionResult(
           manufacturer: Manufacturer.teltonika,
           confidence: 90,
@@ -374,7 +403,7 @@ class TeltonikaDriver implements ManufacturerDriver {
         );
       }
     }
-    return DetectionResult(
+    return const DetectionResult(
       manufacturer: Manufacturer.teltonika,
       confidence: 10,
     );
@@ -415,7 +444,9 @@ class TeltonikaDriver implements ManufacturerDriver {
     if (input.asciiLine != null) {
       final line = input.asciiLine!;
 
-      void add(String key, String rawKey, String name, String? unit, dynamic val, [String cat = 'vehicle']) {
+      void add(
+          String key, String rawKey, String name, String? unit, dynamic val,
+          [String cat = 'vehicle']) {
         measurements.add(
           NormalizedMeasurement(
             key: key,
@@ -445,7 +476,8 @@ class TeltonikaDriver implements ManufacturerDriver {
       }
       if (line.contains('FUEL_LEVEL=')) {
         final val = _extractNumeric(line, 'FUEL_LEVEL=') ?? 0;
-        add('fuelLevelPercentage', 'FUEL_LEVEL', 'Nível de combustível', '%', val);
+        add('fuelLevelPercentage', 'FUEL_LEVEL', 'Nível de combustível', '%',
+            val);
       }
       if (line.contains('THROTTLE=')) {
         final val = _extractNumeric(line, 'THROTTLE=') ?? 0;
@@ -472,6 +504,26 @@ class TeltonikaDriver implements ManufacturerDriver {
         final value = _extractNumeric(line, 'IGN=') ?? 0;
         add('ignition', 'IGN', 'Ignição', null, value == 1);
       }
+      if (line.contains('Lat=') || line.contains('Latitude=')) {
+        final val = _extractNumeric(line, 'Lat=', 'Latitude:') ?? 0;
+        add('latitude', 'Lat', 'Latitude', 'º', val, 'position');
+      }
+      if (line.contains('Lon=') || line.contains('Longitude=')) {
+        final val = _extractNumeric(line, 'Lon=', 'Longitude:') ?? 0;
+        add('longitude', 'Lon', 'Longitude', 'º', val, 'position');
+      }
+      if (line.contains('GPS Speed=') || line.contains('Speed=')) {
+        final val = _extractNumeric(line, 'GPS Speed=', 'Speed:') ?? 0;
+        add('speed', 'Speed', 'Velocidade', 'km/h', val, 'vehicle');
+      }
+      if (line.contains('Sat=')) {
+        final val = _extractNumeric(line, 'Sat=') ?? 0;
+        add('satellites', 'Sat', 'Satélites', null, val, 'position');
+      }
+      if (line.contains('Alt=') || line.contains('Altitude=')) {
+        final val = _extractNumeric(line, 'Alt=', 'Altitude:') ?? 0;
+        add('altitude', 'Alt', 'Altitude', 'm', val, 'position');
+      }
     }
 
     return measurements;
@@ -480,7 +532,7 @@ class TeltonikaDriver implements ManufacturerDriver {
   @override
   List<CommandDefinition> commands(DeviceContext context) {
     return [
-      CommandDefinition(
+      const CommandDefinition(
         id: 'teltonika.identity',
         manufacturer: Manufacturer.teltonika,
         title: 'Identificação',
@@ -488,7 +540,7 @@ class TeltonikaDriver implements ManufacturerDriver {
         category: 'identification',
         risk: RiskLevel.readOnly,
       ),
-      CommandDefinition(
+      const CommandDefinition(
         id: 'teltonika.status',
         manufacturer: Manufacturer.teltonika,
         title: 'Status',
@@ -502,7 +554,7 @@ class TeltonikaDriver implements ManufacturerDriver {
   @override
   List<ConfigurationSection> configuration(DeviceContext context) {
     return [
-      ConfigurationSection(
+      const ConfigurationSection(
         id: 'teltonika.network',
         title: 'Rede',
         description: 'Configurações de rede Teltonika',
@@ -564,7 +616,7 @@ class TeltonikaDriver implements ManufacturerDriver {
 
     if (session.normalizedState.vehicle.speedKph > 120) {
       findings.add(
-        DiagnosticFinding(
+        const DiagnosticFinding(
           id: 'TLT-VEH-001',
           code: 'TLT-VEH-001',
           severity: RiskLevel.safe,
@@ -578,6 +630,15 @@ class TeltonikaDriver implements ManufacturerDriver {
       findings: findings.toList(),
       warnings: const [],
       errors: const [],
+    );
+  }
+
+  static List<int> bytesFromHex(String hex) {
+    final cleaned = hex.replaceAll(RegExp(r'[^0-9A-Fa-f]'), '');
+    if (cleaned.length % 2 != 0) return [];
+    return List<int>.generate(
+      cleaned.length ~/ 2,
+      (i) => int.parse(cleaned.substring(i * 2, i * 2 + 2), radix: 16),
     );
   }
 
@@ -596,10 +657,24 @@ class TeltonikaDriver implements ManufacturerDriver {
       final match = RegExp(r'AVL\s+ID:\s+(\d+)').firstMatch(input.asciiLine!);
       return match?.group(1);
     }
+    if (input.hex != null) {
+      final hex = input.hex!;
+      final bytes = bytesFromHex(hex);
+      if (bytes.isNotEmpty) {
+        if (bytes[0] == 0x00 && bytes.length >= 9) {
+          final id = bytes.sublist(5, 9);
+          return id
+              .map((b) => b.toRadixString(16).padLeft(2, '0'))
+              .join('')
+              .toUpperCase();
+        }
+      }
+    }
     return null;
   }
 
-  num? _extractNumeric(String line, [String? p1, String? p2, String? p3, String? p4]) {
+  num? _extractNumeric(String line,
+      [String? p1, String? p2, String? p3, String? p4]) {
     final patterns = [p1, p2, p3, p4].whereType<String>();
     for (final pattern in patterns) {
       if (line.contains(pattern)) {
@@ -608,6 +683,12 @@ class TeltonikaDriver implements ManufacturerDriver {
         final numStr = match?.group(0);
         if (numStr != null) {
           return num.tryParse(numStr);
+        }
+        final negRegex = RegExp(r'-?\d+(\.\d+)?');
+        final negMatch = negRegex.firstMatch(line);
+        final negNumStr = negMatch?.group(0);
+        if (negNumStr != null) {
+          return num.tryParse(negNumStr);
         }
       }
     }

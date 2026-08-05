@@ -281,6 +281,8 @@ class DeviceSummary {
 
   bool get hasIdentity =>
       esn.trim().isNotEmpty || model != '-' || firmware != '-';
+
+  String get manufacturerName => manufacturer;
 }
 
 class ConnectionSummary {
