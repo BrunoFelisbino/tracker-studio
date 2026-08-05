@@ -16,28 +16,28 @@ class DeviceDiagnosticsScreen extends ConsumerWidget {
         title: const Text('Diagnósticos'),
         backgroundColor: TrackerColors.surface,
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TrackerSectionHeader(title: 'Diagnósticos do Dispositivo'),
-            SizedBox(height: 16),
+            const TrackerSectionHeader(title: 'Diagnósticos do Dispositivo'),
+            const SizedBox(height: 16),
             Card(
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     Text(
                       'ID: $deviceId',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: TrackerColors.primary,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'Realize diagnósticos e análise do dispositivo aqui',
                       style: TextStyle(
                         fontSize: 14,

@@ -16,28 +16,28 @@ class DeviceDetailScreen extends ConsumerWidget {
         title: const Text('Detalhes do Dispositivo'),
         backgroundColor: TrackerColors.surface,
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TrackerSectionHeader(title: 'Detalhes do Dispositivo'),
-            SizedBox(height: 16),
+            const TrackerSectionHeader(title: 'Detalhes do Dispositivo'),
+            const SizedBox(height: 16),
             Card(
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     Text(
                       'ID: $deviceId',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: TrackerColors.primary,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'Detalhes completos do dispositivo serão exibidos aqui',
                       style: TextStyle(
                         fontSize: 14,
