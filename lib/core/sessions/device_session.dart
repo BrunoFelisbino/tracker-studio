@@ -76,8 +76,8 @@ class DeviceSession extends Equatable {
 
   /// Atualiza as configurações na sessão.
   DeviceSession updateConfiguration(ConfigurationSnapshot snapshot) {
-    final updatedSnapshots = List<ConfigurationSnapshot>.from(configurationSnapshots)
-      ..add(snapshot);
+    final updatedSnapshots =
+        List<ConfigurationSnapshot>.from(configurationSnapshots)..add(snapshot);
     return DeviceSession(
       id: id,
       identity: identity,
@@ -134,19 +134,19 @@ class DeviceSession extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    identity,
-    capabilities,
-    normalizedState,
-    measurements,
-    rawData,
-    responses,
-    configurationSnapshots,
-    diagnostics,
-    createdAt,
-    lastUpdate,
-    isActive,
-  ];
+        id,
+        identity,
+        capabilities,
+        normalizedState,
+        measurements,
+        rawData,
+        responses,
+        configurationSnapshots,
+        diagnostics,
+        createdAt,
+        lastUpdate,
+        isActive,
+      ];
 
   /// Mescla medições novas em medições existentes.
   List<NormalizedMeasurement> _mergeMeasurements(

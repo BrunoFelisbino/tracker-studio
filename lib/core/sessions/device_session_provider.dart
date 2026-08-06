@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../drivers/driver_contracts.dart';
 import '../drivers/implementations.dart';
@@ -17,7 +16,6 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
   final String _deviceId;
   final SessionPersistenceService _persistenceService;
   final Ref _ref;
-  StreamSubscription? _transportSubscription;
 
   DeviceSessionNotifier(this._deviceId, this._persistenceService, this._ref)
       : super(const AsyncValue.loading()) {
@@ -140,25 +138,88 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
     // 3. Normalize measurements
     final measurements = driver.normalize(input, context);
 
-    // 4. Update normalized state fields
+    // 4. Update normalized state fields from canonical measurement keys.
+    //    Drivers produce NormalizedMeasurement with canonical keys; this
+    //    mapper translates them into the structured NormalizedDeviceState
+    //    sub-objects so the front-end cards are populated regardless of
+    //    which manufacturer was detected.
     bool ignition = current.normalizedState.vehicle.ignition;
     bool movement = current.normalizedState.vehicle.movement;
     int speedKph = current.normalizedState.vehicle.speedKph;
     int odometerKm = current.normalizedState.vehicle.odometerKm;
     double extVolt = current.normalizedState.power.externalVoltage;
+    double intVolt = current.normalizedState.power.internalVoltage;
     int battery = current.normalizedState.power.batteryPercent;
+    bool charging = current.normalizedState.power.charging;
     double lat = current.normalizedState.position.latitude;
     double lon = current.normalizedState.position.longitude;
+    double altitude = current.normalizedState.position.altitude;
+    double heading = current.normalizedState.position.heading;
+    int satellites = current.normalizedState.position.satellites;
+    double hdop = current.normalizedState.position.hdop;
+    String networkStatus = current.normalizedState.network.status;
+    String operatorName = current.normalizedState.network.operator;
+    int signalLevel = current.normalizedState.network.signalLevel;
+    String technology = current.normalizedState.network.technology;
+    bool roaming = current.normalizedState.network.roaming;
 
     for (final m in measurements) {
-      if (m.key == 'ignition') ignition = m.value == true;
-      if (m.key == 'speed') speedKph = (m.value as num?)?.toInt() ?? speedKph;
-      if (m.key == 'odometer') {
-        odometerKm = (m.value as num?)?.toInt() ?? odometerKm;
+      switch (m.key) {
+        case 'ignition':
+          ignition = m.value == true;
+        case 'movement':
+          movement = m.value == true;
+        case 'speedKph':
+          speedKph = (m.value as num?)?.toInt() ?? speedKph;
+        case 'speed':
+          speedKph = (m.value as num?)?.toInt() ?? speedKph;
+        case 'odometerKm':
+          odometerKm = (m.value as num?)?.toInt() ?? odometerKm;
+        case 'odometer':
+          odometerKm = (m.value as num?)?.toInt() ?? odometerKm;
+        case 'latitude':
+          lat = (m.value as num?)?.toDouble() ?? lat;
+        case 'longitude':
+          lon = (m.value as num?)?.toDouble() ?? lon;
+        case 'altitude':
+          altitude = (m.value as num?)?.toDouble() ?? altitude;
+        case 'heading':
+          heading = (m.value as num?)?.toDouble() ?? heading;
+        case 'satellites':
+          satellites = (m.value as num?)?.toInt() ?? satellites;
+        case 'sats':
+          satellites = (m.value as num?)?.toInt() ?? satellites;
+        case 'hdop':
+          hdop = (m.value as num?)?.toDouble() ?? hdop;
+        case 'externalVoltage':
+          extVolt = (m.value as num?)?.toDouble() ?? extVolt;
+        case 'power':
+          extVolt = (m.value as num?)?.toDouble() ?? extVolt;
+        case 'internalVoltage':
+          intVolt = (m.value as num?)?.toDouble() ?? intVolt;
+        case 'batteryPercent':
+          final pct = (m.value as num?)?.toInt();
+          if (pct != null && pct >= 0) battery = pct;
+        case 'battery':
+          final pct = (m.value as num?)?.toInt();
+          if (pct != null && pct >= 0) battery = pct;
+        case 'charging':
+          charging = m.value == true;
+        case 'networkStatus':
+          networkStatus = m.value?.toString() ?? networkStatus;
+        case 'network':
+          networkStatus = m.value?.toString() ?? networkStatus;
+        case 'operatorName':
+          operatorName = m.value?.toString() ?? operatorName;
+        case 'signalLevel':
+          signalLevel = (m.value as num?)?.toInt() ?? signalLevel;
+        case 'technology':
+          technology = m.value?.toString() ?? technology;
+        case 'roaming':
+          roaming = m.value == true;
+        case 'rpm':
+          movement = true;
       }
-      if (m.key == 'latitude') lat = (m.value as num?)?.toDouble() ?? lat;
-      if (m.key == 'longitude') lon = (m.value as num?)?.toDouble() ?? lon;
-      if (m.key == 'rpm') movement = true;
     }
 
     final newState = NormalizedDeviceState(
@@ -173,18 +234,24 @@ class DeviceSessionNotifier extends StateNotifier<AsyncValue<DeviceSession>> {
       ),
       power: PowerState(
         externalVoltage: extVolt,
-        internalVoltage: 12.0,
+        internalVoltage: intVolt,
         batteryPercent: battery > 0 ? battery : 100,
-        charging: extVolt > 13.0,
+        charging: charging || extVolt > 13.0,
       ),
-      network: current.normalizedState.network,
+      network: NetworkState(
+        status: networkStatus,
+        operator: operatorName,
+        signalLevel: signalLevel,
+        technology: technology,
+        roaming: roaming,
+      ),
       position: PositionState(
         latitude: lat,
         longitude: lon,
-        altitude: 0,
-        heading: 0,
-        satellites: 8,
-        hdop: 0,
+        altitude: altitude,
+        heading: heading,
+        satellites: satellites,
+        hdop: hdop,
         timestamp: DateTime.now(),
       ),
       measurements: {

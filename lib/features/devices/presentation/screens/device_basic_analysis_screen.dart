@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/sessions/device_session.dart';
 import '../../../../core/sessions/device_session_provider.dart';
@@ -84,18 +83,18 @@ class _BasicAnalysisContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _MapSection(session: session),
-            const SizedBox(height: 24),
-            _StatusCardsSection(session: session),
-            const SizedBox(height: 24),
-            _SystemInfoSection(session: session),
-          ],
-        ),
-      );
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _MapSection(session: session),
+          const SizedBox(height: 24),
+          _StatusCardsSection(session: session),
+          const SizedBox(height: 24),
+          _SystemInfoSection(session: session),
+        ],
+      ),
+    );
   }
 }
 
@@ -188,7 +187,7 @@ class _MapSection extends StatelessWidget {
               child: Center(
                 child: Text(
                   'Mapa para ${session.identity.model}',
-                  style: TextStyle(color: TrackerColors.textSecondary),
+                  style: const TextStyle(color: TrackerColors.textSecondary),
                 ),
               ),
             ),

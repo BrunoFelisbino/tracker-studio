@@ -524,5 +524,49 @@
       "source": "manual",
       "validationStatus": "official"
     }
+  ],
+  "commands": [
+    {
+      "id": "teltonika.output1_lock",
+      "manufacturer": "teltonika",
+      "name": "Bloquear (DO1 ON)",
+      "code": "cfg_setparam_1001_1",
+      "rawCommand": ":cfg_setparam:1001:1",
+      "category": "blocking",
+      "risk": "config",
+      "status": "supported",
+      "models": ["FMB140", "FMB902", "FMC640", "FM5500", "FMP100"],
+      "channels": ["usb", "terminal"],
+      "parameters": [
+        {"name": "outputId", "type": "number", "required": false, "defaultValue": "1001", "description": "Digital output parameter ID (1001 = DO1)"}
+      ],
+      "expectedResponse": "<SETPARAM_RESULT>:1",
+      "documentationRef": "teltonika_driver.dart:737",
+      "destructive": false,
+      "critical": false,
+      "requiresReadback": true,
+      "notes": "Ativa saída digital 1 — usado para bloqueio/ímã de ar"
+    },
+    {
+      "id": "teltonika.output1_unlock",
+      "manufacturer": "teltonika",
+      "name": "Desbloquear (DO1 OFF)",
+      "code": "cfg_setparam_1001_0",
+      "rawCommand": ":cfg_setparam:1001:0",
+      "category": "unblocking",
+      "risk": "config",
+      "status": "supported",
+      "models": ["FMB140", "FMB902", "FMC640", "FM5500", "FMP100"],
+      "channels": ["usb", "terminal"],
+      "parameters": [
+        {"name": "outputId", "type": "number", "required": false, "defaultValue": "1001", "description": "Digital output parameter ID (1001 = DO1)"}
+      ],
+      "expectedResponse": "<SETPARAM_RESULT>:1",
+      "documentationRef": "teltonika_driver.dart:748",
+      "destructive": false,
+      "critical": false,
+      "requiresReadback": true,
+      "notes": "Desativa saída digital 1 — usado para desbloqueio/ímã de ar"
+    }
   ]
 }

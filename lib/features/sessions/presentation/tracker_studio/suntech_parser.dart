@@ -155,6 +155,41 @@ class SuntechParser {
   final List<String> _teltonikaRecordBuffer = [];
   bool _insideTeltonikaRecord = false;
 
+  // No stream USB do FMB140 cada campo de telemetria chega em uma linha
+  // separada ([GPS.API], [LiPo], [ACC], ...). Mantemos o ultimo valor conhecido
+  // de cada campo para que o snapshot seguinte carregue o estado completo.
+  double? _telLat;
+  double? _telLon;
+  int? _telSatellites;
+  bool? _telGpsFix;
+  double? _telHdop;
+  bool? _telIgnitionOn;
+  double? _telMainVoltage;
+  double? _telBackupVoltage;
+  bool? _telGprsOnline;
+
+  void _mergeTeltonikaTelemetry(
+    double? lat,
+    double? lon,
+    int? satellites,
+    bool? gpsFix,
+    double? hdop,
+    bool? ignitionOn,
+    double? mainVoltage,
+    double? backupVoltage,
+    bool? gprsOnline,
+  ) {
+    if (lat != null) _telLat = lat;
+    if (lon != null) _telLon = lon;
+    if (satellites != null) _telSatellites = satellites;
+    if (gpsFix != null) _telGpsFix = gpsFix;
+    if (hdop != null) _telHdop = hdop;
+    if (ignitionOn != null) _telIgnitionOn = ignitionOn;
+    if (mainVoltage != null) _telMainVoltage = mainVoltage;
+    if (backupVoltage != null) _telBackupVoltage = backupVoltage;
+    if (gprsOnline != null) _telGprsOnline = gprsOnline;
+  }
+
   NormalizedTrackerSnapshot? parseLine(String rawLine) {
     final line = rawLine.trim();
     if (line.isEmpty) return null;
@@ -184,8 +219,10 @@ class SuntechParser {
       );
     }
 
-    // Se a linha contém marcadores Teltonika (AVL ID, codec, etc.), tenta parsear
-    if (_looksLikeTeltonika(line)) {
+    // Se a linha contém marcadores Teltonika (AVL ID, codec, etc.), tenta
+    // parsear. Enquanto um registro [REC.GEN] esta em andamento, todas as
+    // linhas de campo fazem parte do registro e precisam ser acumuladas.
+    if (_looksLikeTeltonika(line) || _insideTeltonikaRecord) {
       return _parseTeltonikaLine(line);
     }
 
@@ -200,22 +237,58 @@ class SuntechParser {
   void clearTeltonikaBuffer() {
     _teltonikaRecordBuffer.clear();
     _insideTeltonikaRecord = false;
+    _telLat = null;
+    _telLon = null;
+    _telSatellites = null;
+    _telGpsFix = null;
+    _telHdop = null;
+    _telIgnitionOn = null;
+    _telMainVoltage = null;
+    _telBackupVoltage = null;
+    _telGprsOnline = null;
   }
+
+  /// True enquanto um registro Teltonika ([REC.GEN]) esta sendo acumulado.
+  /// Usado pelo gate do controller para aceitar as linhas de campo do registro.
+  bool get isInsideTeltonikaRecord => _insideTeltonikaRecord;
 
   bool _looksLikeTeltonika(String line) {
     final upper = line.toUpperCase();
     return upper.contains('AVL ID:') ||
+        upper.contains('IMEI:') ||
         upper.contains('CODEC') ||
         upper.contains('[REC.GEN]') ||
+        upper.contains('RECORD CONTENT:') ||
+        upper.contains('RECORD SIZE:') ||
+        upper.contains('IO ID[') ||
         upper.contains('GNSS') ||
         upper.contains('GPS INFO') ||
+        upper.contains('GPS.API') ||
+        upper.contains('[LIPO]') ||
+        upper.contains('EXTV') ||
+        upper.contains('BATV') ||
+        upper.contains('FIXSTATUS') ||
+        upper.contains('[ACC]') ||
+        upper.contains('[MODEM.STATUS]') ||
+        upper.contains('[MODEM.ACTION]') ||
+        upper.contains('[NETWORK]') ||
+        upper.contains('[UNPLUG]') ||
+        upper.contains('[LVCAN]') ||
         upper.contains('<CFG_') ||
         upper.contains('<SETPARAM_RESULT') ||
-        upper.contains('<SAVE_CFG_RESULT');
+        upper.contains('<SAVE_CFG_RESULT') ||
+        upper.contains('TELTONIKA') ||
+        upper.contains('FMB') ||
+        upper.contains('FMC') ||
+        upper.contains('LAT:') ||
+        upper.contains('LON:') ||
+        upper.contains('LATITUDE:') ||
+        upper.contains('LONGITUDE:');
   }
 
   NormalizedTrackerSnapshot _parseTeltonikaLine(String line) {
-    if (line.contains('[REC.GEN] Record Content:')) {
+    final upper = line.toUpperCase();
+    if (upper.contains('RECORD CONTENT:')) {
       _teltonikaRecordBuffer.clear();
       _insideTeltonikaRecord = true;
       _teltonikaRecordBuffer.add(line);
@@ -264,26 +337,38 @@ class SuntechParser {
         model = m?.group(1);
       }
 
-      if (upper.contains('AVL ID:')) {
+      if (upper.contains('AVL ID:') && !upper.contains('EVENT')) {
         final m = RegExp(r'AVL\s+ID:\s*([0-9A-F]+)', caseSensitive: false)
             .firstMatch(line);
         esn = m?.group(1);
       }
 
-      if (upper.contains('LAT:') || upper.contains('LATITUDE:')) {
-        final val = double.tryParse(line.split(':').last.trim());
-        if (val != null && val != 0) lat = val;
-      }
+    if (esn == null && upper.contains('IMEI:')) {
+      final m = RegExp(r'IMEI:\s*(\d+)', caseSensitive: false)
+          .firstMatch(line);
+      if (m != null) esn = m.group(1);
+    }
 
-      if (upper.contains('LON:') || upper.contains('LONGITUDE:')) {
-        final val = double.tryParse(line.split(':').last.trim());
-        if (val != null && val != 0) lon = val;
-      }
+    final latMatch = RegExp(r'(?:Lat|Latitude)[:=]\s*(-?\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (latMatch != null) {
+      final val = double.tryParse(latMatch.group(1)!);
+      if (val != null && val != 0) lat = val;
+    }
 
-      if (upper.contains('SPEED:')) {
-        final val = double.tryParse(line.split(':').last.trim());
-        if (val != null) speed = val;
-      }
+    final lonMatch = RegExp(r'(?:Lon|Longitude)[:=]\s*(-?\d+\.?\d*)',
+            caseSensitive: false)
+        .firstMatch(line);
+    if (lonMatch != null) {
+      final val = double.tryParse(lonMatch.group(1)!);
+      if (val != null && val != 0) lon = val;
+    }
+
+    if (upper.contains('SPEED:')) {
+      final val = double.tryParse(line.split(':').last.trim());
+      if (val != null) speed = val;
+    }
 
       if (upper.contains('HDOP:')) {
         hdop = double.tryParse(line.split(':').last.trim());
@@ -318,19 +403,32 @@ class SuntechParser {
       }
     }
 
+    _mergeTeltonikaTelemetry(
+      lat,
+      lon,
+      sats,
+      gpsFix,
+      hdop,
+      ignitionOn,
+      externalVoltage,
+      batteryVoltage,
+      null,
+    );
+
     return NormalizedTrackerSnapshot(
       manufacturer: 'Teltonika',
       model: model,
       esn: esn,
-      latitude: lat,
-      longitude: lon,
+      latitude: lat ?? _telLat,
+      longitude: lon ?? _telLon,
       speed: speed,
-      satellites: sats,
-      gpsFix: gpsFix,
-      hdop: hdop,
-      ignitionOn: ignitionOn,
-      mainVoltage: externalVoltage,
-      backupVoltage: batteryVoltage,
+      satellites: sats ?? _telSatellites,
+      gpsFix: gpsFix ?? _telGpsFix,
+      hdop: hdop ?? _telHdop,
+      ignitionOn: ignitionOn ?? _telIgnitionOn,
+      mainVoltage: externalVoltage ?? _telMainVoltage,
+      backupVoltage: batteryVoltage ?? _telBackupVoltage,
+      gprsOnline: _telGprsOnline,
       rawLine: lines.join('\n'),
     );
   }
@@ -345,6 +443,10 @@ class SuntechParser {
     int? sats;
     bool? gpsFix;
     double? hdop;
+    bool? ignitionOn;
+    double? mainVoltage;
+    double? backupVoltage;
+    bool? gprsOnline;
 
     if (upper.contains('FMB140') || upper.contains('FMB150') ||
         upper.contains('FMC')) {
@@ -352,52 +454,100 @@ class SuntechParser {
       model = m?.group(1);
     }
 
-    if (upper.contains('AVL ID:')) {
-      final m = RegExp(r'AVL\s+ID:\s*([0-9A-F]+)', caseSensitive: false)
+      if (upper.contains('AVL ID:') && !upper.contains('EVENT')) {
+        final m = RegExp(r'AVL\s+ID:\s*([0-9A-F]+)', caseSensitive: false)
+            .firstMatch(line);
+        esn = m?.group(1);
+      }
+
+    if (esn == null && upper.contains('IMEI:')) {
+      final m = RegExp(r'IMEI:\s*(\d+)', caseSensitive: false)
           .firstMatch(line);
-      esn = m?.group(1);
+      if (m != null) esn = m.group(1);
     }
 
-    final latMatch = RegExp(r'(?:Lat|Latitude)(?::|=\s*)(-?\d+\.?\d*)',
+    final latMatch = RegExp(r'(?:Lat|Latitude)[:=]\s*(-?\d+\.?\d*)',
             caseSensitive: false)
         .firstMatch(line);
     if (latMatch != null) lat = double.tryParse(latMatch.group(1)!);
 
-    final lonMatch = RegExp(r'(?:Lon|Longitude)(?::|=\s*)(-?\d+\.?\d*)',
+    final lonMatch = RegExp(r'(?:Lon|Longitude)[:=]\s*(-?\d+\.?\d*)',
             caseSensitive: false)
         .firstMatch(line);
     if (lonMatch != null) lon = double.tryParse(lonMatch.group(1)!);
 
-    final speedMatch = RegExp(r'(?:Speed|GPS Speed)(?::|=\s*)(\d+\.?\d*)',
+    final speedMatch = RegExp(r'(?:Spd|Speed|GPS Speed)[:=]\s*(\d+\.?\d*)',
             caseSensitive: false)
         .firstMatch(line);
     if (speedMatch != null) speed = double.tryParse(speedMatch.group(1)!);
 
-    final satMatch = RegExp(r'Sat(?:ellites)?(?: Used)?(?::|=\s*)(\d+)',
+    final satMatch = RegExp(r'Sat(?:ellites)?(?: Used)?[:=]\s*(\d+)',
             caseSensitive: false)
         .firstMatch(line);
     if (satMatch != null) sats = int.tryParse(satMatch.group(1)!);
 
-    final fixMatch = RegExp(r'GPS Fix(?:d)?(?::|=\s*)(\d+)',
+    final fixMatch = RegExp(r'(?:GPS\s+Fix(?:ed)?|FixStatus)[:=]\s*(\d+)',
             caseSensitive: false)
         .firstMatch(line);
     if (fixMatch != null) gpsFix = fixMatch.group(1) == '1';
 
-    final hdopMatch = RegExp(r'HDOP(?:=|:\s*)(\d+\.?\d*)',
+    final hdopMatch = RegExp(r'HDOP[:=]\s*(\d+\.?\d*)',
             caseSensitive: false)
         .firstMatch(line);
     if (hdopMatch != null) hdop = double.tryParse(hdopMatch.group(1)!);
+
+    final extVMatch = RegExp(r'ExtV[:=]\s*(\d+)', caseSensitive: false)
+        .firstMatch(line);
+    if (extVMatch != null) {
+      final millivolts = int.tryParse(extVMatch.group(1)!) ?? 0;
+      mainVoltage = millivolts > 0 ? millivolts / 1000 : null;
+    }
+
+    final batVMatch = RegExp(r'BatV[:=]\s*(\d+)', caseSensitive: false)
+        .firstMatch(line);
+    if (batVMatch != null) {
+      final millivolts = int.tryParse(batVMatch.group(1)!) ?? 0;
+      backupVoltage = millivolts > 0 ? millivolts / 1000 : null;
+    }
+
+    final ignMatch =
+        RegExp(r'\bIgn\s*:\s*(ON|OFF)', caseSensitive: false).firstMatch(line);
+    if (ignMatch != null) {
+      ignitionOn = ignMatch.group(1)!.toUpperCase() == 'ON';
+    }
+
+    if ((upper.contains('[NETWORK]') && upper.contains('SOCKET OPENED')) ||
+        (upper.contains('[MODEM.STATUS]') &&
+            upper.contains('REGISTRO DE REDE'))) {
+      gprsOnline = true;
+    }
+
+    _mergeTeltonikaTelemetry(
+      lat,
+      lon,
+      sats,
+      gpsFix,
+      hdop,
+      ignitionOn,
+      mainVoltage,
+      backupVoltage,
+      gprsOnline,
+    );
 
     return NormalizedTrackerSnapshot(
       manufacturer: 'Teltonika',
       model: model,
       esn: esn,
-      latitude: lat,
-      longitude: lon,
+      latitude: lat ?? _telLat,
+      longitude: lon ?? _telLon,
       speed: speed,
-      satellites: sats,
-      gpsFix: gpsFix,
-      hdop: hdop,
+      satellites: sats ?? _telSatellites,
+      gpsFix: gpsFix ?? _telGpsFix,
+      hdop: hdop ?? _telHdop,
+      ignitionOn: ignitionOn ?? _telIgnitionOn,
+      mainVoltage: mainVoltage ?? _telMainVoltage,
+      backupVoltage: backupVoltage ?? _telBackupVoltage,
+      gprsOnline: gprsOnline ?? _telGprsOnline,
       rawLine: line,
     );
   }

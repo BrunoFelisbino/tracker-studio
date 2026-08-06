@@ -16,7 +16,8 @@ final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
   return SessionRepository(db);
 });
 
-final sessionPersistenceServiceProvider = Provider<SessionPersistenceService>((ref) {
+final sessionPersistenceServiceProvider =
+    Provider<SessionPersistenceService>((ref) {
   final repo = ref.watch(sessionRepositoryProvider);
   return SessionPersistenceService(repo);
 });
@@ -31,13 +32,21 @@ class SessionRepository {
       id: Value(session.id),
       manufacturer: Value(session.identity.manufacturer.name),
       identityJson: Value(jsonEncode(_serializeIdentity(session.identity))),
-      capabilitiesJson: Value(jsonEncode(_serializeCapabilities(session.capabilities))),
-      normalizedStateJson: Value(jsonEncode(_serializeNormalizedState(session.normalizedState))),
-      measurementsJson: Value(jsonEncode(session.measurements.map(_serializeMeasurement).toList())),
+      capabilitiesJson:
+          Value(jsonEncode(_serializeCapabilities(session.capabilities))),
+      normalizedStateJson:
+          Value(jsonEncode(_serializeNormalizedState(session.normalizedState))),
+      measurementsJson: Value(
+          jsonEncode(session.measurements.map(_serializeMeasurement).toList())),
       rawDataJson: Value(jsonEncode(session.rawData)),
-      responsesJson: Value(jsonEncode(session.responses.map(_serializeResponse).toList())),
-      configurationSnapshotsJson: Value(jsonEncode(session.configurationSnapshots.map(_serializeConfigSnapshot).toList())),
-      diagnosticsJson: Value(jsonEncode(session.diagnostics.map(_serializeDiagnostic).toList())),
+      responsesJson:
+          Value(jsonEncode(session.responses.map(_serializeResponse).toList())),
+      configurationSnapshotsJson: Value(jsonEncode(session
+          .configurationSnapshots
+          .map(_serializeConfigSnapshot)
+          .toList())),
+      diagnosticsJson: Value(
+          jsonEncode(session.diagnostics.map(_serializeDiagnostic).toList())),
       createdAt: Value(session.createdAt),
       lastUpdate: Value(session.lastUpdate),
       isActive: Value(session.isActive),
@@ -47,7 +56,8 @@ class SessionRepository {
   }
 
   Future<DeviceSession?> loadSession(String id) async {
-    final query = _db.select(_db.deviceSessionsTable)..where((t) => t.id.equals(id));
+    final query = _db.select(_db.deviceSessionsTable)
+      ..where((t) => t.id.equals(id));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
     return _rowToSession(row);
@@ -55,7 +65,8 @@ class SessionRepository {
 
   Future<List<DeviceSession>> listSessionsByDevice(String deviceId) async {
     final query = _db.select(_db.deviceSessionsTable)
-      ..where((t) => t.id.equals(deviceId) | t.identityJson.like('%$deviceId%'));
+      ..where(
+          (t) => t.id.equals(deviceId) | t.identityJson.like('%$deviceId%'));
     final rows = await query.get();
     return rows.map(_rowToSession).toList();
   }
@@ -67,12 +78,15 @@ class SessionRepository {
 
   DeviceSession _rowToSession(DeviceSessionsTableData row) {
     final identityMap = jsonDecode(row.identityJson) as Map<String, dynamic>;
-    final capabilitiesMap = jsonDecode(row.capabilitiesJson) as Map<String, dynamic>;
-    final stateMap = jsonDecode(row.normalizedStateJson) as Map<String, dynamic>;
+    final capabilitiesMap =
+        jsonDecode(row.capabilitiesJson) as Map<String, dynamic>;
+    final stateMap =
+        jsonDecode(row.normalizedStateJson) as Map<String, dynamic>;
     final measurementsList = jsonDecode(row.measurementsJson) as List<dynamic>;
     final rawDataMap = jsonDecode(row.rawDataJson) as Map<String, dynamic>;
     final responsesList = jsonDecode(row.responsesJson) as List<dynamic>;
-    final configList = jsonDecode(row.configurationSnapshotsJson) as List<dynamic>;
+    final configList =
+        jsonDecode(row.configurationSnapshotsJson) as List<dynamic>;
     final diagnosticsList = jsonDecode(row.diagnosticsJson) as List<dynamic>;
 
     return DeviceSession(
@@ -80,11 +94,19 @@ class SessionRepository {
       identity: _deserializeIdentity(identityMap),
       capabilities: _deserializeCapabilities(capabilitiesMap),
       normalizedState: _deserializeNormalizedState(stateMap),
-      measurements: measurementsList.map((m) => _deserializeMeasurement(m as Map<String, dynamic>)).toList(),
+      measurements: measurementsList
+          .map((m) => _deserializeMeasurement(m as Map<String, dynamic>))
+          .toList(),
       rawData: rawDataMap,
-      responses: responsesList.map((r) => _deserializeResponse(r as Map<String, dynamic>)).toList(),
-      configurationSnapshots: configList.map((c) => _deserializeConfigSnapshot(c as Map<String, dynamic>)).toList(),
-      diagnostics: diagnosticsList.map((d) => _deserializeDiagnostic(d as Map<String, dynamic>)).toList(),
+      responses: responsesList
+          .map((r) => _deserializeResponse(r as Map<String, dynamic>))
+          .toList(),
+      configurationSnapshots: configList
+          .map((c) => _deserializeConfigSnapshot(c as Map<String, dynamic>))
+          .toList(),
+      diagnostics: diagnosticsList
+          .map((d) => _deserializeDiagnostic(d as Map<String, dynamic>))
+          .toList(),
       createdAt: row.createdAt,
       lastUpdate: row.lastUpdate,
       isActive: row.isActive,
@@ -105,7 +127,8 @@ class SessionRepository {
         'confidence': id.confidence,
       };
 
-  DeviceIdentity _deserializeIdentity(Map<String, dynamic> map) => DeviceIdentity(
+  DeviceIdentity _deserializeIdentity(Map<String, dynamic> map) =>
+      DeviceIdentity(
         id: map['id'] ?? '',
         manufacturer: Manufacturer.values.firstWhere(
           (m) => m.name == map['manufacturer'],
@@ -118,7 +141,9 @@ class SessionRepository {
         hardwareVersion: map['hardwareVersion'],
         protocol: map['protocol'],
         codec: map['codec'],
-        firstSeenAt: map['firstSeenAt'] != null ? DateTime.parse(map['firstSeenAt']) : null,
+        firstSeenAt: map['firstSeenAt'] != null
+            ? DateTime.parse(map['firstSeenAt'])
+            : null,
         confidence: map['confidence'] ?? 0,
       );
 
@@ -133,7 +158,8 @@ class SessionRepository {
         'ioTypes': cap.ioTypes,
       };
 
-  DeviceCapabilities _deserializeCapabilities(Map<String, dynamic> map) => DeviceCapabilities(
+  DeviceCapabilities _deserializeCapabilities(Map<String, dynamic> map) =>
+      DeviceCapabilities(
         can: map['can'] ?? false,
         ble: map['ble'] ?? false,
         hasCan: map['hasCan'] ?? false,
@@ -144,7 +170,8 @@ class SessionRepository {
         ioTypes: List<String>.from(map['ioTypes'] ?? []),
       );
 
-  Map<String, dynamic> _serializeNormalizedState(NormalizedDeviceState state) => {
+  Map<String, dynamic> _serializeNormalizedState(NormalizedDeviceState state) =>
+      {
         'lastUpdate': state.lastUpdate.toIso8601String(),
         'connectionStatus': state.connectionStatus,
         'lastPacketAt': state.lastPacketAt?.toIso8601String(),
@@ -187,17 +214,25 @@ class SessionRepository {
     final n = map['network'] ?? {};
     final pos = map['position'] ?? {};
     return NormalizedDeviceState(
-      lastUpdate: map['lastUpdate'] != null ? DateTime.parse(map['lastUpdate']) : DateTime.now(),
+      lastUpdate: map['lastUpdate'] != null
+          ? DateTime.parse(map['lastUpdate'])
+          : DateTime.now(),
       connectionStatus: map['connectionStatus'] ?? 'disconnected',
-      lastPacketAt: map['lastPacketAt'] != null ? DateTime.parse(map['lastPacketAt']) : null,
+      lastPacketAt: map['lastPacketAt'] != null
+          ? DateTime.parse(map['lastPacketAt'])
+          : null,
       networkInfo: map['networkInfo'],
       vehicle: VehicleState(
         ignition: v['ignition'] ?? false,
         movement: v['movement'] ?? false,
         speedKph: v['speedKph'] ?? 0,
         odometerKm: v['odometerKm'] ?? 0,
-        ignitionOnAt: v['ignitionOnAt'] != null ? DateTime.parse(v['ignitionOnAt']) : null,
-        ignitionOffAt: v['ignitionOffAt'] != null ? DateTime.parse(v['ignitionOffAt']) : null,
+        ignitionOnAt: v['ignitionOnAt'] != null
+            ? DateTime.parse(v['ignitionOnAt'])
+            : null,
+        ignitionOffAt: v['ignitionOffAt'] != null
+            ? DateTime.parse(v['ignitionOffAt'])
+            : null,
       ),
       power: PowerState(
         externalVoltage: (p['externalVoltage'] as num?)?.toDouble() ?? 0.0,
@@ -237,7 +272,8 @@ class SessionRepository {
         'metadata': m.metadata,
       };
 
-  NormalizedMeasurement _deserializeMeasurement(Map<String, dynamic> map) => NormalizedMeasurement(
+  NormalizedMeasurement _deserializeMeasurement(Map<String, dynamic> map) =>
+      NormalizedMeasurement(
         key: map['key'] ?? '',
         rawKey: map['rawKey'] ?? '',
         category: map['category'] ?? '',
@@ -245,8 +281,12 @@ class SessionRepository {
         unit: map['unit'],
         multiplier: map['multiplier'],
         value: map['value'],
-        timestamp: map['timestamp'] != null ? DateTime.parse(map['timestamp']) : DateTime.now(),
-        metadata: map['metadata'] != null ? Map<String, dynamic>.from(map['metadata']) : null,
+        timestamp: map['timestamp'] != null
+            ? DateTime.parse(map['timestamp'])
+            : DateTime.now(),
+        metadata: map['metadata'] != null
+            ? Map<String, dynamic>.from(map['metadata'])
+            : null,
       );
 
   Map<String, dynamic> _serializeResponse(CommandTransaction r) => {
@@ -258,17 +298,24 @@ class SessionRepository {
         'success': r.success,
       };
 
-  CommandTransaction _deserializeResponse(Map<String, dynamic> map) => CommandTransaction(
+  CommandTransaction _deserializeResponse(Map<String, dynamic> map) =>
+      CommandTransaction(
         id: map['id'] ?? '',
         command: map['command'] ?? '',
-        requestSentAt: map['requestSentAt'] != null ? DateTime.parse(map['requestSentAt']) : DateTime.now(),
-        responseReceivedAt: map['responseReceivedAt'] != null ? DateTime.parse(map['responseReceivedAt']) : null,
+        requestSentAt: map['requestSentAt'] != null
+            ? DateTime.parse(map['requestSentAt'])
+            : DateTime.now(),
+        responseReceivedAt: map['responseReceivedAt'] != null
+            ? DateTime.parse(map['responseReceivedAt'])
+            : null,
         responseRaw: map['responseRaw'],
         success: map['success'] ?? false,
         portId: map['portId'] ?? '',
         request: map['request'] ?? '',
         responseLines: List<String>.from(map['responseLines'] ?? []),
-        parsedResponse: map['parsedResponse'] != null ? Map<String, dynamic>.from(map['parsedResponse']) : null,
+        parsedResponse: map['parsedResponse'] != null
+            ? Map<String, dynamic>.from(map['parsedResponse'])
+            : null,
         error: map['error'],
         transport: CommandTransport.values.firstWhere(
           (t) => t.name == map['transport'],
@@ -281,8 +328,11 @@ class SessionRepository {
         'values': c.values,
       };
 
-  ConfigurationSnapshot _deserializeConfigSnapshot(Map<String, dynamic> map) => ConfigurationSnapshot(
-        timestamp: map['timestamp'] != null ? DateTime.parse(map['timestamp']) : DateTime.now(),
+  ConfigurationSnapshot _deserializeConfigSnapshot(Map<String, dynamic> map) =>
+      ConfigurationSnapshot(
+        timestamp: map['timestamp'] != null
+            ? DateTime.parse(map['timestamp'])
+            : DateTime.now(),
         values: Map<String, dynamic>.from(map['values'] ?? {}),
       );
 
@@ -294,7 +344,8 @@ class SessionRepository {
         'message': d.message,
       };
 
-  DiagnosticFinding _deserializeDiagnostic(Map<String, dynamic> map) => DiagnosticFinding(
+  DiagnosticFinding _deserializeDiagnostic(Map<String, dynamic> map) =>
+      DiagnosticFinding(
         id: map['id'] ?? '',
         code: map['code'] ?? '',
         severity: RiskLevel.values.firstWhere(
@@ -319,10 +370,12 @@ class SessionPersistenceService {
     await _repository.saveSession(session);
   }
 
-  Future<void> appendRawData(String sessionId, String key, dynamic value) async {
+  Future<void> appendRawData(
+      String sessionId, String key, dynamic value) async {
     final session = await _repository.loadSession(sessionId);
     if (session == null) return;
-    final updatedRaw = Map<String, dynamic>.from(session.rawData)..[key] = value;
+    final updatedRaw = Map<String, dynamic>.from(session.rawData)
+      ..[key] = value;
     final updated = DeviceSession(
       id: session.id,
       identity: session.identity,
@@ -340,11 +393,14 @@ class SessionPersistenceService {
     await _repository.saveSession(updated);
   }
 
-  Future<void> appendMeasurement(String sessionId, NormalizedMeasurement measurement) async {
+  Future<void> appendMeasurement(
+      String sessionId, NormalizedMeasurement measurement) async {
     final session = await _repository.loadSession(sessionId);
     if (session == null) return;
-    final updatedMeasurements = List<NormalizedMeasurement>.from(session.measurements);
-    final index = updatedMeasurements.indexWhere((m) => m.key == measurement.key);
+    final updatedMeasurements =
+        List<NormalizedMeasurement>.from(session.measurements);
+    final index =
+        updatedMeasurements.indexWhere((m) => m.key == measurement.key);
     if (index >= 0) {
       updatedMeasurements[index] = measurement;
     } else {
@@ -359,14 +415,16 @@ class SessionPersistenceService {
     await _repository.saveSession(updated);
   }
 
-  Future<void> appendResponse(String sessionId, CommandTransaction response) async {
+  Future<void> appendResponse(
+      String sessionId, CommandTransaction response) async {
     final session = await _repository.loadSession(sessionId);
     if (session == null) return;
     final updated = session.addResponse(response);
     await _repository.saveSession(updated);
   }
 
-  Future<void> saveConfigurationSnapshot(String sessionId, ConfigurationSnapshot snapshot) async {
+  Future<void> saveConfigurationSnapshot(
+      String sessionId, ConfigurationSnapshot snapshot) async {
     final session = await _repository.loadSession(sessionId);
     if (session == null) return;
     final updated = session.updateConfiguration(snapshot);
@@ -390,7 +448,10 @@ class SessionPersistenceService {
 
   Future<DeviceSession> reprocessSession(String sessionId) async {
     final session = await _repository.loadSession(sessionId);
-    if (session == null) throw StateError('Sessão não encontrada para reprocessamento: $sessionId');
+    if (session == null) {
+      throw StateError(
+          'Sessão não encontrada para reprocessamento: $sessionId');
+    }
     // Reprocessar normalizações baseadas em rawData
     await _repository.saveSession(session);
     return session;

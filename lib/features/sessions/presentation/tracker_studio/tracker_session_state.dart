@@ -498,6 +498,11 @@ class LogCaptureState {
   /// Result of the last diff computed from [analysis].
   final TeltonikaCaptureDiff? diff;
 
+  /// When non-null, only this single AVL IO Id is tracked in real time.
+  /// Other IOs continue to be read but are hidden from the live view.
+  /// Use [clearLockedIo] / `lockedIoId = null` to reset.
+  final int? lockedIoId;
+
   const LogCaptureState({
     this.active = false,
     this.startedAt = '',
@@ -505,6 +510,7 @@ class LogCaptureState {
     this.hexChunks = const [],
     this.analysis,
     this.diff,
+    this.lockedIoId,
   });
 
   LogCaptureState copyWith({
@@ -516,6 +522,8 @@ class LogCaptureState {
     bool clearAnalysis = false,
     TeltonikaCaptureDiff? diff,
     bool clearDiff = false,
+    int? lockedIoId,
+    bool clearLockedIo = false,
   }) {
     return LogCaptureState(
       active: active ?? this.active,
@@ -524,6 +532,8 @@ class LogCaptureState {
       hexChunks: hexChunks ?? this.hexChunks,
       analysis: clearAnalysis ? null : analysis ?? this.analysis,
       diff: clearDiff ? null : diff ?? this.diff,
+      lockedIoId:
+          clearLockedIo ? null : lockedIoId ?? this.lockedIoId,
     );
   }
 }

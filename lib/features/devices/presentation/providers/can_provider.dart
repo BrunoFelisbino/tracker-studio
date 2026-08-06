@@ -12,9 +12,6 @@ final canStatusProvider = Provider.family<CanRuntimeStatus, String>(
       loading: () => CanRuntimeStatus.unsupported(),
       error: (_, __) => CanRuntimeStatus.unsupported(),
       data: (deviceState) {
-        if (deviceState == null) {
-          return CanRuntimeStatus.unsupported();
-        }
         return CanRuntimeStatus.fromSession(
           deviceId: deviceId,
           session: deviceState,
@@ -163,9 +160,8 @@ class CanRuntimeStatus {
     }).toList();
 
     final now = DateTime.now();
-    final lastSampleAt = canMeasurements.isNotEmpty
-        ? canMeasurements.last.timestamp
-        : null;
+    final lastSampleAt =
+        canMeasurements.isNotEmpty ? canMeasurements.last.timestamp : null;
 
     final sampleCount = <String, dynamic>{};
     for (final measurement in canMeasurements) {
@@ -234,10 +230,6 @@ final canDataProvider = Provider.family<Map<String, dynamic>, String>(
       loading: () => {},
       error: (_, __) => {},
       data: (deviceState) {
-        if (deviceState == null) {
-          return {};
-        }
-
         final canMeasurements = deviceState.measurements.where((m) {
           final category = m.category.toLowerCase();
           final key = m.key.toLowerCase();
@@ -253,14 +245,14 @@ final canDataProvider = Provider.family<Map<String, dynamic>, String>(
         for (final measurement in canMeasurements) {
           canData[measurement.key] = {
             'value': measurement.value,
-        'unit': measurement.unit,
-        'timestamp': measurement.timestamp.toIso8601String(),
-        'name': measurement.name,
-        'category': measurement.category,
-      };
-    }
+            'unit': measurement.unit,
+            'timestamp': measurement.timestamp.toIso8601String(),
+            'name': measurement.name,
+            'category': measurement.category,
+          };
+        }
 
-    return canData;
+        return canData;
       },
     );
   },
@@ -287,12 +279,11 @@ class CanUpdater {
     required String name,
     String? unit,
   }) {
-final deviceStateAsync = _ref.read(deviceSessionProvider(_deviceId));
+    final deviceStateAsync = _ref.read(deviceSessionProvider(_deviceId));
     deviceStateAsync.when(
       loading: () {},
       error: (_, __) {},
       data: (deviceState) {
-        if (deviceState == null) return;
         final normalized = NormalizedMeasurement(
           key: key,
           rawKey: key,
@@ -301,7 +292,7 @@ final deviceStateAsync = _ref.read(deviceSessionProvider(_deviceId));
           unit: unit,
           value: value,
           timestamp: timestamp,
-          metadata: {'source': 'can'},
+          metadata: const {'source': 'can'},
         );
         final newSession = deviceState.updateState(
           newState: deviceState.normalizedState,
@@ -315,7 +306,9 @@ final deviceStateAsync = _ref.read(deviceSessionProvider(_deviceId));
           },
           timestamp: timestamp,
         );
-        _ref.read(deviceSessionProvider(_deviceId).notifier).updateSession(newSession);
+        _ref
+            .read(deviceSessionProvider(_deviceId).notifier)
+            .updateSession(newSession);
       },
     );
   }

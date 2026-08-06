@@ -2024,8 +2024,16 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       state = _appendLog(state, LogEntry(_clock(), 'USB', line));
       return;
     }
-    if (line.startsWith('[READ_ASCII] ')) {
-      final ascii = line.substring(13);
+
+    // Strip timestamp prefix like [2026.08.03 15:16:01]- from FMB140 USB stream
+    String processedLine = line;
+    final timestampPrefixMatch = RegExp(r'^\[\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\]-').firstMatch(line);
+    if (timestampPrefixMatch != null) {
+      processedLine = line.substring(timestampPrefixMatch.end);
+    }
+
+    if (processedLine.startsWith('[READ_ASCII] ')) {
+      final ascii = processedLine.substring(13);
       _lastRawAt = DateTime.now();
       if (!_isAsciiEcho(ascii) &&
           isProbableAsciiResponse(ascii) &&
@@ -2042,8 +2050,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       state = _appendLog(state, LogEntry(_clock(), 'READ_ASCII', ascii));
       return;
     }
-    if (line.startsWith('[READ_HEX] ')) {
-      final hex = line.substring(11);
+    if (processedLine.startsWith('[READ_HEX] ')) {
+      final hex = processedLine.substring(11);
       final bytes = bytesFromHex(hex);
       final binary = bytes.isNotEmpty && printableAsciiRatio(bytes) <= 0.70;
       state = _copy(
@@ -2054,8 +2062,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       );
       return;
     }
-    if (line.startsWith('[READ] ')) {
-      final rawLine = line.substring(7);
+    if (processedLine.startsWith('[READ] ')) {
+      final rawLine = processedLine.substring(7);
       if (isCommandEcho(state.manualCommand.lastCommand, rawLine)) {
         state = _appendLog(state, LogEntry(_clock(), 'ECHO', rawLine));
         return;
@@ -2112,7 +2120,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       ingestRawLine(rawLine, source: 'PARSER');
       return;
     }
-    ingestRawLine(line);
+    ingestRawLine(processedLine);
   }
 
   void _requireUsb() {
@@ -2158,13 +2166,69 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
   bool _isKnownProtocolLine(String line) {
     final normalized = line.trimLeft().toUpperCase();
     final manufacturer = state.device.manufacturerName.toLowerCase();
+    // Enquanto um registro Teltonika ([REC.GEN]) esta sendo acumulado, todas
+    // as linhas de campo (Lat:, IO ID[3]:, Record Size:, ...) fazem parte do
+    // registro e precisam chegar ao parser para completar a leitura.
+    if (_parser.isInsideTeltonikaRecord) {
+      return true;
+    }
+    // Marcadores Teltonika aceitos sempre: o parser identifica Teltonika pelas
+    // primeiras linhas (AVL ID, [REC.GEN], IMEI, FMB140, ...) mesmo quando o
+    // handshake Suntech nao identifica a familia (equipamento Teltonika na 1a
+    // conexao).
+    const teltonikaPrefixes = [
+      'TELTONIKA', 'AVL', 'IMEI', 'FMB', 'FMC', 'EVENT',
+      'RECCODECOUNT', 'CODEC', 'RECORDCOUNT', 'GNSS', 'GPS',
+      '[REC.GEN]', 'CFG', 'SETPARAM_RESULT', 'SAVE_CFG_RESULT',
+    ];
+    if (teltonikaPrefixes.any(normalized.startsWith)) {
+      return true;
+    }
+    // O FMB140 via USB emite cada linha com o prefixo do proprio aparelho
+    // ([timestamp]-[SECTION]), entao os marcadores Teltonika tambem sao
+    // aceitos em qualquer posicao da linha.
+    const teltonikaMarkers = [
+      'TELTONIKA',
+      'AVL ID:',
+      'IMEI:',
+      'FMB',
+      'FMC',
+      'CODEC',
+      '[REC.GEN]',
+      'RECORD CONTENT:',
+      'RECORD SIZE:',
+      'IO ID[',
+      '[READ_ASCII]',
+      '[GPS.API]',
+      'GPS.API',
+      '[LIPO]',
+      'FIXSTATUS',
+      '[ACC]',
+      '[MODEM.STATUS]',
+      '[MODEM.ACTION]',
+      '[NETWORK]',
+      '[UNPLUG]',
+      '[LVCAN]',
+      'EXTV',
+      'BATV',
+      'LAT:',
+      'LON:',
+      'LATITUDE:',
+      'LONGITUDE:',
+      'ALT:',
+      'ANGLE:',
+      'SPEED:',
+      'HDOP:',
+      'SATINUSE:',
+      'SATS IN USE:',
+      'GPS FIX:',
+      'FIXSTATUS',
+    ];
+    if (teltonikaMarkers.any(normalized.contains)) {
+      return true;
+    }
     if (manufacturer.contains('teltonika')) {
-      final teltonikaPrefixes = [
-        'TELTONIKA', 'AVL ID', 'RECCODECOUNT', 'CODEC', 'RECORDCOUNT',
-        'GNSS', 'GPS', '[REC.GEN]', 'CFG', 'SETPARAM_RESULT',
-        'SAVE_CFG_RESULT', 'STT', 'OK', 'ACK', 'ERR',
-      ];
-      return teltonikaPrefixes.any(normalized.startsWith);
+      return const ['STT', 'OK', 'ACK', 'ERR'].any(normalized.startsWith);
     }
     final prefixes = switch (state.selectedSuntechFamily) {
       SuntechCommandFamily.legacySt300St310 => const [
@@ -2429,6 +2493,8 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
   List<DiagnosticGroup> _diagnosticsFrom(
       TrackerSessionState current, NormalizedTrackerSnapshot snapshot) {
+    final ignitionOn =
+        _extractTeltonikaIgnition(snapshot) ?? snapshot.ignitionOn;
     return [
       DiagnosticGroup('Identidade', {
         'Modelo': current.device.model,
@@ -2461,7 +2527,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       DiagnosticGroup('I/O', {
         'Entrada': snapshot.inputMask ?? '-',
         'Saida': snapshot.outputMask ?? '-',
-        'Ignicao': snapshot.ignitionOn == true ? 'ON' : 'OFF / nao mapeada'
+        'Ignicao': ignitionOn == true ? 'ON' : 'OFF / nao mapeada'
       }),
     ];
   }

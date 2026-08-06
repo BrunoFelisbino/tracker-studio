@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracker_studio/features/devices/presentation/screens/devices_screen.dart';
 
-import '../test_helpers/studio_test_harness.dart';
-
 void main() {
   testWidgets('empty enumeration does not break and shows no fake ports',
       (tester) async {
@@ -29,10 +27,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Atualizar portas'), findsOneWidget);
+    expect(find.byTooltip('Atualizar portas'), findsOneWidget);
   });
 
-  testWidgets('connection button is present', (tester) async {
+  testWidgets('empty state shows USB connection guidance', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(home: DevicesScreen()),
@@ -40,6 +38,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Conectar'), findsOneWidget);
+    expect(
+        find.textContaining('Conecte um adaptador USB serial'), findsOneWidget);
   });
 }

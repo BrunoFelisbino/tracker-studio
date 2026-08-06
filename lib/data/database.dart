@@ -64,7 +64,14 @@ class DeviceSessionsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Equipamentos, Antenas, Testes, Usuarios, Financeiros, DeviceSessionsTable])
+@DriftDatabase(tables: [
+  Equipamentos,
+  Antenas,
+  Testes,
+  Usuarios,
+  Financeiros,
+  DeviceSessionsTable
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 

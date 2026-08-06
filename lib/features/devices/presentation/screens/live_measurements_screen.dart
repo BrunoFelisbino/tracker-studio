@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/tracker_colors.dart';
-import '../../../../core/drivers/driver_contracts.dart';
 import '../../../../core/sessions/device_session.dart';
 import '../../../../core/sessions/device_session_provider.dart';
 import '../../../../core/sessions/session_persistence.dart';
@@ -13,10 +12,12 @@ class LiveMeasurementsScreen extends ConsumerStatefulWidget {
   const LiveMeasurementsScreen({super.key, required this.deviceId});
 
   @override
-  ConsumerState<LiveMeasurementsScreen> createState() => _LiveMeasurementsScreenState();
+  ConsumerState<LiveMeasurementsScreen> createState() =>
+      _LiveMeasurementsScreenState();
 }
 
-class _LiveMeasurementsScreenState extends ConsumerState<LiveMeasurementsScreen> with SingleTickerProviderStateMixin {
+class _LiveMeasurementsScreenState extends ConsumerState<LiveMeasurementsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isPaused = false;
   String _searchQuery = '';
@@ -55,9 +56,10 @@ class _LiveMeasurementsScreenState extends ConsumerState<LiveMeasurementsScreen>
             onPressed: () async {
               final persistence = ref.read(sessionPersistenceServiceProvider);
               await persistence.reprocessSession(widget.deviceId);
-              if (mounted) {
+              if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sessão reprocessada com sucesso!')),
+                  const SnackBar(
+                      content: Text('Sessão reprocessada com sucesso!')),
                 );
               }
             },
@@ -72,13 +74,16 @@ class _LiveMeasurementsScreenState extends ConsumerState<LiveMeasurementsScreen>
             Tab(icon: Icon(Icons.history), text: 'Histórico'),
             Tab(icon: Icon(Icons.code), text: 'Somente CAN'),
             Tab(icon: Icon(Icons.help_outline), text: 'IOs Desconhecidos'),
-            Tab(icon: Icon(Icons.check_circle_outline), text: 'Medições Feitas'),
+            Tab(
+                icon: Icon(Icons.check_circle_outline),
+                text: 'Medições Feitas'),
           ],
         ),
       ),
       body: sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, st) => Center(child: Text('Erro ao carregar sessão: $err')),
+        error: (err, st) =>
+            Center(child: Text('Erro ao carregar sessão: $err')),
         data: (session) {
           if (_isPaused) {
             // Persistência continua funcionando no background via provider, mas ignoramos re-render se pausado ou mantemos dados correntes
@@ -87,7 +92,11 @@ class _LiveMeasurementsScreenState extends ConsumerState<LiveMeasurementsScreen>
             controller: _tabController,
             children: [
               _WidgetsTab(session: session, canStatus: canStatus),
-              _ListTab(session: session, searchQuery: _searchQuery, category: _selectedCategory, onSearchChanged: (q) => setState(() => _searchQuery = q)),
+              _ListTab(
+                  session: session,
+                  searchQuery: _searchQuery,
+                  category: _selectedCategory,
+                  onSearchChanged: (q) => setState(() => _searchQuery = q)),
               _HistoryTab(session: session),
               _OnlyCanTab(session: session, canStatus: canStatus),
               _UnknownIoTab(session: session),
@@ -111,7 +120,8 @@ class _WidgetsTab extends StatelessWidget {
     final measurements = session.measurements;
     if (measurements.isEmpty) {
       return const Center(
-        child: Text('Aguardando medições do dispositivo...', style: TextStyle(color: TrackerColors.textSecondary)),
+        child: Text('Aguardando medições do dispositivo...',
+            style: TextStyle(color: TrackerColors.textSecondary)),
       );
     }
 
@@ -130,7 +140,9 @@ class _WidgetsTab extends StatelessWidget {
 
         return Card(
           elevation: 2,
-          color: isStale ? TrackerColors.surface.withOpacity(0.5) : TrackerColors.surface,
+          color: isStale
+              ? TrackerColors.surface.withValues(alpha: 0.5)
+              : TrackerColors.surface,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -138,19 +150,21 @@ class _WidgetsTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
                         m.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isStale)
                       const Tooltip(
                         message: 'Valor Stale (> 60s sem atualização)',
-                        child: Icon(Icons.warning_amber, size: 16, color: TrackerColors.attentionAmber),
+                        child: Icon(Icons.warning_amber,
+                            size: 16, color: TrackerColors.attentionAmber),
                       ),
                   ],
                 ),
@@ -159,16 +173,21 @@ class _WidgetsTab extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: m.value != null ? TrackerColors.communicationBlue : TrackerColors.textSecondary,
+                    color: m.value != null
+                        ? TrackerColors.communicationBlue
+                        : TrackerColors.textSecondary,
                   ),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Raw: ${m.rawKey}', style: const TextStyle(fontSize: 10, color: TrackerColors.textSecondary)),
+                    Text('Raw: ${m.rawKey}',
+                        style: const TextStyle(
+                            fontSize: 10, color: TrackerColors.textSecondary)),
                     Text(
                       '${m.timestamp.hour.toString().padLeft(2, '0')}:${m.timestamp.minute.toString().padLeft(2, '0')}:${m.timestamp.second.toString().padLeft(2, '0')}',
-                      style: const TextStyle(fontSize: 10, color: TrackerColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 10, color: TrackerColors.textSecondary),
                     ),
                   ],
                 ),
@@ -187,12 +206,18 @@ class _ListTab extends StatelessWidget {
   final String category;
   final ValueChanged<String> onSearchChanged;
 
-  const _ListTab({required this.session, required this.searchQuery, required this.category, required this.onSearchChanged});
+  const _ListTab(
+      {required this.session,
+      required this.searchQuery,
+      required this.category,
+      required this.onSearchChanged});
 
   @override
   Widget build(BuildContext context) {
     final filtered = session.measurements.where((m) {
-      if (searchQuery.isNotEmpty && !m.name.toLowerCase().contains(searchQuery.toLowerCase()) && !m.key.toLowerCase().contains(searchQuery.toLowerCase())) {
+      if (searchQuery.isNotEmpty &&
+          !m.name.toLowerCase().contains(searchQuery.toLowerCase()) &&
+          !m.key.toLowerCase().contains(searchQuery.toLowerCase())) {
         return false;
       }
       return true;
@@ -217,15 +242,20 @@ class _ListTab extends StatelessWidget {
             itemBuilder: (context, index) {
               final m = filtered[index];
               return ListTile(
-                leading: const Icon(Icons.sensors, color: TrackerColors.communicationBlue),
+                leading: const Icon(Icons.sensors,
+                    color: TrackerColors.communicationBlue),
                 title: Text(m.name),
                 subtitle: Text('Chave: ${m.key} | Categoria: ${m.category}'),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${m.value}${m.unit != null ? ' ${m.unit}' : ''}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(m.timestamp.toIso8601String().substring(11, 19), style: const TextStyle(fontSize: 10, color: TrackerColors.textSecondary)),
+                    Text('${m.value}${m.unit != null ? ' ${m.unit}' : ''}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(m.timestamp.toIso8601String().substring(11, 19),
+                        style: const TextStyle(
+                            fontSize: 10, color: TrackerColors.textSecondary)),
                   ],
                 ),
               );
@@ -253,9 +283,15 @@ class _HistoryTab extends StatelessWidget {
         final val = entry.value;
         return Card(
           child: ListTile(
-            title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(val is Map ? (val['ascii'] ?? val.toString()) : val.toString()),
-            trailing: Text(val is Map && val['timestamp'] != null ? val['timestamp'].toString().substring(11, 19) : '', style: const TextStyle(fontSize: 12)),
+            title: Text(entry.key,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(
+                val is Map ? (val['ascii'] ?? val.toString()) : val.toString()),
+            trailing: Text(
+                val is Map && val['timestamp'] != null
+                    ? val['timestamp'].toString().substring(11, 19)
+                    : '',
+                style: const TextStyle(fontSize: 12)),
           ),
         );
       },
@@ -272,21 +308,30 @@ class _OnlyCanTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!canStatus.supportsCan) {
-      return const Center(child: Text('Módulo CAN não suportado por este dispositivo.', style: TextStyle(color: TrackerColors.textSecondary)));
+      return const Center(
+          child: Text('Módulo CAN não suportado por este dispositivo.',
+              style: TextStyle(color: TrackerColors.textSecondary)));
     }
 
-    final canMeasurements = session.measurements.where((m) => m.category.toLowerCase().contains('can') || m.key.toLowerCase().contains('can') || m.key.toLowerCase().contains('rpm') || m.key.toLowerCase().contains('speed')).toList();
+    final canMeasurements = session.measurements
+        .where((m) =>
+            m.category.toLowerCase().contains('can') ||
+            m.key.toLowerCase().contains('can') ||
+            m.key.toLowerCase().contains('rpm') ||
+            m.key.toLowerCase().contains('speed'))
+        .toList();
 
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          color: canStatus.statusColor.withOpacity(0.1),
+          color: canStatus.statusColor.withValues(alpha: 0.1),
           child: Row(
             children: [
               Icon(Icons.circle, color: canStatus.statusColor, size: 16),
               const SizedBox(width: 8),
-              Text(canStatus.statusDescription, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(canStatus.statusDescription,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -296,9 +341,12 @@ class _OnlyCanTab extends StatelessWidget {
             itemBuilder: (context, index) {
               final m = canMeasurements[index];
               return ListTile(
-                leading: const Icon(Icons.directions_car, color: TrackerColors.technicalGreen),
+                leading: const Icon(Icons.directions_car,
+                    color: TrackerColors.technicalGreen),
                 title: Text(m.name),
-                trailing: Text('${m.value} ${m.unit ?? ''}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                trailing: Text('${m.value} ${m.unit ?? ''}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
               );
             },
           ),
@@ -315,7 +363,9 @@ class _UnknownIoTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unknown = session.measurements.where((m) => m.key.startsWith('io_') || m.category == 'io').toList();
+    final unknown = session.measurements
+        .where((m) => m.key.startsWith('io_') || m.category == 'io')
+        .toList();
 
     return ListView.builder(
       itemCount: unknown.length,
@@ -323,7 +373,8 @@ class _UnknownIoTab extends StatelessWidget {
         final m = unknown[index];
         final rawVal = m.value;
         final dec = rawVal is num ? rawVal : 0;
-        final hex = dec is int ? '0x${dec.toRadixString(16).toUpperCase()} : null';
+        final hex =
+            dec is int ? '0x${dec.toRadixString(16).toUpperCase()}' : null;
         final bin = dec is int ? dec.toRadixString(2) : null;
 
         return ExpansionTile(
@@ -337,7 +388,8 @@ class _UnknownIoTab extends StatelessWidget {
                 children: [
                   Text('Hexadecimal: $hex'),
                   Text('Binário: $bin'),
-                  Text('Quantidade de mudanças: ${m.metadata?['changeCount'] ?? 1}'),
+                  Text(
+                      'Quantidade de mudanças: ${m.metadata?['changeCount'] ?? 1}'),
                 ],
               ),
             ),
@@ -358,12 +410,14 @@ class _MeasurementsDoneTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('Resumo de Medições Concluídas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Resumo de Medições Concluídas',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         Text('Total de medições registradas: ${session.measurements.length}'),
         Text('Total de chunks brutos salvos: ${session.rawData.length}'),
         Text('Respostas de comandos: ${session.responses.length}'),
-        Text('Snapshots de configuração: ${session.configurationSnapshots.length}'),
+        Text(
+            'Snapshots de configuração: ${session.configurationSnapshots.length}'),
       ],
     );
   }

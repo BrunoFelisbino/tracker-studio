@@ -28,7 +28,6 @@ class ServiceMapPreview extends StatefulWidget {
 class _ServiceMapPreviewState extends State<ServiceMapPreview> {
   final ErbsRepository _erbsRepo = ErbsRepository();
   List<ErbStation> _erbs = [];
-  bool _loadingErbs = false;
 
   @override
   void initState() {
@@ -55,8 +54,6 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
     final points = [if (service != null) service, if (tracker != null) tracker];
     if (points.isEmpty) return;
 
-    setState(() => _loadingErbs = true);
-
     final center = points.length == 1
         ? points.first
         : LatLng(
@@ -76,7 +73,6 @@ class _ServiceMapPreviewState extends State<ServiceMapPreview> {
     if (mounted) {
       setState(() {
         _erbs = uniqueErbs.values.toList();
-        _loadingErbs = false;
       });
     }
   }

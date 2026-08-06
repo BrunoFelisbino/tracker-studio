@@ -4,17 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tracker_colors.dart';
 import '../../../../core/design/tracker_radius.dart';
-import '../../../../core/design/tracker_shadows.dart';
 import '../../../../core/design/tracker_spacing.dart';
 import '../../../../core/design/tracker_text_styles.dart';
 import '../../../../core/widgets/tracker_card.dart';
 import '../../../../core/widgets/tracker_scaffold.dart';
 import '../../../../core/widgets/tracker_section_header.dart';
-import '../../../sessions/presentation/tracker_studio/tracker_studio_controller.dart';
+import '../../../equipment_lab/core/equipment_lab_types.dart';
+import '../../../map/presentation/widgets/mini_map_widget.dart';
+import '../../../devices/presentation/widgets/response_viewer_card.dart';
 import '../../../sessions/presentation/tracker_studio/suntech_command_family.dart';
+import '../../../sessions/presentation/tracker_studio/tracker_studio_controller.dart';
 import 'modals/dashboard_modals.dart';
 import '../widgets/telemetry_matrix_card.dart';
-import '../../../sessions/presentation/tracker_studio/report_generator.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -25,6 +26,45 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final Set<String> _executedCommands = {};
+
+  Manufacturer _getManufacturer(String manufacturerName) {
+    final lower = manufacturerName.toLowerCase();
+    if (lower.contains('teltonika')) return Manufacturer.teltonika;
+    if (lower.contains('suntech')) return Manufacturer.suntech;
+    return Manufacturer.unknown;
+  }
+
+  Set<String> _getDefaultMonitoredKeys(Manufacturer manufacturer) {
+    switch (manufacturer) {
+      case Manufacturer.teltonika:
+        return {
+          'ignition',
+          'speedKph',
+          'teltonika.gps.latitude',
+          'teltonika.gps.longitude',
+          'externalVoltage',
+          'networkStatus',
+        };
+      case Manufacturer.suntech:
+        return {
+          'ignition',
+          'speedKph',
+          'suntech.gps.latitude',
+          'suntech.gps.longitude',
+          'externalVoltage',
+          'networkStatus',
+        };
+      default:
+        return {
+          'ignition',
+          'speedKph',
+          'latitude',
+          'longitude',
+          'externalVoltage',
+          'networkStatus',
+        };
+    }
+  }
 
   String _output1Code(String mask, String model) {
     if (mask == '-' || mask.isEmpty) return '--';
@@ -94,6 +134,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final session = ref.watch(trackerSessionControllerProvider);
     final connected = session.connection.usbConnected;
+    final manufacturer = session.device.manufacturerName;
     final esn = session.device.esn;
     final model = session.device.model;
     final satCount = session.diagnostics
@@ -167,7 +208,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildConnectionBanner(connected, model, esn, session),
+            _buildConnectionBanner(connected, manufacturer, model, esn, session),
             const SizedBox(height: TrackerSpacing.lg),
             _buildTelemetrySection(
               satCount: satCount,
@@ -194,10 +235,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               manualCommand: manualCommand,
             ),
             const SizedBox(height: TrackerSpacing.xl),
-            // DeviceControlPanel removed
-            // const SizedBox(height: TrackerSpacing.xl),
+            ResponseViewerCard(
+              monitoredKeys: _getDefaultMonitoredKeys(_getManufacturer(manufacturer)),
+              onMonitoredChanged: (_) {},
+            ),
             const SizedBox(height: TrackerSpacing.xl),
-            _buildToolsSection(context),
+            _buildMiniMap(context),
             const SizedBox(height: TrackerSpacing.xl),
           ],
         ),
@@ -207,15 +250,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildConnectionBanner(
     bool connected,
+    String manufacturer,
     String model,
     String esn,
     dynamic session,
   ) {
+    final identity = [
+      if (manufacturer.isNotEmpty && manufacturer != '-') manufacturer,
+      if (model.isNotEmpty && model != '-') model,
+      if (esn.isNotEmpty && esn != '-') esn,
+    ].join(' · ');
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () =>
-            Future.microtask(() => showIdentityModal(context, session)),
+        onTap: () => showIdentityModal(context, session),
         borderRadius: TrackerRadius.large,
         child: Container(
           padding: const EdgeInsets.all(TrackerSpacing.md),
@@ -255,7 +303,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Text(
                       connected
-                          ? '$model · $esn'
+                          ? (identity.isEmpty ? 'Dispositivo conectado' : identity)
                           : 'Nenhum dispositivo conectado',
                       style: TrackerTextStyles.cardTitle.copyWith(fontSize: 14),
                     ),
@@ -303,6 +351,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }) {
     final isLockActive =
         output1State.toLowerCase().contains('ativ') || output1Code == '01';
+    final isTeltonika =
+        session.device.manufacturerName.toLowerCase().contains('teltonika');
     return TelemetryMatrixCard(
       satCount: satCount,
       gpsFix: gpsFix,
@@ -317,20 +367,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       connected: connected,
       session: session,
       onToggleLock: () {
+        final notifier =
+            ref.read(trackerSessionControllerProvider.notifier);
         if (isLockActive) {
           _runBlockCommand(
             label: 'Desativar Bloqueio',
-            action:
-                ref.read(trackerSessionControllerProvider.notifier).disable1,
-            verify:
-                ref.read(trackerSessionControllerProvider.notifier).readStatus,
+            action: isTeltonika ? notifier.teltonikaUnlock : notifier.disable1,
+            verify: isTeltonika ? () async {} : notifier.readStatus,
           );
         } else {
           _runBlockCommand(
             label: 'Ativar Bloqueio',
-            action: ref.read(trackerSessionControllerProvider.notifier).enable1,
-            verify:
-                ref.read(trackerSessionControllerProvider.notifier).readStatus,
+            action: isTeltonika ? notifier.teltonikaLock : notifier.enable1,
+            verify: isTeltonika ? () async {} : notifier.readStatus,
           );
         }
       },
@@ -350,72 +399,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Wrap(
           spacing: TrackerSpacing.sm,
           runSpacing: TrackerSpacing.sm,
-          children: [
-            _CommandChip(
-              label: 'Ativar Saída 1',
-              executed: _executedCommands.contains('Ativar Bloqueio'),
-              color: TrackerColors.technicalGreen,
-              icon: Icons.lock_open_rounded,
-              onPressed: connected
-                  ? () => _runBlockCommand(
-                        label: 'Ativar Bloqueio',
-                        action: ref
-                            .read(trackerSessionControllerProvider.notifier)
-                            .enable1,
-                        verify: ref
-                            .read(trackerSessionControllerProvider.notifier)
-                            .readStatus,
-                      )
-                  : null,
-            ),
-            _CommandChip(
-              label: 'Desativar Saída 1',
-              executed: _executedCommands.contains('Desativar Bloqueio'),
-              color: TrackerColors.failureRed,
-              icon: Icons.lock_rounded,
-              onPressed: connected
-                  ? () => _runBlockCommand(
-                        label: 'Desativar Bloqueio',
-                        action: ref
-                            .read(trackerSessionControllerProvider.notifier)
-                            .disable1,
-                        verify: ref
-                            .read(trackerSessionControllerProvider.notifier)
-                            .readStatus,
-                      )
-                  : null,
-            ),
-            _CommandChip(
-              label: 'Ler Status',
-              executed: _executedCommands.contains('Ler Status'),
-              color: TrackerColors.communicationBlue,
-              icon: Icons.info_outline_rounded,
-              onPressed: connected
-                  ? () => _runQuickCommand(
-                        'Ler Status',
-                        session.selectedSuntechFamily ==
-                                SuntechCommandFamily.legacySt300St310
-                            ? 'AT^ST300CMD;;02;StatusReq'
-                            : 'AT^CMD;$esn;03;01',
-                      )
-                  : null,
-            ),
-            _CommandChip(
-              label: 'Ler Preset',
-              executed: _executedCommands.contains('Ler Preset'),
-              color: TrackerColors.communicationBlue,
-              icon: Icons.settings_rounded,
-              onPressed: connected
-                  ? () => _runQuickCommand(
-                        'Ler Preset',
-                        session.selectedSuntechFamily ==
-                                SuntechCommandFamily.legacySt300St310
-                            ? 'AT^ST300CMD;;02;Preset'
-                            : 'AT^CMD;$esn;03;05',
-                      )
-                  : null,
-            ),
-          ],
+          children: _quickCommandChips(connected, esn, session),
         ),
         const SizedBox(height: TrackerSpacing.sm),
         TrackerCard(
@@ -431,18 +415,122 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 8),
               const _CommandReference(
                 command: 'CMD;XXXX;04;01',
-                description: 'Ativa Saída 1 (Bloqueio)',
+                description: 'Ativa Saída 1 (Bloqueio - Suntech)',
               ),
               const SizedBox(height: 4),
               const _CommandReference(
                 command: 'CMD;XXXX;04;02',
-                description: 'Desativa Saída 1 (Desbloqueio)',
+                description: 'Desativa Saída 1 (Desbloqueio - Suntech)',
+              ),
+              const SizedBox(height: 4),
+              const _CommandReference(
+                command: ':cfg_setparam:1001:1',
+                description: 'Ativa DO1 (Bloqueio - Teltonika)',
+              ),
+              const SizedBox(height: 4),
+              const _CommandReference(
+                command: ':cfg_setparam:1001:0',
+                description: 'Desativa DO1 (Desbloqueio - Teltonika)',
               ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  List<Widget> _quickCommandChips(bool connected, String esn, dynamic session) {
+    final notifier = ref.read(trackerSessionControllerProvider.notifier);
+    final isTeltonika =
+        session.device.manufacturerName.toLowerCase().contains('teltonika');
+    if (isTeltonika) {
+      return [
+        _CommandChip(
+          label: 'Travar (Teltonika)',
+          executed: _executedCommands.contains('Travar Teltonika'),
+          color: TrackerColors.technicalGreen,
+          icon: Icons.lock_open_rounded,
+          onPressed: connected
+              ? () => _runBlockCommand(
+                    label: 'Travar Teltonika',
+                    action: notifier.teltonikaLock,
+                    verify: () async {},
+                  )
+              : null,
+        ),
+        _CommandChip(
+          label: 'Destravar (Teltonika)',
+          executed: _executedCommands.contains('Destravar Teltonika'),
+          color: TrackerColors.failureRed,
+          icon: Icons.lock_rounded,
+          onPressed: connected
+              ? () => _runBlockCommand(
+                    label: 'Destravar Teltonika',
+                    action: notifier.teltonikaUnlock,
+                    verify: () async {},
+                  )
+              : null,
+        ),
+      ];
+    }
+    return [
+      _CommandChip(
+        label: 'Ativar Saída 1',
+        executed: _executedCommands.contains('Ativar Bloqueio'),
+        color: TrackerColors.technicalGreen,
+        icon: Icons.lock_open_rounded,
+        onPressed: connected
+            ? () => _runBlockCommand(
+                  label: 'Ativar Bloqueio',
+                  action: notifier.enable1,
+                  verify: notifier.readStatus,
+                )
+            : null,
+      ),
+      _CommandChip(
+        label: 'Desativar Saída 1',
+        executed: _executedCommands.contains('Desativar Bloqueio'),
+        color: TrackerColors.failureRed,
+        icon: Icons.lock_rounded,
+        onPressed: connected
+            ? () => _runBlockCommand(
+                  label: 'Desativar Bloqueio',
+                  action: notifier.disable1,
+                  verify: notifier.readStatus,
+                )
+            : null,
+      ),
+      _CommandChip(
+        label: 'Ler Status',
+        executed: _executedCommands.contains('Ler Status'),
+        color: TrackerColors.communicationBlue,
+        icon: Icons.info_outline_rounded,
+        onPressed: connected
+            ? () => _runQuickCommand(
+                  'Ler Status',
+                  session.selectedSuntechFamily ==
+                          SuntechCommandFamily.legacySt300St310
+                      ? 'AT^ST300CMD;;02;StatusReq'
+                      : 'AT^CMD;$esn;03;01',
+                )
+            : null,
+      ),
+      _CommandChip(
+        label: 'Ler Preset',
+        executed: _executedCommands.contains('Ler Preset'),
+        color: TrackerColors.communicationBlue,
+        icon: Icons.settings_rounded,
+        onPressed: connected
+            ? () => _runQuickCommand(
+                  'Ler Preset',
+                  session.selectedSuntechFamily ==
+                          SuntechCommandFamily.legacySt300St310
+                      ? 'AT^ST300CMD;;02;Preset'
+                      : 'AT^CMD;$esn;03;05',
+                )
+            : null,
+      ),
+    ];
   }
 
   Widget _buildResponseSection({
@@ -530,136 +618,51 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildToolsSection(BuildContext context) {
+  Widget _buildMiniMap(BuildContext context) {
+    final session = ref.watch(trackerSessionControllerProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TrackerSectionHeader(
-          title: 'Ferramentas',
-          eyebrow: 'Acesso rápido aos módulos do Studio',
-          icon: Icons.grid_view_rounded,
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _ToolButton(
-                label: 'Terminal',
-                icon: Icons.code_rounded,
-                color: TrackerColors.communicationBlue,
-                onPressed: () => context.go('/lab'),
-              ),
-            ),
-            const SizedBox(width: TrackerSpacing.sm),
-            Expanded(
-              child: _ToolButton(
-                label: 'Catálogo',
-                icon: Icons.list_alt_rounded,
-                color: TrackerColors.technicalGreen,
-                onPressed: () => context.go('/commands'),
-              ),
-            ),
-            const SizedBox(width: TrackerSpacing.sm),
-            Expanded(
-              child: _ToolButton(
-                label: 'SMS',
-                icon: Icons.sms_rounded,
-                color: TrackerColors.attentionAmber,
-                onPressed: () => context.go('/sms'),
-              ),
-            ),
-            const SizedBox(width: TrackerSpacing.sm),
-            Expanded(
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final session = ref.watch(trackerSessionControllerProvider);
-                  return _ToolButton(
-                    label: 'Relatório',
-                    icon: Icons.picture_as_pdf_rounded,
-                    color: TrackerColors.primary,
-                    onPressed: () =>
-                        ReportGenerator.generateAndPrintSessionReport(session),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-  }) : onTap = null;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: TrackerColors.surface,
-      borderRadius: TrackerRadius.large,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: TrackerRadius.large,
-        child: Container(
-          padding: TrackerSpacing.cardPadding,
-          decoration: BoxDecoration(
-            borderRadius: TrackerRadius.large,
-            border: Border.all(color: TrackerColors.lineSubtle),
-            boxShadow: TrackerShadows.soft,
+        TrackerSectionHeader(
+          title: 'Mapa',
+          icon: Icons.map_outlined,
+          eyebrow: 'Localização do serviço e rastreador',
+          trailing: IconButton(
+            icon: const Icon(Icons.open_in_full, size: 16),
+            onPressed: () => context.go('/map'),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        const SizedBox(height: TrackerSpacing.sm),
+        SizedBox(
+          height: 180,
+          child: MiniMapWidget(
+            serviceLatitude: session.serviceLocation.latitude,
+            serviceLongitude: session.serviceLocation.longitude,
+            trackerLatitude: session.localitel.latitude,
+            trackerLongitude: session.localitel.longitude,
+            toleranceMeters: session.localitel.serviceToleranceMeters,
+          ),
+        ),
+        if (session.localitel.hasValidCoordinates) ...[
+          const SizedBox(height: TrackerSpacing.sm),
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: TrackerRadius.small,
-                    ),
-                    child: Icon(icon, size: 16, color: color),
-                  ),
-                  const SizedBox(width: TrackerSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: TrackerTextStyles.label,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: TrackerSpacing.sm),
+              const Icon(Icons.gps_fixed_rounded,
+                  size: 14, color: TrackerColors.communicationBlue),
+              const SizedBox(width: 6),
               Text(
-                value,
-                style: TrackerTextStyles.telemetryLarge.copyWith(fontSize: 20),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TrackerTextStyles.body.copyWith(fontSize: 12),
-                overflow: TextOverflow.ellipsis,
+                'Lat ${session.localitel.latitude.toStringAsFixed(6)} · '
+                'Lon ${session.localitel.longitude.toStringAsFixed(6)}',
+                style: TrackerTextStyles.body.copyWith(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: TrackerColors.textSecondary,
+                ),
               ),
             ],
           ),
-        ),
-      ),
+        ],
+      ],
     );
   }
 }
@@ -755,60 +758,6 @@ class _CommandReference extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ToolButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _ToolButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: TrackerColors.surface,
-      borderRadius: TrackerRadius.large,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: TrackerRadius.large,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: TrackerRadius.large,
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-            boxShadow: TrackerShadows.soft,
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: TrackerRadius.pill,
-                ),
-                child: Icon(icon, size: 22, color: color),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TrackerTextStyles.cardTitle.copyWith(
-                  fontSize: 13,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -589,10 +589,6 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final agendaCount =
-        session.todayWorkOrders.where(isActionableWorkOrder).length;
-    final hasOverdue = session.todayWorkOrders
-        .any((order) => isOverdueWorkOrder(order, DateTime.now()));
     final navigation = SegmentedButton<StudioMode>(
       segments: const [
         ButtonSegment(
@@ -705,116 +701,6 @@ class _TopBar extends StatelessWidget {
       ),
     );
   }
-}
-
-class _AgendaView extends StatelessWidget {
-  final TrackerSessionState session;
-  final ValueChanged<WorkOrder> onOpenWorkOrder;
-  final ValueChanged<WorkOrder> onStartWorkOrder;
-  final ValueChanged<WorkOrder> onRoute;
-  final ValueChanged<WorkOrder> onWhatsApp;
-
-  const _AgendaView({
-    required this.session,
-    required this.onOpenWorkOrder,
-    required this.onStartWorkOrder,
-    required this.onRoute,
-    required this.onWhatsApp,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final today = session.todayWorkOrders.where(isActionableWorkOrder).toList();
-    final now = DateTime.now();
-    final weekEnd = now.add(Duration(days: 7 - now.weekday));
-    final weekCount =
-        today.where((order) => !order.date.isAfter(weekEnd)).length;
-    final monthCount = today
-        .where((order) =>
-            order.date.year == now.year && order.date.month == now.month)
-        .length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const _PageIntro(
-          eyebrow: 'AGENDA TÉCNICA',
-          title: 'Serviços programados',
-          description:
-              'Acompanhe horários, prioridades, serviços feitos e envios pendentes.',
-        ),
-        const SizedBox(height: 18),
-        _ResponsiveCards(
-          preferredWidth: 250,
-          children: [
-            _AgendaSummaryCard(
-                title: 'Hoje', value: '${today.length}', icon: Icons.today),
-            _AgendaSummaryCard(
-                title: 'Semana',
-                value: '$weekCount',
-                icon: Icons.date_range_outlined),
-            _AgendaSummaryCard(
-                title: 'Mês',
-                value: '$monthCount',
-                icon: Icons.calendar_month_outlined),
-            _AgendaSummaryCard(
-                title: 'Serviços feitos',
-                value: '${session.recentCompletedServices.length}',
-                icon: Icons.task_alt),
-            _AgendaSummaryCard(
-                title: 'Pendentes de envio',
-                value: '${session.pendingSyncServices.length}',
-                icon: Icons.cloud_upload_outlined),
-          ],
-        ),
-        const SizedBox(height: 18),
-        WorkOrderAgendaSection(
-          workOrders: today,
-          onOpen: onOpenWorkOrder,
-          onStart: onStartWorkOrder,
-          onRoute: onRoute,
-          onWhatsApp: onWhatsApp,
-        ),
-        const SizedBox(height: 18),
-        CompletedServicesCard(
-          records: session.recentCompletedServices,
-          pendingCount: session.pendingSyncServices.length,
-        ),
-      ],
-    );
-  }
-}
-
-class _AgendaSummaryCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-
-  const _AgendaSummaryCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) => _Panel(
-        child: Row(
-          children: [
-            Icon(icon, color: _Studio.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(color: _Studio.muted)),
-                  Text(value,
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.w900)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
 }
 
 class _OperationalView extends StatelessWidget {

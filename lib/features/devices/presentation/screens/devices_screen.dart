@@ -103,7 +103,7 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
                               port.path,
                             );
                             if (!mounted) return;
-                            goRouter.push('/device/${port.path}/basic');
+                            goRouter.go('/dashboard');
                           },
                         );
                       },

@@ -759,18 +759,42 @@ class TeltonikaDriver {
         risk: RiskLevel.configuration,
         requiresConfirmation: true,
       ),
-      CommandDefinition(
-        id: 'teltonika.cfg_disconnect',
-        manufacturer: manufacturer,
-        name: 'Disconnect Session',
-        description: 'Gracefully close current configuration session',
-        transport: [CommandTransport.usb, CommandTransport.terminal],
-        commandTemplate: ':cfg_disconnect',
-        timeout: const Duration(seconds: 2),
-        risk: RiskLevel.safe,
-        requiresConfirmation: false,
-      ),
-    ];
+       CommandDefinition(
+         id: 'teltonika.cfg_disconnect',
+         manufacturer: manufacturer,
+         name: 'Disconnect Session',
+         description: 'Gracefully close current configuration session',
+         transport: [CommandTransport.usb, CommandTransport.terminal],
+         commandTemplate: ':cfg_disconnect',
+         timeout: const Duration(seconds: 2),
+         risk: RiskLevel.safe,
+         requiresConfirmation: false,
+       ),
+       CommandDefinition(
+         id: 'teltonika.output1_lock',
+         manufacturer: manufacturer,
+         name: 'Bloquear (DO1 ON)',
+         description:
+             'Ativa a saída digital 1 (bloqueio/ímã de ar). Envia 1 para DO1.',
+         transport: [CommandTransport.usb, CommandTransport.terminal],
+         commandTemplate: ':cfg_setparam:{outputId}:1',
+         timeout: const Duration(seconds: 3),
+         risk: RiskLevel.configuration,
+         requiresConfirmation: true,
+       ),
+       CommandDefinition(
+         id: 'teltonika.output1_unlock',
+         manufacturer: manufacturer,
+         name: 'Desbloquear (DO1 OFF)',
+         description:
+             'Desativa a saída digital 1 (desbloqueio/ímã de ar). Envia 0 para DO1.',
+         transport: [CommandTransport.usb, CommandTransport.terminal],
+         commandTemplate: ':cfg_setparam:{outputId}:0',
+         timeout: const Duration(seconds: 3),
+         risk: RiskLevel.configuration,
+         requiresConfirmation: true,
+       ),
+     ];
     registry.commands.registerAll(commands);
 
     // ──────────────────────────────────────────────────────────────────────────

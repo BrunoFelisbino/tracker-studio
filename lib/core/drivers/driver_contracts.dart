@@ -1,11 +1,16 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 
-import '../uce/uce_interfaces.dart' show Manufacturer, CommandTransport, RiskLevel, ParameterCategory, ParameterValueType;
+import '../uce/uce_interfaces.dart'
+    show Manufacturer, CommandTransport, RiskLevel;
 import '../sessions/device_session.dart';
 
-export '../uce/uce_interfaces.dart' show Manufacturer, CommandTransport, RiskLevel, ParameterCategory, ParameterValueType;
+export '../uce/uce_interfaces.dart'
+    show
+        Manufacturer,
+        CommandTransport,
+        RiskLevel,
+        ParameterCategory,
+        ParameterValueType;
 
 /// Tipo de valor de um campo.
 enum FieldValueType {
@@ -123,7 +128,8 @@ class DiagnosticFinding extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, code, title, message, severity, relatedCommand, metadata];
+  List<Object?> get props =>
+      [id, code, title, message, severity, relatedCommand, metadata];
 }
 
 /// Interface contrat para o driver de fabricante.

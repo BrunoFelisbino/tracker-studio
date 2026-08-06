@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tracker_colors.dart';
 import '../../../../core/design/tracker_spacing.dart';
@@ -8,6 +9,8 @@ import '../../../../core/widgets/tracker_empty_state.dart';
 import '../../../../core/widgets/tracker_metric_card.dart';
 import '../../../../core/widgets/tracker_scaffold.dart';
 import '../../../../core/widgets/tracker_section_header.dart';
+import '../../../devices/presentation/widgets/response_viewer_card.dart';
+import '../../../map/presentation/widgets/mini_map_widget.dart';
 import '../../../sessions/presentation/tracker_studio/quick_test_wizard.dart';
 import '../../../sessions/presentation/tracker_studio/tracker_session_state.dart';
 import '../../../sessions/presentation/tracker_studio/tracker_studio_controller.dart';
@@ -103,12 +106,45 @@ class BenchScreen extends ConsumerWidget {
 
           const SizedBox(height: TrackerSpacing.lg),
 
-          // ── EVIDÊNCIAS & RESULTADOS ──────────────────────────────────
-          const TrackerSectionHeader(
-            title: 'Resultado do Teste',
-            icon: Icons.assessment,
-            eyebrow: 'Resumo da última execução',
+          // ── MINI MAPA ──────────────────────────────────────────────────
+          TrackerSectionHeader(
+            title: 'Mapa',
+            icon: Icons.map_outlined,
+            eyebrow: 'Localização do serviço e rastreador',
+            trailing: IconButton(
+              icon: const Icon(Icons.open_in_full, size: 16),
+              onPressed: () => context.push('/map'),
+            ),
           ),
+          const SizedBox(height: TrackerSpacing.sm),
+          SizedBox(
+            height: 180,
+            child: MiniMapWidget(
+              serviceLatitude: session.serviceLocation.latitude,
+              serviceLongitude: session.serviceLocation.longitude,
+              trackerLatitude: session.localitel.latitude,
+              trackerLongitude: session.localitel.longitude,
+              toleranceMeters: session.localitel.serviceToleranceMeters,
+            ),
+          ),
+
+          const SizedBox(height: TrackerSpacing.lg),
+
+          // ── VISOR DE RETORNO ──────────────────────────────────────────
+          const TrackerSectionHeader(
+            title: 'Visor de Retorno',
+            icon: Icons.visibility,
+            eyebrow: 'Monitore IOs em tempo real',
+          ),
+          const SizedBox(height: TrackerSpacing.sm),
+          ResponseViewerCard(
+            monitoredKeys: const <String>{},
+            onMonitoredChanged: (_) {},
+          ),
+
+          const SizedBox(height: TrackerSpacing.lg),
+
+          // ── EVIDÊNCIAS & RESULTADOS ──────────────────────────────────
           const SizedBox(height: TrackerSpacing.sm),
           Row(
             children: [

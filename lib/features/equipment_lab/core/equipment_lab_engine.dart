@@ -132,9 +132,11 @@ class EquipmentLabEngine {
     for (final t in session.tests) {
       if (t.status == TestStatus.passed) {
         passed++;
-      } else if (t.status == TestStatus.failed)
+      } else if (t.status == TestStatus.failed) {
         failed++;
-      else if (t.status == TestStatus.passedWithWarning) warnings++;
+      } else if (t.status == TestStatus.passedWithWarning) {
+        warnings++;
+      }
     }
     buffer.writeln('  ✓ Aprovados: $passed');
     buffer.writeln('  ⚠ Atenção: $warnings');

@@ -1,10 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
-import '../../uce/uce_interfaces.dart';
-import '../teltonika_fields.dart';
+import '../../../../core/uce/uce_interfaces.dart';
 
 /// Utility functions for USB Teltonika capture processing.
 class TeltonikaCaptureUtils {
@@ -558,12 +556,6 @@ class TeltonikaCaptureUtils {
       case 242:
       case 243:
         return AvlCategory.movement;
-      case 1:
-      case 4:
-      case 5:
-      case 10:
-      case 11:
-        return AvlCategory.output;
       default:
         return AvlCategory.unknown;
     }

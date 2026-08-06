@@ -5,13 +5,13 @@
 // Copyright (c) 2026 Bruno Felisbino - LocaliTel
 // Licença: Apache 2.0
 
-import '../../uce/uce_interfaces.dart';
+import '../../../../core/uce/uce_interfaces.dart';
 
 class TeltonikaParameterCatalog {
   /// Retorna o catálogo completo de definições de parâmetros para Teltonika.
   static List<TeltonikaParameterMapping> get all => [
         // --- Parâmetros de rede ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 2001,
@@ -19,7 +19,7 @@ class TeltonikaParameterCatalog {
           group: 'GPRS',
           name: 'APN',
           description: 'Access Point Name do operador celular',
-          type: ParameterType.apn,
+          type: ParameterValueType.apn,
           defaultValue: 'internet',
           unit: null,
           readable: true,
@@ -29,7 +29,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 2002,
@@ -37,7 +37,7 @@ class TeltonikaParameterCatalog {
           group: 'GPRS',
           name: 'Username',
           description: 'Nome de usuário para autenticação APN',
-          type: ParameterType.string,
+          type: ParameterValueType.string,
           defaultValue: '',
           unit: null,
           readable: true,
@@ -47,7 +47,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 2003,
@@ -55,7 +55,7 @@ class TeltonikaParameterCatalog {
           group: 'GPRS',
           name: 'Password',
           description: 'Senha para autenticação APN',
-          type: ParameterType.string,
+          type: ParameterValueType.string,
           defaultValue: '',
           unit: null,
           readable: true,
@@ -65,7 +65,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2004,
@@ -73,7 +73,7 @@ class TeltonikaParameterCatalog {
           group: 'Server',
           name: 'Server Address',
           description: 'Endereço IP ou domínio do servidor de destino',
-          type: ParameterType.ipAddress,
+          type: ParameterValueType.ipAddress,
           defaultValue: '',
           unit: null,
           readable: true,
@@ -83,7 +83,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2005,
@@ -91,7 +91,7 @@ class TeltonikaParameterCatalog {
           group: 'Server',
           name: 'Server Port',
           description: 'Porta de destino do servidor',
-          type: ParameterType.port,
+          type: ParameterValueType.port,
           defaultValue: 5026,
           unit: null,
           readable: true,
@@ -102,7 +102,7 @@ class TeltonikaParameterCatalog {
           validationStatus: 'official',
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 2006,
@@ -110,7 +110,7 @@ class TeltonikaParameterCatalog {
           group: 'Server',
           name: 'Transport Protocol',
           description: '0 = TCP, 1 = UDP, 3 = MQTT',
-          type: ParameterType.enumValue,
+          type: ParameterValueType.enumValue,
           defaultValue: '0',
           unit: null,
           readable: true,
@@ -127,7 +127,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros de backup/servidor ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2007,
@@ -135,7 +135,7 @@ class TeltonikaParameterCatalog {
           group: 'Server Backup',
           name: 'Backup Server Domain',
           description: 'Endereço IP ou domínio do servidor backup',
-          type: ParameterType.string,
+          type: ParameterValueType.string,
           defaultValue: '',
           unit: null,
           readable: true,
@@ -145,7 +145,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2008,
@@ -153,7 +153,7 @@ class TeltonikaParameterCatalog {
           group: 'Server Backup',
           name: 'Backup Server Port',
           description: 'Porta do servidor backup',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 0,
           unit: null,
           readable: true,
@@ -163,7 +163,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2009,
@@ -171,7 +171,7 @@ class TeltonikaParameterCatalog {
           group: 'Server Backup',
           name: 'Backup Server Protocol',
           description: '0 = TCP, 1 = UDP, 3 = MQTT',
-          type: ParameterType.enumValue,
+          type: ParameterValueType.enumValue,
           defaultValue: '0',
           unit: null,
           readable: true,
@@ -186,7 +186,7 @@ class TeltonikaParameterCatalog {
             '3': 'MQTT',
           },
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902'],
           parameterId: 2010,
@@ -194,7 +194,7 @@ class TeltonikaParameterCatalog {
           group: 'Server Backup',
           name: 'Backup Server Mode',
           description: '0 = Disable, 1 = Backup, 2 = Duplicate, 3 = EGTS',
-          type: ParameterType.enumValue,
+          type: ParameterValueType.enumValue,
           defaultValue: '0',
           unit: null,
           readable: true,
@@ -212,7 +212,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros de aquisição de dados em movimento ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10050,
@@ -221,7 +221,7 @@ class TeltonikaParameterCatalog {
           name: 'Min Period',
           description:
               'Período mínimo de aquisição enquanto movendo (segundos)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 300,
           unit: 's',
           readable: true,
@@ -231,7 +231,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10051,
@@ -240,7 +240,7 @@ class TeltonikaParameterCatalog {
           name: 'Min Distance',
           description:
               'Distância mínima de aquisição enquanto movendo (metros)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 100,
           unit: 'm',
           readable: true,
@@ -250,7 +250,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10052,
@@ -259,7 +259,7 @@ class TeltonikaParameterCatalog {
           name: 'Min Angle',
           description:
               'Mudança mínima de curso para registrar enquanto movendo (graus)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 10,
           unit: '°',
           readable: true,
@@ -269,7 +269,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10053,
@@ -278,7 +278,7 @@ class TeltonikaParameterCatalog {
           name: 'Min Speed Delta',
           description:
               'Mudança mínima de velocidade para registrar enquanto movendo (km/h)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 10,
           unit: 'km/h',
           readable: true,
@@ -288,7 +288,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10054,
@@ -297,7 +297,7 @@ class TeltonikaParameterCatalog {
           name: 'Min Saved Records',
           description:
               'Mínimo de registros para salvar antes de enviar (enquanto movendo)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 1,
           unit: null,
           readable: true,
@@ -307,7 +307,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 10055,
@@ -315,7 +315,7 @@ class TeltonikaParameterCatalog {
           group: 'Data Acquisition',
           name: 'Send Period',
           description: 'Período máximo de envio enquanto movendo (segundos)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 120,
           unit: 's',
           readable: true,
@@ -327,7 +327,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros de sistema ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 901,
@@ -335,7 +335,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'NTP Resync',
           description: 'Período de resync via NTP (horas)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 0,
           unit: 'h',
           readable: true,
@@ -345,7 +345,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 902,
@@ -353,7 +353,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'NTP Server 1',
           description: 'Primary NTP server host',
-          type: ParameterType.string,
+          type: ParameterValueType.string,
           defaultValue: 'pool.ntp.org',
           unit: null,
           readable: true,
@@ -363,7 +363,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 903,
@@ -371,7 +371,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'NTP Server 2',
           description: 'Secondary NTP server host',
-          type: ParameterType.string,
+          type: ParameterValueType.string,
           defaultValue: 'time.nist.gov',
           unit: null,
           readable: true,
@@ -383,7 +383,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros de energia e ignição ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 104,
@@ -391,7 +391,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'High Voltage',
           description: 'Tensão de ignição alta (mV)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 30000,
           unit: 'mV',
           readable: true,
@@ -401,7 +401,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.configuration,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640', 'FM5500', 'FMP100'],
           parameterId: 105,
@@ -409,7 +409,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'Low Voltage',
           description: 'Tensão de ignição baixa (mV)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 13200,
           unit: 'mV',
           readable: true,
@@ -421,7 +421,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros de baixo consumo ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 19500,
@@ -430,7 +430,7 @@ class TeltonikaParameterCatalog {
           name: 'Low Power Mode',
           description:
               '0 = Disabled, 1 = Enabled (requires battery + deep sleep)',
-          type: ParameterType.enumValue,
+          type: ParameterValueType.enumValue,
           defaultValue: '0',
           unit: null,
           readable: true,
@@ -444,7 +444,7 @@ class TeltonikaParameterCatalog {
             '1': 'Enabled',
           },
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 19501,
@@ -452,7 +452,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'Min Period (Low Power)',
           description: 'Wake-up period while in Low Power Mode (seconds)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 3600,
           unit: 's',
           readable: true,
@@ -462,7 +462,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 19502,
@@ -470,7 +470,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'GPS Search Period',
           description: 'Período de busca GPS após wake-up (segundos)',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 60,
           unit: 's',
           readable: true,
@@ -480,7 +480,7 @@ class TeltonikaParameterCatalog {
           riskLevel: RiskLevel.safe,
           source: 'manual',
         ),
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140', 'FMB902', 'FMC640'],
           parameterId: 19504,
@@ -488,7 +488,7 @@ class TeltonikaParameterCatalog {
           group: 'Sistema',
           name: 'GPS Satellites Quantity',
           description: 'Minimum visible satellites to renew GPS data',
-          type: ParameterType.number,
+          type: ParameterValueType.number,
           defaultValue: 0,
           unit: null,
           readable: true,
@@ -500,7 +500,7 @@ class TeltonikaParameterCatalog {
         ),
 
         // --- Parâmetros específicos de firmware ---
-        TeltonikaParameterMapping(
+        const TeltonikaParameterMapping(
           manufacturer: Manufacturer.teltonika,
           model: ['FMB140'],
           parameterId: 2001,
@@ -508,7 +508,7 @@ class TeltonikaParameterCatalog {
           group: 'GPRS',
           name: 'APN',
           description: 'APN para FMB140 (diferente dos outros modelos)',
-          type: ParameterType.apn,
+          type: ParameterValueType.apn,
           defaultValue: 'internet',
           unit: null,
           readable: true,
@@ -562,7 +562,7 @@ class TeltonikaParameterMapping {
   final String group;
   final String name;
   final String description;
-  final ParameterType type;
+  final ParameterValueType type;
   final dynamic defaultValue;
   final String? unit;
   final bool readable;
