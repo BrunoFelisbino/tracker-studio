@@ -18,7 +18,7 @@ void main() {
       pathResolver: () async => inMemoryDatabasePath,
     );
     final controller = TrackerStudioController(
-      parser: const SuntechParser(),
+      parser: SuntechParser(),
       transport: _DeniedTransport(),
       localitel: LocalitelClient(),
       serviceLocation: ServiceLocationProvider(),

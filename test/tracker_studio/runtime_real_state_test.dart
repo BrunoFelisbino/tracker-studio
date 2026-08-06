@@ -64,7 +64,7 @@ Future<TrackerStudioController> _controller(List<SerialPortInfo> ports) async {
     pathResolver: () async => inMemoryDatabasePath,
   );
   return TrackerStudioController(
-    parser: const SuntechParser(),
+    parser: SuntechParser(),
     transport: _FakeTransport(ports),
     localitel: LocalitelClient(),
     serviceLocation: ServiceLocationProvider(),

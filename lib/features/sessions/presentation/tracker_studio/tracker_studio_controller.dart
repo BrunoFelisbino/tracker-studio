@@ -18,6 +18,7 @@ import 'suntech_handshake_engine.dart';
 import 'suntech_legacy_commands.dart';
 import 'suntech_newgen_commands.dart';
 import '../../../../core/drivers/teltonika/teltonika_network_commands.dart';
+import '../../../../core/uce/registry/uce_registry.dart';
 import 'tracker_session_state.dart';
 import 'usb_serial_transport.dart';
 import 'work_order_models.dart';
@@ -32,7 +33,7 @@ final trackerSessionControllerProvider =
   final serviceDatabase = LocalServiceDatabase.createDefault();
   final completedServices = CompletedServiceRepository(serviceDatabase);
   final controller = TrackerStudioController(
-    parser: const SuntechParser(),
+    parser: SuntechParser(),
     transport: transport,
     localitel: localitel,
     serviceLocation: serviceLocation,
@@ -952,6 +953,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
   Future<void> disconnectUsb() async {
     if (_isDisconnecting) return;
     _isDisconnecting = true;
+    _parser.clearTeltonikaBuffer();
     _handshakeEngine.cancel();
     _responseTimer?.cancel();
     _responseTimer = null;
@@ -1162,6 +1164,31 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     await _sendCommand('AT^CMD;${state.device.esn};04;02');
     await Future<void>.delayed(const Duration(milliseconds: 500));
     await readStatus();
+   }
+
+  Future<void> teltonikaLock() async {
+    _requireUsb();
+    final cmd = UceRegistry().commands.getById('teltonika.output1_lock');
+    if (cmd == null) {
+      throw StateError('Comando de lock Teltonika não registrado.');
+    }
+    final wire = cmd.buildCommand({'outputId': '1001'});
+    await _sendCommand(wire);
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (state.selectedSuntechFamily != SuntechCommandFamily.unknown) {
+      // Se for Teltonika conectado via handshake rápido, pula readStatus
+    }
+  }
+
+  Future<void> teltonikaUnlock() async {
+    _requireUsb();
+    final cmd = UceRegistry().commands.getById('teltonika.output1_unlock');
+    if (cmd == null) {
+      throw StateError('Comando de unlock Teltonika não registrado.');
+    }
+    final wire = cmd.buildCommand({'outputId': '1001'});
+    await _sendCommand(wire);
+    await Future<void>.delayed(const Duration(milliseconds: 500));
   }
 
   Future<void> sendManualCommand(String command) async {
@@ -1257,7 +1284,7 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     final ports = await scanPorts();
     final usbModemPorts = ports
         .map((port) => port.path)
-        .where((path) => path.toLowerCase().contains('usbmodem'))
+        .where((path) => path.toLowerCase().contains('usbmodem') || path.toLowerCase().contains('usb'))
         .toList();
     final matrix = generateSerialDiagnosticMatrix(usbModemPorts);
     if (matrix.isEmpty) {
@@ -1484,12 +1511,40 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
     state = next;
   }
 
-  /// Clears the capture buffer, analysis and diff.
+  /// Clears the capture buffer, analysis, diff and any locked IO.
   void clearTeltonikaCapture() {
     state = _copy(
       state,
       logCapture: const LogCaptureState(),
     );
+  }
+
+  /// Locks analysis to a single IO ID. While locked, the live capture view
+  /// shows only that IO — other IOs continue to be read silently.
+  /// Pass `null` to unlock (show all IOs again).
+  void lockTeltonikaIo(int? ioId) {
+    state = _copy(
+      state,
+      logCapture: state.logCapture.copyWith(
+        lockedIoId: ioId,
+        clearLockedIo: ioId == null,
+      ),
+    );
+    if (ioId != null) {
+      state = _appendLog(
+        state,
+        LogEntry(
+          _clock(),
+          'Captura',
+          'IO $ioId travado para análise. Outros IOs continuam sendo lidos silenciosamente.',
+        ),
+      );
+    } else {
+      state = _appendLog(
+        state,
+        LogEntry(_clock(), 'Captura', 'Travamento de IO liberado. Todos os IOs visíveis.'),
+      );
+    }
   }
 
   /// Persists the last stopped capture (lines + analysis) to the local capture
@@ -1976,6 +2031,13 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
           isProbableAsciiResponse(ascii) &&
           _diagnosticResponse?.isCompleted == false) {
         _diagnosticResponse?.complete(ascii);
+      }
+      final manufacturer = state.device.manufacturerName.toLowerCase();
+      if (manufacturer.contains('teltonika') ||
+          ascii.toUpperCase().contains('[REC.GEN]') ||
+          ascii.toUpperCase().contains('IO ID[')) {
+        ingestRawLine(ascii, source: 'PARSER');
+        return;
       }
       state = _appendLog(state, LogEntry(_clock(), 'READ_ASCII', ascii));
       return;

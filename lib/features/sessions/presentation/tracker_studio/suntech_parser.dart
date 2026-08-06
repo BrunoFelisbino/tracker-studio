@@ -150,7 +150,10 @@ class OperationModeSectionParser extends St8SectionParser {
 }
 
 class SuntechParser {
-  const SuntechParser();
+  SuntechParser();
+
+  final List<String> _teltonikaRecordBuffer = [];
+  bool _insideTeltonikaRecord = false;
 
   NormalizedTrackerSnapshot? parseLine(String rawLine) {
     final line = rawLine.trim();
@@ -176,7 +179,7 @@ class SuntechParser {
         manufacturer: 'Suntech',
         rawLine: line,
         warnings: const [
-          'Linha reconhecida como legado Suntech, mas ainda sem parser completo.',
+          'Linha reconhecada como legado Suntech, mas ainda sem parser completo.',
         ],
       );
     }
@@ -194,6 +197,11 @@ class SuntechParser {
     );
   }
 
+  void clearTeltonikaBuffer() {
+    _teltonikaRecordBuffer.clear();
+    _insideTeltonikaRecord = false;
+  }
+
   bool _looksLikeTeltonika(String line) {
     final upper = line.toUpperCase();
     return upper.contains('AVL ID:') ||
@@ -207,6 +215,127 @@ class SuntechParser {
   }
 
   NormalizedTrackerSnapshot _parseTeltonikaLine(String line) {
+    if (line.contains('[REC.GEN] Record Content:')) {
+      _teltonikaRecordBuffer.clear();
+      _insideTeltonikaRecord = true;
+      _teltonikaRecordBuffer.add(line);
+      return NormalizedTrackerSnapshot(
+        manufacturer: 'Teltonika',
+        rawLine: line,
+      );
+    }
+
+    if (_insideTeltonikaRecord) {
+      _teltonikaRecordBuffer.add(line);
+      if (line.contains('Record Size:')) {
+        final recordLines = List<String>.from(_teltonikaRecordBuffer);
+        _insideTeltonikaRecord = false;
+        _teltonikaRecordBuffer.clear();
+        return _parseTeltonikaRecord(recordLines);
+      }
+      return NormalizedTrackerSnapshot(
+        manufacturer: 'Teltonika',
+        rawLine: line,
+      );
+    }
+
+    return _parseTeltonikaSingleLine(line);
+  }
+
+  NormalizedTrackerSnapshot _parseTeltonikaRecord(List<String> lines) {
+    String? model;
+    String? esn;
+    double? lat;
+    double? lon;
+    double? speed;
+    int? sats;
+    bool? gpsFix;
+    double? hdop;
+    bool? ignitionOn;
+    double? externalVoltage;
+    double? batteryVoltage;
+
+    for (final line in lines) {
+      final upper = line.toUpperCase();
+
+      if (upper.contains('FMB140') || upper.contains('FMB150') ||
+          upper.contains('FMC')) {
+        final m = RegExp(r'(FMB\d{3}|FMC\d{3})').firstMatch(line);
+        model = m?.group(1);
+      }
+
+      if (upper.contains('AVL ID:')) {
+        final m = RegExp(r'AVL\s+ID:\s*([0-9A-F]+)', caseSensitive: false)
+            .firstMatch(line);
+        esn = m?.group(1);
+      }
+
+      if (upper.contains('LAT:') || upper.contains('LATITUDE:')) {
+        final val = double.tryParse(line.split(':').last.trim());
+        if (val != null && val != 0) lat = val;
+      }
+
+      if (upper.contains('LON:') || upper.contains('LONGITUDE:')) {
+        final val = double.tryParse(line.split(':').last.trim());
+        if (val != null && val != 0) lon = val;
+      }
+
+      if (upper.contains('SPEED:')) {
+        final val = double.tryParse(line.split(':').last.trim());
+        if (val != null) speed = val;
+      }
+
+      if (upper.contains('HDOP:')) {
+        hdop = double.tryParse(line.split(':').last.trim());
+      }
+
+      if (upper.contains('SATINUSE:') || upper.contains('SATS IN USE:')) {
+        sats = int.tryParse(line.split(':').last.trim());
+      }
+
+      if (upper.contains('GPS FIX:')) {
+        final val = line.split(':').last.trim();
+        gpsFix = val == '1';
+      }
+
+      final ioMatch = RegExp(
+              r'IO\s+ID\[\s*(\d+)\s*\]\s*:\s*(-?\d+(?:\.\d+)?)',
+              caseSensitive: false)
+          .firstMatch(line);
+      if (ioMatch != null) {
+        final ioId = int.parse(ioMatch.group(1)!);
+        final ioVal = double.tryParse(ioMatch.group(2)!) ??
+            int.tryParse(ioMatch.group(2)!) ??
+            ioMatch.group(2)!;
+
+        if (ioId == 3) {
+          ignitionOn = ioVal == 1 || ioVal == 1.0;
+        } else if (ioId == 66 && ioVal is num) {
+          externalVoltage = (ioVal * 0.001).toDouble();
+        } else if (ioId == 67 && ioVal is num) {
+          batteryVoltage = (ioVal * 0.001).toDouble();
+        }
+      }
+    }
+
+    return NormalizedTrackerSnapshot(
+      manufacturer: 'Teltonika',
+      model: model,
+      esn: esn,
+      latitude: lat,
+      longitude: lon,
+      speed: speed,
+      satellites: sats,
+      gpsFix: gpsFix,
+      hdop: hdop,
+      ignitionOn: ignitionOn,
+      mainVoltage: externalVoltage,
+      backupVoltage: batteryVoltage,
+      rawLine: lines.join('\n'),
+    );
+  }
+
+  NormalizedTrackerSnapshot _parseTeltonikaSingleLine(String line) {
     final upper = line.toUpperCase();
     String? model;
     String? esn;
@@ -216,8 +345,6 @@ class SuntechParser {
     int? sats;
     bool? gpsFix;
     double? hdop;
-    String? apn;
-    String? serverAddr;
 
     if (upper.contains('FMB140') || upper.contains('FMB150') ||
         upper.contains('FMC')) {
@@ -271,8 +398,6 @@ class SuntechParser {
       satellites: sats,
       gpsFix: gpsFix,
       hdop: hdop,
-      apn: apn,
-      serverAddress: serverAddr,
       rawLine: line,
     );
   }
@@ -293,15 +418,12 @@ class SuntechParser {
         _maskEvidence(at(16), 'saida', minLength: 4, maxLength: 8);
     final rawIgnition = at(17);
 
-    bool? ignitionOn;
     TechnicalEvidence<bool> ignitionEvidence;
 
     if (rawIgnition == '1' || rawIgnition == '0') {
       ignitionEvidence = _binaryEvidence(rawIgnition, 'ignicao');
-      ignitionOn = ignitionEvidence.value;
     } else if (inputEvidence.value != null && inputEvidence.value!.isNotEmpty) {
       final isIgnitionOn = inputEvidence.value!.startsWith('1');
-      ignitionOn = isIgnitionOn;
       ignitionEvidence = TechnicalEvidence<bool>(
         status: TechnicalEvidenceStatus.confirmed,
         value: isIgnitionOn,
@@ -312,7 +434,6 @@ class SuntechParser {
       );
     } else {
       ignitionEvidence = _binaryEvidence(rawIgnition, 'ignicao');
-      ignitionOn = ignitionEvidence.value;
     }
 
     final networkCode = at(25);

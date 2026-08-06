@@ -100,7 +100,7 @@ TrackerStudioController _controller(
 }) {
   final workOrders = fixtureWorkOrders();
   return TrackerStudioController(
-    parser: const SuntechParser(),
+    parser: SuntechParser(),
     transport: _FakeTransport(),
     localitel: LocalitelClient(),
     serviceLocation: ServiceLocationProvider(),

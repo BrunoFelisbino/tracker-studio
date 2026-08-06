@@ -17,7 +17,7 @@ Future<MutableTrackerStudioController> createStudioTestController({
   CaptureLogStore? captureLogs,
 }) async {
   return MutableTrackerStudioController(
-    parser: const SuntechParser(),
+    parser: SuntechParser(),
     transport: CountingTransport(ports: ports),
     localitel: localitel ?? LocalitelClient(),
     serviceLocation: ServiceLocationProvider(),
