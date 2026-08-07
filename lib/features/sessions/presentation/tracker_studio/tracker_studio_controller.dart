@@ -561,6 +561,35 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       _setControlledHandshakeError('USB serial não conectado.');
       return;
     }
+
+    // Wait briefly for Teltonika auto-data (IMEI, FMB140, GPS lines) before
+    // running Suntech handshake. Teltonika devices often send identification
+    // data automatically on connect.
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (_disposed || _isDisconnecting || !_transport.connected) return;
+
+    // Check if Teltonika data already received and parsed
+    final manufacturer = state.device.manufacturerName.toLowerCase();
+    final looksLikeTeltonika = manufacturer.contains('teltonika') ||
+        state.device.model.toLowerCase().contains('fmb') ||
+        state.device.model.toLowerCase().contains('fmc') ||
+        state.device.esn.length >= 15; // IMEI-like ESN
+
+    if (looksLikeTeltonika) {
+      // Teltonika detected - skip Suntech handshake, start polling directly
+      state = _appendLog(
+        state,
+        LogEntry(_clock(), 'AutoID', 'Teltonika detectado; pulando handshake Suntech'),
+      );
+      await readStatus();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (!_disposed && !_isDisconnecting) {
+        await readPreset();
+      }
+      _startStatusPolling();
+      return;
+    }
+
     _isHandshakeRunning = true;
     final currentBaud = state.connection.baudRate;
     SuntechHandshakeResult result;
