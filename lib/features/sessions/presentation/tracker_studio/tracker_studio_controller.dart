@@ -608,8 +608,13 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       }
     }
 
+    // Suntech handshake
     _isHandshakeRunning = true;
     final currentBaud = state.connection.baudRate;
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'AutoID', 'Iniciando handshake Suntech (baud=$currentBaud fullScan=$fullScan)'),
+    );
     SuntechHandshakeResult result;
     try {
       result = fullScan
@@ -636,6 +641,14 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
       _isHandshakeRunning = false;
     }
     if (_disposed || _isDisconnecting || result.canceled) return;
+    
+    // Debug: log handshake result
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'AutoID',
+          'Handshake resultado: identified=${result.identified} family=${result.family} model=${result.model} esn=${result.esn} error=${result.error}'),
+    );
+    
     _applyHandshakeResult(result);
     runServiceValidation();
     if (result.identified) {
