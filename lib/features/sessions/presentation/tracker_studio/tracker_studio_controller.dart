@@ -570,10 +570,20 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
 
     // Check if Teltonika data already received and parsed
     final manufacturer = state.device.manufacturerName.toLowerCase();
+    final model = state.device.model.toLowerCase();
+    final esn = state.device.esn;
+    
     final looksLikeTeltonika = manufacturer.contains('teltonika') ||
-        state.device.model.toLowerCase().contains('fmb') ||
-        state.device.model.toLowerCase().contains('fmc') ||
-        state.device.esn.length >= 15; // IMEI-like ESN
+        model.contains('fmb') ||
+        model.contains('fmc') ||
+        (esn.length >= 15 && !esn.contains('-')); // IMEI-like ESN (not the initial '-')
+
+    // Debug logging
+    state = _appendLog(
+      state,
+      LogEntry(_clock(), 'AutoID',
+          'Detecção: manufacturer=$manufacturer model=$model esn=$esn teltonika=$looksLikeTeltonika'),
+    );
 
     if (looksLikeTeltonika) {
       // Teltonika detected - skip Suntech handshake, start polling directly
@@ -581,13 +591,21 @@ class TrackerStudioController extends StateNotifier<TrackerSessionState> {
         state,
         LogEntry(_clock(), 'AutoID', 'Teltonika detectado; pulando handshake Suntech'),
       );
-      await readStatus();
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      if (!_disposed && !_isDisconnecting) {
-        await readPreset();
+      try {
+        await readStatus();
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        if (!_disposed && !_isDisconnecting) {
+          await readPreset();
+        }
+        _startStatusPolling();
+        return; // Success - exit early
+      } catch (e) {
+        state = _appendLog(
+          state,
+          LogEntry(_clock(), 'ERROR', 'Erro no fluxo Teltonika: $e; tentando handshake Suntech'),
+        );
+        // Fall through to Suntech handshake as fallback
       }
-      _startStatusPolling();
-      return;
     }
 
     _isHandshakeRunning = true;
